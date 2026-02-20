@@ -16,9 +16,9 @@ const slides = [
   {
     id: 2,
     label: "Bakery & Food",
-    headline: "Premium Quality\nBakery Packaging",
-    sub: "Food-grade specialized boxes for Cakes, Pastries, and Pizza. Maintain freshness with a touch of luxury.",
-    cta: "Shop Bakery Range",
+    headline: "Freshness\nMeets Luxury",
+    sub: "Food-grade boxes for Cakes, Pastries & Pizza.",
+    cta: "Shop Bakery",
     img: "https://boxfox.in/wp-content/uploads/2022/11/03-4.jpg",
     color: "from-gray-950/80",
   },
