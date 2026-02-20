@@ -1,0 +1,28 @@
+{
+    "totalSales": "₹0",
+    "totalSalesGrowth": "0%",
+    "totalOrders": "0",
+    "totalOrdersGrowth": "0%",
+    "productsSold": "0",
+    "productsSoldGrowth": "0%",
+    "activeSessions": "0",
+    "activeSessionsGrowth": "0%",
+    "recentOrders": [],
+    "labUtilization": [
+        {
+            "label": "Pizza Box Presets",
+            "percent": 0,
+            "color": "bg-emerald-500"
+        },
+        {
+            "label": "Rigid Box Custom",
+            "percent": 0,
+            "color": "bg-blue-500"
+        },
+        {
+            "label": "Mailer Box Samples",
+            "percent": 0,
+            "color": "bg-orange-500"
+        }
+    ]
+}

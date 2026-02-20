@@ -1,0 +1,47 @@
+[
+    {
+        "category": "Packaging",
+        "tabs": [
+            "Best Seller",
+            "New Arrivals"
+        ],
+        "items": [
+            {
+                "id": "pizza-12-multi",
+                "name": "3 Ply Duplex Multi-Color Printed Pizza Packaging Box 12*12*1.5 Inch",
+                "price": "₹14.00 - ₹36.00",
+                "originalPrice": 36.00,
+                "discount": "61%",
+                "img": "https://images.unsplash.com/photo-1626243292723-86866160167d?w=600&q=80",
+                "badge": "Best Seller",
+                "hasVariants": true
+            }
+        ]
+    },
+    {
+        "category": "Duplex Boxes",
+        "tabs": [
+            "New Arrivals",
+            "Bakery"
+        ],
+        "items": []
+    },
+    {
+        "category": "3Ply n More",
+        "tabs": [
+            "Carry Bags",
+            "3 Ply"
+        ],
+        "items": [
+            {
+                "id": "mailer-4x4-white",
+                "name": "3 Ply Duplex Plain White Mailer Box 4*4*2 Inch",
+                "price": "₹5.00 - ₹14.00",
+                "originalPrice": 14.00,
+                "discount": "63%",
+                "img": "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80",
+                "hasVariants": true
+            }
+        ]
+    }
+]

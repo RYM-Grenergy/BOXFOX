@@ -5,52 +5,47 @@ import { ArrowUpRight } from "lucide-react";
 const categories = [
   {
     id: 1,
-    name: "Luxury Duplex",
-    desc: "Premium multi-colour packaging",
-    img: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=800&q=80",
-    grid: "md:col-span-2 md:row-span-2",
+    name: "Corrugated Boxes",
+    desc: "3 Ply Kraft & White Mailers",
+    img: "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
   },
   {
     id: 2,
-    name: "Artisan Rigid",
-    desc: "100% handmade luxury",
-    img: "https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=600&q=80",
-    grid: "md:col-span-1 md:row-span-1",
+    name: "Bakery Packaging",
+    desc: "Cake, Pastry & Brownie Boxes",
+    img: "https://boxfox.in/wp-content/uploads/2022/11/03-4.jpg",
   },
   {
     id: 3,
-    name: "Eco Corrugated",
-    desc: "Sustainable & strong",
-    img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=600&q=80",
-    grid: "md:col-span-1 md:row-span-1",
+    name: "Pizza Boxes",
+    desc: "Food-grade specialized",
+    img: "https://boxfox.in/wp-content/uploads/2022/11/open-pizza-box.png",
   },
   {
     id: 4,
-    name: "Gourmet Bakery",
-    desc: "Cakes & pastries",
-    img: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=600&q=80",
-    grid: "md:col-span-1 md:row-span-2",
+    name: "Luxury Duplex",
+    desc: "Multi-color premium prints",
+    img: "https://boxfox.in/wp-content/uploads/2022/11/55-copy.png",
   },
   {
     id: 5,
-    name: "Custom Pizza",
-    desc: "Food-grade specialized",
-    img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80",
-    grid: "md:col-span-1 md:row-span-1",
+    name: "Sweet Boxes",
+    desc: "Eco-friendly Mithai packaging",
+    img: "https://boxfox.in/wp-content/uploads/2022/12/04.jpg",
   },
 ];
 
 export default function CategorySection() {
   return (
-    <section id="categories" className="py-24 px-6 lg:px-12 bg-gray-50/50">
+    <section id="categories" className="py-32 px-6 lg:px-12 bg-white">
       <div className="max-w-[1600px] mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-          <div className="max-w-2xl">
+        <div className="flex flex-col md:flex-row items-baseline justify-between mb-24 gap-6">
+          <div>
             <motion.span
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="text-sm font-bold text-gray-400 uppercase tracking-[0.3em] mb-4 block"
+              className="text-xs font-black text-gray-400 uppercase tracking-[0.4em] mb-4 block"
             >
               Curated Collections
             </motion.span>
@@ -58,58 +53,52 @@ export default function CategorySection() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-4xl md:text-6xl font-black text-gray-950 tracking-tighter leading-[0.9]"
+              className="text-6xl md:text-8xl font-black text-gray-950 tracking-tighter leading-none"
             >
-              Shop by <span className="text-gray-400">Category</span>
+              Shop by Category
             </motion.h2>
           </div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <button className="text-sm font-bold flex items-center gap-2 group border-b-2 border-gray-950 pb-1">
-              View All Categories
-              <ArrowUpRight size={18} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </button>
-          </motion.div>
+          <button className="text-xs font-black uppercase tracking-widest flex items-center gap-3 group bg-gray-950 text-white px-8 py-5 rounded-full transition-all hover:scale-105 active:scale-95">
+            View All Categories
+            <ArrowUpRight size={16} />
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-3 gap-6 h-full md:h-[900px]">
+        <div className="flex flex-col border-t border-gray-100">
           {categories.map((cat, idx) => (
             <motion.a
               key={cat.id}
               href="#"
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: idx * 0.1 }}
-              className={`group relative rounded-[2.5rem] overflow-hidden ${cat.grid}`}
+              className="group relative border-b border-gray-100 py-12 md:py-20 flex flex-col md:flex-row md:items-center justify-between gap-8 transition-all hover:px-8"
             >
-              <img
-                src={cat.img}
-                alt={cat.name}
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative z-10 flex flex-col md:flex-row md:items-baseline gap-4 md:gap-12">
+                <span className="text-sm font-black text-gray-300 group-hover:text-gray-950 transition-colors">
+                  0{idx + 1}
+                </span>
+                <h3 className="text-4xl md:text-7xl font-black text-gray-950 tracking-tight group-hover:translate-x-4 transition-transform duration-500">
+                  {cat.name}
+                </h3>
+              </div>
 
-              <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  whileInView={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.2 + idx * 0.1 }}
-                >
-                  <p className="text-white text-2xl font-black tracking-tighter mb-2">
-                    {cat.name}
-                  </p>
-                  <p className="text-white/60 text-sm font-medium transition-colors group-hover:text-white">
-                    {cat.desc}
-                  </p>
-                </motion.div>
-
-                <div className="absolute top-8 right-8 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white opacity-0 -translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                  <ArrowUpRight size={20} />
+              <div className="relative z-10 flex items-center justify-between md:justify-end gap-12 w-full md:w-auto">
+                <p className="text-lg md:text-xl font-medium text-gray-400 group-hover:text-gray-950 transition-colors max-w-xs md:text-right leading-tight">
+                  {cat.desc}
+                </p>
+                <div className="w-16 h-16 rounded-full border border-gray-200 flex items-center justify-center group-hover:bg-gray-950 group-hover:border-gray-950 group-hover:text-white transition-all duration-500 group-hover:rotate-45">
+                  <ArrowUpRight size={24} />
                 </div>
+              </div>
+
+              {/* Hover Image Reveal */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-40 md:w-96 md:h-60 rounded-3xl overflow-hidden pointer-events-none opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 transition-all duration-700 ease-out z-0">
+                <img
+                  src={cat.img}
+                  alt={cat.name}
+                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
+                />
               </div>
             </motion.a>
           ))}
