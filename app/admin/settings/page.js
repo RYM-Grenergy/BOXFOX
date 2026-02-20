@@ -47,8 +47,10 @@ export default function SettingsPage() {
                             <div className="space-y-2 md:col-span-2">
                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Logo URL</label>
                                 <div className="flex gap-4">
-                                    <input className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all" defaultValue="https://boxfox.in/wp-content/uploads/2021/08/logo.png" />
-                                    <div className="w-14 h-14 bg-gray-950 rounded-2xl flex items-center justify-center font-black text-white text-[10px]">BF</div>
+                                    <input className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all" defaultValue="/BOXFOX-1.png" />
+                                    <div className="w-14 h-14 bg-gray-950 rounded-2xl flex items-center justify-center overflow-hidden">
+                                        <img src="/BOXFOX-1.png" alt="Logo" className="w-10 h-auto object-contain" />
+                                    </div>
                                 </div>
                             </div>
                         </div>

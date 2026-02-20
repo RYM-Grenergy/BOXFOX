@@ -23,7 +23,7 @@ export default function AboutPage() {
                         animate={{ opacity: 1, scale: 1 }}
                         className="w-24 h-24 bg-gray-950 rounded-[2rem] flex items-center justify-center mx-auto mb-12 shadow-2xl"
                     >
-                        <img src="/BOXFOX-1.png" className="w-16 h-auto brightness-0 invert" alt="BoxFox" />
+                        <img src="/BOXFOX-1.png" className="w-16 h-auto" alt="BoxFox" />
                     </motion.div>
                     <motion.h1
                         initial={{ opacity: 0, y: 20 }}

@@ -1,14 +1,28 @@
 "use client";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, ShoppingCart, User, Menu, X, Box, Trash2, ChevronRight, ArrowRight } from "lucide-react";
+import {
+  Search,
+  ShoppingCart,
+  User,
+  Menu,
+  X,
+  Box,
+  Trash2,
+  ChevronRight,
+  ArrowRight,
+} from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCart } from "@/app/context/CartContext";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { cart, removeFromCart, isCartOpen, setIsCartOpen, cartTotal } = useCart();
+  const { cart, removeFromCart, isCartOpen, setIsCartOpen, cartTotal } =
+    useCart();
+  const pathname = usePathname();
+  const isHome = pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,25 +38,25 @@ export default function Navbar() {
     { label: "About", href: "/about" },
   ];
 
+  const shouldBeSolid = isScrolled || !isHome;
+
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-700 ${isScrolled
-          ? "bg-white/70 backdrop-blur-2xl border-b border-gray-100 py-4 shadow-sm"
-          : "bg-transparent py-8"
-          }`}
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-700 ${
+          shouldBeSolid
+            ? "bg-white/70 backdrop-blur-2xl border-b border-gray-100 py-4 shadow-sm"
+            : "bg-transparent py-8"
+        }`}
       >
         <div className="max-w-[1700px] mx-auto px-8 lg:px-16">
           <div className="flex items-center justify-between gap-12">
             {/* Logo */}
-            <Link
-              href="/"
-              className="flex items-center group shrink-0"
-            >
+            <Link href="/" className="flex items-center group shrink-0">
               <img
                 src="/BOXFOX-1.png"
                 alt="BOXFOX Logo"
-                className={`h-8 sm:h-10 w-auto object-contain transition-all ${!isScrolled ? 'brightness-0 invert' : ''}`}
+                className="h-8 sm:h-10 w-auto object-contain transition-all"
               />
             </Link>
 
@@ -52,10 +66,11 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`text-xs font-black uppercase tracking-[0.3em] transition-all hover:opacity-100 ${isScrolled
-                    ? "text-gray-500 hover:text-gray-950"
-                    : "text-white/60 hover:text-white"
-                    }`}
+                  className={`text-xs font-black uppercase tracking-[0.3em] transition-all hover:opacity-100 ${
+                    shouldBeSolid
+                      ? "text-gray-500 hover:text-gray-950"
+                      : "text-white/60 hover:text-white"
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -65,29 +80,47 @@ export default function Navbar() {
             {/* Actions */}
             <div className="flex items-center gap-6">
               {/* Premium Pill Search */}
-              <div className={`hidden md:flex items-center rounded-full transition-all duration-500 px-6 py-2.5 w-72 border ${isScrolled
-                ? "bg-gray-50 border-gray-200 focus-within:bg-white focus-within:ring-4 focus-within:ring-gray-950/5"
-                : "bg-white/5 border-white/10 focus-within:bg-white/10"
-                }`}>
-                <Search size={16} className={isScrolled ? "text-gray-400" : "text-white/70"} />
+              <div
+                className={`hidden md:flex items-center rounded-full transition-all duration-500 px-6 py-2.5 w-72 border ${
+                  shouldBeSolid
+                    ? "bg-gray-50 border-gray-200 focus-within:bg-white focus-within:ring-4 focus-within:ring-gray-950/5"
+                    : "bg-white/5 border-white/10 focus-within:bg-white/10"
+                }`}
+              >
+                <Search
+                  size={16}
+                  className={shouldBeSolid ? "text-gray-400" : "text-white/70"}
+                />
                 <input
                   type="text"
                   placeholder="Search packaging..."
-                  className={`bg-transparent text-xs font-bold outline-none ml-3 w-full transition-colors tracking-tight ${isScrolled ? "text-gray-900 placeholder-gray-400" : "text-white placeholder-white/60"
-                    }`}
+                  className={`bg-transparent text-xs font-bold outline-none ml-3 w-full transition-colors tracking-tight ${
+                    shouldBeSolid
+                      ? "text-gray-900 placeholder-gray-400"
+                      : "text-white placeholder-white/60"
+                  }`}
                 />
               </div>
 
               <div className="flex items-center gap-2">
-                <Link href="/admin" className={`p-3 rounded-full transition-all ${isScrolled ? "hover:bg-gray-100 text-gray-900" : "hover:bg-white/10 text-white"
-                  }`}>
+                <Link
+                  href="/admin"
+                  className={`p-3 rounded-full transition-all ${
+                    shouldBeSolid
+                      ? "hover:bg-gray-100 text-gray-900"
+                      : "hover:bg-white/10 text-white"
+                  }`}
+                >
                   <User size={20} />
                 </Link>
 
                 <button
                   onClick={() => setIsCartOpen(true)}
-                  className={`relative p-3 rounded-full transition-all ${isScrolled ? "hover:bg-gray-100 text-gray-900" : "hover:bg-white/10 text-white"
-                    }`}
+                  className={`relative p-3 rounded-full transition-all ${
+                    shouldBeSolid
+                      ? "hover:bg-gray-100 text-gray-900"
+                      : "hover:bg-white/10 text-white"
+                  }`}
                 >
                   <ShoppingCart size={20} />
                   {cart.length > 0 && (
@@ -99,8 +132,11 @@ export default function Navbar() {
 
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className={`lg:hidden p-3 rounded-full transition-all ${isScrolled ? "hover:bg-gray-100 text-gray-900" : "hover:bg-white/10 text-white"
-                    }`}
+                  className={`lg:hidden p-3 rounded-full transition-all ${
+                    shouldBeSolid
+                      ? "hover:bg-gray-100 text-gray-900"
+                      : "hover:bg-white/10 text-white"
+                  }`}
                 >
                   {menuOpen ? <X size={20} /> : <Menu size={20} />}
                 </button>
@@ -127,7 +163,10 @@ export default function Navbar() {
                     onClick={() => setMenuOpen(false)}
                   >
                     {link.label}
-                    <ChevronRight size={24} className="text-gray-200 transition-transform group-hover:translate-x-2" />
+                    <ChevronRight
+                      size={24}
+                      className="text-gray-200 transition-transform group-hover:translate-x-2"
+                    />
                   </Link>
                 ))}
               </div>
@@ -148,18 +187,25 @@ export default function Navbar() {
               className="absolute inset-0 bg-gray-950/60 backdrop-blur-md"
             />
             <motion.div
-              initial={{ x: '100%' }}
+              initial={{ x: "100%" }}
               animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="relative w-full max-w-lg h-full bg-white shadow-2xl flex flex-col"
             >
               <div className="p-10 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
                 <div>
-                  <h2 className="text-3xl font-black text-gray-950 tracking-tighter uppercase">Cart Overview</h2>
-                  <p className="text-[11px] font-black tracking-[0.2em] text-emerald-500 uppercase">{cart.length} Items Selected</p>
+                  <h2 className="text-3xl font-black text-gray-950 tracking-tighter uppercase">
+                    Cart Overview
+                  </h2>
+                  <p className="text-[11px] font-black tracking-[0.2em] text-emerald-500 uppercase">
+                    {cart.length} Items Selected
+                  </p>
                 </div>
-                <button onClick={() => setIsCartOpen(false)} className="p-4 hover:bg-gray-50 rounded-2xl transition-all">
+                <button
+                  onClick={() => setIsCartOpen(false)}
+                  className="p-4 hover:bg-gray-50 rounded-2xl transition-all"
+                >
                   <X size={24} />
                 </button>
               </div>
@@ -171,8 +217,12 @@ export default function Navbar() {
                       <ShoppingCart size={48} />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-black text-gray-950 uppercase tracking-tighter">Empty Lab</h3>
-                      <p className="text-gray-400 font-medium text-sm max-w-[200px] mx-auto">Your design selections will appear here.</p>
+                      <h3 className="text-2xl font-black text-gray-950 uppercase tracking-tighter">
+                        Empty Lab
+                      </h3>
+                      <p className="text-gray-400 font-medium text-sm max-w-[200px] mx-auto">
+                        Your design selections will appear here.
+                      </p>
                     </div>
                     <Link
                       href="/shop"
@@ -186,15 +236,30 @@ export default function Navbar() {
                   cart.map((item) => (
                     <div key={item.id} className="flex gap-8 group">
                       <div className="w-28 h-28 bg-gray-50 rounded-[2rem] overflow-hidden border border-gray-100 shrink-0">
-                        <img src={item.img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.name} />
+                        <img
+                          src={item.img}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                          alt={item.name}
+                        />
                       </div>
                       <div className="flex-1 flex flex-col justify-between py-2">
                         <div>
-                          <h4 className="text-sm font-black text-gray-950 leading-tight line-clamp-2 uppercase tracking-tight">{item.name}</h4>
-                          <p className="text-[11px] font-extrabold text-gray-400 uppercase mt-2 tracking-widest">PCS: {item.quantity}</p>
+                          <h4 className="text-sm font-black text-gray-950 leading-tight line-clamp-2 uppercase tracking-tight">
+                            {item.name}
+                          </h4>
+                          <p className="text-[11px] font-extrabold text-gray-400 uppercase mt-2 tracking-widest">
+                            PCS: {item.quantity}
+                          </p>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-lg font-black text-gray-950 tracking-tighter">₹{parseFloat(typeof item.price === 'number' ? item.price : item.price.replace(/[^0-9.]/g, '')).toLocaleString('en-IN')}</span>
+                          <span className="text-lg font-black text-gray-950 tracking-tighter">
+                            ₹
+                            {parseFloat(
+                              typeof item.price === "number"
+                                ? item.price
+                                : item.price.replace(/[^0-9.]/g, ""),
+                            ).toLocaleString("en-IN")}
+                          </span>
                           <button
                             onClick={() => removeFromCart(item.id)}
                             className="p-2.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
@@ -211,8 +276,12 @@ export default function Navbar() {
               {cart.length > 0 && (
                 <div className="p-10 border-t border-gray-100 space-y-8 bg-gray-50/50 shrink-0">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Estimated Total</span>
-                    <span className="text-4xl font-black text-gray-950 tracking-[calc(-0.05em)]">₹{cartTotal.toLocaleString('en-IN')}</span>
+                    <span className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">
+                      Estimated Total
+                    </span>
+                    <span className="text-4xl font-black text-gray-950 tracking-[calc(-0.05em)]">
+                      ₹{cartTotal.toLocaleString("en-IN")}
+                    </span>
                   </div>
                   <Link
                     href="/checkout"

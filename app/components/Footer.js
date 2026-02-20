@@ -9,10 +9,12 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="mb-5">
-              <span className="text-[18px] font-black text-gray-950 tracking-tight">
-                BoxFox
-              </span>
-              <p className="text-[10px] font-medium text-gray-400 tracking-[0.18em] uppercase mt-0.5">
+              <img
+                src="/BOXFOX-1.png"
+                alt="BoxFox Logo"
+                className="h-8 w-auto object-contain brightness-0"
+              />
+              <p className="text-[10px] font-medium text-gray-400 tracking-[0.18em] uppercase mt-2">
                 Design | Print | Packaging
               </p>
             </div>

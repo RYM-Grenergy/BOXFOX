@@ -46,9 +46,10 @@ export default function AdminLayout({ children }) {
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     exit={{ opacity: 0, x: -10 }}
-                                    className="text-xl font-black tracking-tighter"
+                                    className="flex items-center gap-2"
                                 >
-                                    BOXFOX<span className="text-emerald-500">.ADMIN</span>
+                                    <img src="/BOXFOX-1.png" alt="Logo" className="h-6 w-auto object-contain" />
+                                    <span className="text-xs font-black tracking-widest text-emerald-500">ADMIN</span>
                                 </motion.div>
                             )}
                         </AnimatePresence>
