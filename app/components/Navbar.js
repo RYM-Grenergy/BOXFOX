@@ -84,12 +84,12 @@ export default function Navbar() {
                 className={`hidden md:flex items-center rounded-full transition-all duration-500 px-6 py-2.5 w-72 border ${
                   shouldBeSolid
                     ? "bg-gray-50 border-gray-200 focus-within:bg-white focus-within:ring-4 focus-within:ring-gray-950/5"
-                    : "bg-white/5 border-white/10 focus-within:bg-white/10"
+                    : "bg-black/30 border-white/40 focus-within:bg-black/40"
                 }`}
               >
                 <Search
                   size={16}
-                  className={shouldBeSolid ? "text-gray-400" : "text-white/70"}
+                  className={shouldBeSolid ? "text-gray-400" : "text-white"}
                 />
                 <input
                   type="text"
@@ -97,7 +97,7 @@ export default function Navbar() {
                   className={`bg-transparent text-xs font-bold outline-none ml-3 w-full transition-colors tracking-tight ${
                     shouldBeSolid
                       ? "text-gray-900 placeholder-gray-400"
-                      : "text-white placeholder-white/60"
+                      : "text-white font-bold placeholder-white/90"
                   }`}
                 />
               </div>
@@ -108,7 +108,7 @@ export default function Navbar() {
                   className={`p-3 rounded-full transition-all ${
                     shouldBeSolid
                       ? "hover:bg-gray-100 text-gray-900"
-                      : "hover:bg-white/10 text-white"
+                      : "hover:bg-white/20 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
                   }`}
                 >
                   <User size={20} />
@@ -116,10 +116,10 @@ export default function Navbar() {
 
                 <button
                   onClick={() => setIsCartOpen(true)}
-                  className={`relative p-3 rounded-full transition-all ${
+                  className={`relative p-3 rounded-full transition-all drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] ${
                     shouldBeSolid
                       ? "hover:bg-gray-100 text-gray-900"
-                      : "hover:bg-white/10 text-white"
+                      : "hover:bg-white/20 text-white"
                   }`}
                 >
                   <ShoppingCart size={20} />
@@ -132,10 +132,10 @@ export default function Navbar() {
 
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className={`lg:hidden p-3 rounded-full transition-all ${
+                  className={`lg:hidden p-3 rounded-full transition-all drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] ${
                     shouldBeSolid
                       ? "hover:bg-gray-100 text-gray-900"
-                      : "hover:bg-white/10 text-white"
+                      : "hover:bg-white/20 text-white"
                   }`}
                 >
                   {menuOpen ? <X size={20} /> : <Menu size={20} />}
