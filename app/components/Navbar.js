@@ -42,8 +42,7 @@ export default function Navbar() {
               <img
                 src="/BOXFOX-1.png"
                 alt="BOXFOX Logo"
-                className={`w-full h-auto object-contain transition-all duration-500 ${isScrolled ? "brightness-0" : "sm:brightness-0 sm:invert"
-                  }`}
+                className="w-full h-auto object-contain"
               />
             </div>
           </motion.a>
