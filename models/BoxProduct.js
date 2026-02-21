@@ -28,6 +28,7 @@ const BoxProductSchema = new mongoose.Schema({
     // Flap Config
     flapType: { type: String, enum: ['rsc', 'mailer', 'tuck_top', 'auto_bottom'], default: 'rsc' },
     has3DPreview: { type: Boolean, default: true },
+    pacdoraId: { type: String },
 }, { timestamps: true });
 
 export default mongoose.models.BoxProduct || mongoose.model('BoxProduct', BoxProductSchema);

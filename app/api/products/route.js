@@ -53,7 +53,8 @@ export async function GET(req) {
           minOrderQuantity: p.minOrderQuantity || 100,
           tags: p.tags || [],
           specifications: p.specifications || [],
-          dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' }
+          dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' },
+          pacdoraId: p.pacdoraId
         };
       });
       return NextResponse.json(flatList);
@@ -89,7 +90,8 @@ export async function GET(req) {
         images: p.images,
         hasVariants: p.type === "variable",
         outOfStock: p.stock_status === "outofstock",
-        dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' }
+        dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' },
+        pacdoraId: p.pacdoraId
       });
     });
 
@@ -145,7 +147,8 @@ export async function POST(req) {
         tags: typeof data.tags === 'string' ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : data.tags,
         specifications: data.specifications,
         description: data.description,
-        short_description: data.short_description
+        short_description: data.short_description,
+        pacdoraId: data.pacdoraId
       }, { new: true });
       return NextResponse.json({ success: true, product: updatedProduct });
     }
@@ -171,7 +174,8 @@ export async function POST(req) {
       tags: typeof data.tags === 'string' ? data.tags.split(',').map(t => t.trim()).filter(Boolean) : data.tags,
       specifications: data.specifications,
       description: data.description,
-      short_description: data.short_description
+      short_description: data.short_description,
+      pacdoraId: data.pacdoraId
     });
     return NextResponse.json({ success: true, product });
   } catch (e) {

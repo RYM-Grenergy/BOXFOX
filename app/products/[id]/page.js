@@ -14,7 +14,9 @@ import {
     Package,
     RotateCcw,
     Zap,
-    CheckCircle2
+    CheckCircle2,
+    Box,
+    Eye
 } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
 import Footer from '@/app/components/Footer';
@@ -32,6 +34,7 @@ export default function ProductPage() {
     const [quantity, setQuantity] = useState(1);
     const [activeAttribute, setActiveAttribute] = useState({});
     const [activeTab, setActiveTab] = useState('description');
+    const [viewMode, setViewMode] = useState('2D'); // '2D' or '3D'
 
     useEffect(() => {
         setLoading(true);
@@ -118,12 +121,26 @@ export default function ProductPage() {
                                 {images.map((img, idx) => (
                                     <button
                                         key={idx}
-                                        onClick={() => setActiveImg(idx)}
-                                        className={`relative w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all duration-300 ${activeImg === idx ? 'border-accent shadow-lg shadow-accent/10 scale-105' : 'border-transparent opacity-50 hover:opacity-100 hover:border-gray-200'}`}
+                                        onClick={() => {
+                                            setActiveImg(idx);
+                                            setViewMode('2D');
+                                        }}
+                                        className={`relative w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all duration-300 ${activeImg === idx && viewMode === '2D' ? 'border-accent shadow-lg shadow-accent/10 scale-105' : 'border-transparent opacity-50 hover:opacity-100 hover:border-gray-200'}`}
                                     >
                                         <img src={img} className="w-full h-full object-cover" alt="" />
                                     </button>
                                 ))}
+
+                                {/* 3D Thumbnail Button */}
+                                {product.pacdoraId && (
+                                    <button
+                                        onClick={() => setViewMode('3D')}
+                                        className={`relative w-24 h-24 rounded-2xl overflow-hidden border-2 flex flex-col items-center justify-center gap-1 transition-all duration-300 ${viewMode === '3D' ? 'border-emerald-500 bg-emerald-50 text-emerald-600 shadow-lg scale-105' : 'border-transparent bg-gray-50 text-gray-400 hover:border-emerald-200 hover:text-emerald-500'}`}
+                                    >
+                                        <Box size={24} />
+                                        <span className="text-[9px] font-black tracking-widest uppercase">3D View</span>
+                                    </button>
+                                )}
                             </div>
 
                             {/* Main Image */}
@@ -150,11 +167,46 @@ export default function ProductPage() {
                                     </div>
 
                                     {/* Action Buttons Overlay */}
-                                    <div className="absolute top-8 right-8">
+                                    <div className="absolute top-8 right-8 flex flex-col items-end gap-3">
                                         <button className="w-12 h-12 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-white transition-all shadow-sm border border-white/40">
                                             <Heart size={20} />
                                         </button>
+                                        {product.pacdoraId && (
+                                            <button
+                                                onClick={() => setViewMode(viewMode === '2D' ? '3D' : '2D')}
+                                                className={`px-5 h-12 rounded-full flex items-center justify-center gap-3 transition-all shadow-2xl backdrop-blur-md border-2 hover:scale-[1.02] active:scale-95 ${viewMode === '3D' ? 'bg-emerald-500 border-emerald-400 text-white shadow-emerald-500/20' : 'bg-white border-white/40 text-gray-950 hover:border-emerald-500/50'}`}
+                                                title="Toggle 3D View"
+                                            >
+                                                <div className="relative">
+                                                    <Box size={18} className={viewMode === '3D' ? 'animate-pulse' : ''} />
+                                                    {viewMode !== '3D' && (
+                                                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full border border-white animate-ping" />
+                                                    )}
+                                                </div>
+                                                <span className="text-[10px] font-black uppercase tracking-widest">{viewMode === '3D' ? 'VIEWING 3D' : 'OPEN 3D MODEL'}</span>
+                                            </button>
+                                        )}
                                     </div>
+
+                                    {/* 3D Viewer Iframe */}
+                                    {viewMode === '3D' && product.pacdoraId && (
+                                        <div className="absolute inset-0 bg-white z-10">
+                                            <iframe
+                                                src={product.pacdoraId.includes('http') ? product.pacdoraId : `https://www.pacdora.com/share?id=${product.pacdoraId}&mode=3d`}
+                                                className="w-full h-full border-none"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            />
+                                            {/* Fullscreen Tooltip Button */}
+                                            <button
+                                                onClick={() => window.open(product.pacdoraId.includes('http') ? product.pacdoraId : `https://www.pacdora.com/share?id=${product.pacdoraId}&mode=3d`, '_blank')}
+                                                className="absolute bottom-6 right-6 px-4 py-2 bg-gray-900 text-white rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-black transition-all shadow-2xl"
+                                            >
+                                                <Maximize2 size={12} />
+                                                View Fullscreen
+                                            </button>
+                                        </div>
+                                    )}
                                 </motion.div>
 
                                 {/* Thumbnails (Mobile) */}
@@ -162,12 +214,25 @@ export default function ProductPage() {
                                     {images.map((img, idx) => (
                                         <button
                                             key={idx}
-                                            onClick={() => setActiveImg(idx)}
-                                            className={`relative w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${activeImg === idx ? 'border-accent' : 'border-transparent opacity-60'}`}
+                                            onClick={() => {
+                                                setActiveImg(idx);
+                                                setViewMode('2D');
+                                            }}
+                                            className={`relative w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${activeImg === idx && viewMode === '2D' ? 'border-accent' : 'border-transparent opacity-60'}`}
                                         >
                                             <img src={img} className="w-full h-full object-cover" alt="" />
                                         </button>
                                     ))}
+                                    {/* 3D Thumbnail (Mobile) */}
+                                    {product.pacdoraId && (
+                                        <button
+                                            onClick={() => setViewMode('3D')}
+                                            className={`relative w-16 h-16 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all flex flex-col items-center justify-center bg-gray-50 ${viewMode === '3D' ? 'border-emerald-500 text-emerald-600 scale-105 bg-emerald-50' : 'border-transparent text-gray-400'}`}
+                                        >
+                                            <Box size={16} />
+                                            <span className="text-[8px] font-black uppercase">3D View</span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -257,6 +322,21 @@ export default function ProductPage() {
                                         Checkout Now
                                     </button>
                                 </div>
+
+                                {product.pacdoraId && (
+                                    <button
+                                        onClick={() => {
+                                            const editorUrl = product.pacdoraId.includes('http')
+                                                ? product.pacdoraId.replace('share', 'editor').replace('mode=3d', '')
+                                                : `https://www.pacdora.com/editor?templateId=${product.pacdoraId}`;
+                                            window.open(editorUrl, '_blank');
+                                        }}
+                                        className="w-full h-16 bg-white border-2 border-emerald-500 text-emerald-600 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-emerald-50 hover:scale-[1.01] active:scale-98 transition-all"
+                                    >
+                                        <Maximize2 size={18} />
+                                        Customize Design in 3D
+                                    </button>
+                                )}
                             </div>
 
                             {/* Trust Markers */}
@@ -282,13 +362,13 @@ export default function ProductPage() {
                 {/* Tabs Section for Deep Analytics */}
                 <div className="mt-40 border-t border-gray-100 pt-20">
                     <div className="flex gap-12 mb-16 border-b border-gray-100">
-                        {['description', 'specifications', 'shipping'].map((tab) => (
+                        {['description', 'specifications', 'shipping', (product.pacdoraId ? 'interactive-3d' : null)].filter(Boolean).map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`pb-8 text-xs font-black uppercase tracking-[0.3em] transition-all relative ${activeTab === tab ? 'text-gray-950' : 'text-gray-300 hover:text-gray-500'}`}
+                                className={`pb-8 text-xs font-black uppercase tracking-[0.3em] transition-all relative whitespace-nowrap ${activeTab === tab ? 'text-gray-950' : 'text-gray-300 hover:text-gray-500'}`}
                             >
-                                {tab}
+                                {tab.replace('-', ' ')}
                                 {activeTab === tab && (
                                     <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500 rounded-full" />
                                 )}
@@ -369,6 +449,21 @@ export default function ProductPage() {
                                             <h4 className="text-xs font-black uppercase tracking-widest">Order Tracking</h4>
                                             <p className="text-xs text-gray-400 font-medium tracking-tight">Real-time tracking available in your account dashboard.</p>
                                         </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'interactive-3d' && product.pacdoraId && (
+                                <div className="w-full aspect-video rounded-[3rem] overflow-hidden border border-gray-100 shadow-2xl bg-mesh relative">
+                                    <iframe
+                                        src={product.pacdoraId.includes('http') ? product.pacdoraId : `https://www.pacdora.com/share?id=${product.pacdoraId}&mode=3d`}
+                                        className="w-full h-full border-none"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                    <div className="absolute top-8 left-8 p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+                                        <h4 className="text-white font-black uppercase text-[10px] tracking-[0.2em] mb-2">3D Structural Review</h4>
+                                        <p className="text-white/60 text-[8px] font-bold uppercase tracking-widest max-w-[200px]">Rotate and interact with the professional grade structural model.</p>
                                     </div>
                                 </div>
                             )}

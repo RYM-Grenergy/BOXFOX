@@ -54,7 +54,8 @@ export async function GET(req, { params }) {
             maxPrice: product.maxPrice,
             tags: product.tags || [],
             specifications: product.specifications || [],
-            meta: product.meta
+            meta: product.meta,
+            pacdoraId: product.pacdoraId
         };
 
         return NextResponse.json(result);

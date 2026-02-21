@@ -45,6 +45,8 @@ const productSchema = new mongoose.Schema({
         specifications: String
     },
 
+    pacdoraId: String,
+
     lastSynced: { type: Date, default: Date.now }
 }, {
     timestamps: true

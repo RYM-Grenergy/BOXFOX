@@ -39,7 +39,8 @@ export default function ProductsManager() {
         length: 8.5,
         width: 6.5,
         height: 2,
-        unit: 'inch'
+        unit: 'inch',
+        pacdoraId: ''
     });
 
     const fetchProducts = () => {
@@ -96,7 +97,8 @@ export default function ProductsManager() {
                         length: 8.5,
                         width: 6.5,
                         height: 2,
-                        unit: 'inch'
+                        unit: 'inch',
+                        pacdoraId: ''
                     });
                 }, 1500);
             }
@@ -141,7 +143,8 @@ export default function ProductsManager() {
             length: product.dimensions?.length || 8.5,
             width: product.dimensions?.width || 6.5,
             height: product.dimensions?.height || 2,
-            unit: product.dimensions?.unit || 'inch'
+            unit: product.dimensions?.unit || 'inch',
+            pacdoraId: product.pacdoraId || ''
         });
         setIsModalOpen(true);
     };
@@ -236,9 +239,16 @@ export default function ProductsManager() {
                                             </div>
                                         </td>
                                         <td className="px-8 py-5">
-                                            <span className="px-3 py-1 bg-gray-100 text-gray-500 rounded-lg text-[10px] font-bold uppercase tracking-widest">
-                                                {product.category}
-                                            </span>
+                                            <div className="flex flex-col gap-1">
+                                                <span className="px-3 py-1 bg-gray-100 text-gray-500 rounded-lg text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">
+                                                    {product.category}
+                                                </span>
+                                                {product.pacdoraId && (
+                                                    <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-lg text-[8px] font-black uppercase tracking-widest text-center">
+                                                        3D READY
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-8 py-5 text-sm font-black text-gray-950">{product.price}</td>
                                         <td className="px-8 py-5">
@@ -396,6 +406,16 @@ export default function ProductsManager() {
                                                     value={formData.tags}
                                                     onChange={e => setFormData({ ...formData, tags: e.target.value })}
                                                     placeholder="Pizza, Eco-friendly, Premium"
+                                                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black uppercase tracking-widest text-gray-400">Pacdora ID / URL (For 3D View)</label>
+                                                <input
+                                                    value={formData.pacdoraId}
+                                                    onChange={e => setFormData({ ...formData, pacdoraId: e.target.value })}
+                                                    placeholder="e.g. 5x2x8-mailer-box or full share URL"
                                                     className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
                                                 />
                                             </div>
