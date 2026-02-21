@@ -48,8 +48,8 @@ export default function Dashboard() {
         { label: 'Total Sales', value: data.totalSales, growth: data.totalSalesGrowth, icon: <DollarSign className="text-emerald-500" />, trend: 'up' },
         { label: 'Total Orders', value: data.totalOrders, growth: data.totalOrdersGrowth, icon: <ShoppingBag className="text-blue-500" />, trend: 'up' },
         { label: 'Products Sold', value: data.productsSold, growth: data.productsSoldGrowth, icon: <Box className="text-orange-500" />, trend: 'down' },
-        { label: 'Active Lab Sessions', value: data.activeSessions, growth: data.activeSessionsGrowth, icon: <Clock className="text-purple-500" />, trend: 'up' },
     ];
+
 
     return (
         <div className="space-y-10">
@@ -84,12 +84,17 @@ export default function Dashboard() {
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 gap-8">
                 {/* Recent Orders */}
-                <div className="xl:col-span-2 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
                     <div className="p-8 border-b border-gray-100 flex items-center justify-between">
-                        <h2 className="text-xl font-black text-gray-950">Recent Orders</h2>
-                        <button className="text-xs font-black text-emerald-500 uppercase tracking-widest hover:underline">View All</button>
+                        <h2 className="text-xl font-black text-gray-950 uppercase tracking-tighter">Recent Orders</h2>
+                        <button
+                            onClick={() => window.location.href = '/admin/orders'}
+                            className="text-xs font-black text-emerald-500 uppercase tracking-widest hover:underline"
+                        >
+                            View All
+                        </button>
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
@@ -104,68 +109,47 @@ export default function Dashboard() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {data.recentOrders.map((order) => (
-                                    <tr key={order.id} className="hover:bg-gray-50 transition-colors group">
-                                        <td className="px-8 py-5 text-sm font-black text-gray-950 whitespace-nowrap">{order.id}</td>
-                                        <td className="px-8 py-5 whitespace-nowrap">
-                                            <p className="text-sm font-bold text-gray-950">{order.customer}</p>
-                                            <p className="text-[10px] text-gray-400 font-bold uppercase">{order.time}</p>
-                                        </td>
-                                        <td className="px-8 py-5 text-sm font-medium text-gray-500 whitespace-nowrap">{order.product}</td>
-                                        <td className="px-8 py-5 whitespace-nowrap">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-600' :
+                                {data.recentOrders.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="px-8 py-20 text-center text-gray-400 font-medium">No recent orders found</td>
+                                    </tr>
+                                ) : (
+                                    data.recentOrders.map((order) => (
+                                        <tr
+                                            key={order.id}
+                                            className="hover:bg-gray-50 transition-colors group cursor-pointer"
+                                            onClick={() => window.location.href = `/admin/orders/${order.id}`}
+                                        >
+                                            <td className="px-8 py-5 text-sm font-black text-gray-950 whitespace-nowrap">{order.id}</td>
+                                            <td className="px-8 py-5 whitespace-nowrap">
+                                                <p className="text-sm font-bold text-gray-950">{order.customer}</p>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase">{order.time}</p>
+                                            </td>
+                                            <td className="px-8 py-5 text-sm font-medium text-gray-500 whitespace-nowrap">{order.product}</td>
+                                            <td className="px-8 py-5 whitespace-nowrap">
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-600' :
                                                     order.status === 'Processing' ? 'bg-blue-100 text-blue-600' :
                                                         order.status === 'Shipped' ? 'bg-orange-100 text-orange-600' :
                                                             'bg-gray-100 text-gray-600'
-                                                }`}>
-                                                {order.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-5 text-sm font-black text-gray-950 whitespace-nowrap">{order.amount}</td>
-                                        <td className="px-8 py-5 whitespace-nowrap">
-                                            <button className="p-2 hover:bg-white rounded-lg transition-all"><MoreHorizontal size={16} /></button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                                    }`}>
+                                                    {order.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-5 text-sm font-black text-gray-950 whitespace-nowrap">{order.amount}</td>
+                                            <td className="px-8 py-5 whitespace-nowrap">
+                                                <button className="p-2 hover:bg-white border border-transparent hover:border-gray-100 rounded-lg transition-all group-hover:bg-white">
+                                                    <ArrowUpRight size={16} className="text-gray-400 group-hover:text-emerald-500 transition-colors" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
                 </div>
-
-                {/* Lab Utilization */}
-                <div className="bg-gray-950 rounded-[2.5rem] p-8 text-white relative overflow-hidden flex flex-col justify-between">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl -translate-y-12 translate-x-12"></div>
-                    <div>
-                        <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center mb-6">
-                            <TrendingUp className="text-emerald-500" />
-                        </div>
-                        <h2 className="text-2xl font-black tracking-tight mb-2">3D Lab Performance</h2>
-                        <p className="text-white/40 text-sm font-bold uppercase tracking-widest mb-10">Real-time Analytics</p>
-
-                        <div className="space-y-6">
-                            {data.labUtilization.map((item) => (
-                                <div key={item.label}>
-                                    <div className="flex justify-between text-xs font-black uppercase tracking-widest mb-2">
-                                        <span>{item.label}</span>
-                                        <span>{item.percent}%</span>
-                                    </div>
-                                    <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                                        <motion.div
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${item.percent}%` }}
-                                            className={`h-full ${item.color}`}
-                                        ></motion.div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <button className="mt-12 w-full py-4 bg-emerald-500 text-gray-950 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-emerald-400 transition-all">
-                        Deep Analytics Report
-                    </button>
-                </div>
             </div>
+
         </div>
     );
 }

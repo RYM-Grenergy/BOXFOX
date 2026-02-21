@@ -2,15 +2,25 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Order from '@/models/Order';
 
-export async function GET() {
+export async function GET(req) {
     try {
         await dbConnect();
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get('id');
+
+        if (id) {
+            const order = await Order.findOne({ $or: [{ orderId: id }, { _id: id }] });
+            if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+            return NextResponse.json(order);
+        }
+
         const orders = await Order.find().sort({ createdAt: -1 });
         return NextResponse.json(orders);
     } catch (e) {
         return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
+
 
 export async function POST(req) {
     try {

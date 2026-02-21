@@ -3,6 +3,7 @@ import React from 'react';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { motion } from "framer-motion";
+import Link from 'next/link';
 import { ShieldCheck, Truck, Recycle, Award } from "lucide-react";
 
 export default function AboutPage() {
@@ -10,7 +11,7 @@ export default function AboutPage() {
         { title: 'Premium Quality', desc: 'We use high-grade 3-ply and duplex boards to ensure maximum product safety.', icon: <Award className="text-emerald-500" /> },
         { title: 'Eco-Friendly', desc: 'Our packaging is 100% recyclable and made from sustainable paper sources.', icon: <Recycle className="text-blue-500" /> },
         { title: 'Fast Delivery', desc: 'Optimized logistics to ensure your packaging reaches you on time, every time.', icon: <Truck className="text-orange-500" /> },
-        { title: 'Design Innovation', desc: 'The 3D Packaging Lab allows you to visualize structural integrity before you buy.', icon: <ShieldCheck className="text-purple-500" /> },
+        { title: 'Design Innovation', desc: 'The Design Hub allows you to visualize structural integrity before you buy.', icon: <ShieldCheck className="text-purple-500" /> },
     ];
 
     return (
@@ -55,9 +56,9 @@ export default function AboutPage() {
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200%] h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent opacity-50"></div>
                     <div className="relative z-10 px-6 max-w-4xl mx-auto">
                         <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-8">Ready to revolutionize your packaging?</h2>
-                        <button className="px-12 py-5 bg-emerald-500 text-gray-950 font-black rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl shadow-emerald-500/20 uppercase tracking-widest text-sm">
-                            Start Designing in 3D
-                        </button>
+                        <Link href="/shop" className="inline-block px-12 py-5 bg-emerald-500 text-gray-950 font-black rounded-full hover:scale-105 active:scale-95 transition-all shadow-xl shadow-emerald-500/20 uppercase tracking-widest text-sm">
+                            Explore Our Collection
+                        </Link>
                     </div>
                 </section>
             </main>

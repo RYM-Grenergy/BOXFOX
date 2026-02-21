@@ -1,67 +1,85 @@
 "use client";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { LogOut, User as UserIcon, Settings, Package, MapPin, Phone, Mail } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, Package, MapPin, Phone, Mail, Lock } from "lucide-react";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 export default function AccountManagement() {
+    const router = useRouter();
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [orders, setOrders] = useState([]);
+    const [activeTab, setActiveTab] = useState("profile"); // profile, orders, security
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [pwdData, setPwdData] = useState({ current: "", new: "", confirm: "" });
+
+    // Missing state from previous version
     const [errorMsg, setErrorMsg] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
     const [isEditing, setIsEditing] = useState(false);
-
-    // Editable fields
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
     const [address, setAddress] = useState("");
 
-    const router = useRouter();
-
     useEffect(() => {
-        fetchProfile();
-    }, []);
+        const fetchUserData = async () => {
+            try {
+                const res = await fetch("/api/auth/me");
+                const data = await res.json();
+                if (res.ok && data.user) {
+                    setUser(data.user);
+                    setName(data.user.name || "");
+                    setPhone(data.user.phone || "");
+                    setAddress(data.user.address || "");
 
-    const fetchProfile = async () => {
-        try {
-            const res = await fetch("/api/auth/me");
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || "Not authenticated");
+                    // Fetch orders
+                    const ordersRes = await fetch("/api/orders/user");
+                    if (ordersRes.ok) {
+                        const ordersData = await ordersRes.json();
+                        setOrders(ordersData.orders || []);
+                    }
+                } else {
+                    router.push("/login");
+                }
+            } catch (err) {
+                console.error("Auth error:", err);
+                router.push("/login");
+            } finally {
+                setIsLoading(false);
             }
+        };
 
-            setUser(data.user);
-            setName(data.user.name || "");
-            setPhone(data.user.phone || "");
-            setAddress(data.user.address || "");
+        fetchUserData();
+    }, [router]);
+
+    const handleLogout = async () => {
+        try {
+            await fetch("/api/auth/logout", { method: "POST" });
+            router.push("/login");
         } catch (err) {
-            router.push("/login"); // Redirect to login if unauthenticated
-        } finally {
-            setIsLoading(false);
+            console.error("Logout error:", err);
         }
     };
 
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
         setErrorMsg("");
         setSuccessMsg("");
-        setIsLoading(true);
 
         try {
-            const res = await fetch("/api/auth/update", {
-                method: "PUT",
+            const res = await fetch("/api/auth/update-profile", {
+                method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, phone, address }),
             });
-
             const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
 
-            if (!res.ok) throw new Error(data.error || "Update failed");
-
-            setSuccessMsg("Profile updated successfully!");
             setUser(data.user);
+            setSuccessMsg("Profile updated successfully!");
             setIsEditing(false);
         } catch (err) {
             setErrorMsg(err.message);
@@ -70,14 +88,82 @@ export default function AccountManagement() {
         }
     };
 
-    const handleLogout = async () => {
+    const handlePasswordChange = async (e) => {
+        e.preventDefault();
+        setErrorMsg("");
+        setSuccessMsg("");
+        if (pwdData.new !== pwdData.confirm) {
+            setErrorMsg("Passwords do not match");
+            return;
+        }
+
         try {
-            await fetch("/api/auth/logout", { method: "POST" });
-            router.push("/login");
+            const res = await fetch("/api/auth/change-password", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ currentPassword: pwdData.current, newPassword: pwdData.new }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            setSuccessMsg("Password updated successfully!");
+            setPwdData({ current: "", new: "", confirm: "" });
         } catch (err) {
-            console.error("Logout failed:", err);
+            setErrorMsg(err.message);
         }
     };
+
+    const renderOrderDetail = (order) => (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-6"
+        >
+            <div className="absolute inset-0 bg-gray-950/60 backdrop-blur-sm" onClick={() => setSelectedOrder(null)} />
+            <div className="bg-white rounded-[3rem] w-full max-w-2xl relative z-10 overflow-hidden shadow-2xl border border-gray-100">
+                <div className="p-10 space-y-8 max-h-[80vh] overflow-y-auto">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Order Review</p>
+                            <h2 className="text-3xl font-black text-gray-950 uppercase tracking-tighter">#{order.orderId}</h2>
+                        </div>
+                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-950'}`}>
+                            {order.status}
+                        </span>
+                    </div>
+
+                    <div className="space-y-4">
+                        <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Inventory Detail</p>
+                        <div className="space-y-4">
+                            {order.items.map((item, i) => (
+                                <div key={i} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                    <div>
+                                        <h4 className="text-sm font-black text-gray-950 uppercase">{item.name}</h4>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase">Quantity: {item.quantity}</p>
+                                    </div>
+                                    <p className="text-sm font-black text-gray-950">₹{(item.price * item.quantity).toLocaleString('en-IN')}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-gray-100">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Value</p>
+                                <h3 className="text-4xl font-black text-gray-950 tracking-tighter">₹{order.total.toLocaleString('en-IN')}</h3>
+                            </div>
+                            <button
+                                onClick={() => setSelectedOrder(null)}
+                                className="px-8 py-4 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all"
+                            >
+                                Close View
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
 
     if (isLoading && !user) {
         return (
@@ -90,6 +176,9 @@ export default function AccountManagement() {
     return (
         <div className="min-h-screen bg-gray-50/50 text-gray-950">
             <Navbar />
+            <AnimatePresence>
+                {selectedOrder && renderOrderDetail(selectedOrder)}
+            </AnimatePresence>
 
             <main className="max-w-7xl mx-auto px-8 lg:px-16 pt-32 pb-20">
                 <div className="mb-12">
@@ -97,7 +186,7 @@ export default function AccountManagement() {
                         My Account
                     </h1>
                     <p className="text-gray-500 font-medium tracking-wide uppercase text-sm">
-                        Manage your lab details & settings
+                        Manage your profile & settings
                     </p>
                 </div>
 
@@ -106,16 +195,33 @@ export default function AccountManagement() {
                     <div className="lg:col-span-1 space-y-4">
                         <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 flex flex-col gap-2">
                             <button
-                                className="w-full flex items-center gap-3 px-4 py-3 bg-gray-950 text-white rounded-xl font-bold text-sm tracking-wide transition-all"
+                                onClick={() => setActiveTab("profile")}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'profile' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}`}
                             >
                                 <UserIcon size={18} />
                                 Profile Settings
                             </button>
 
+                            <button
+                                onClick={() => setActiveTab("orders")}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'orders' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}`}
+                            >
+                                <Package size={18} />
+                                Order History
+                            </button>
+
+                            <button
+                                onClick={() => setActiveTab("security")}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'security' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}`}
+                            >
+                                <Lock size={18} />
+                                Security
+                            </button>
+
                             {user?.role === 'admin' && (
                                 <button
                                     onClick={() => router.push('/admin')}
-                                    className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-950 rounded-xl font-bold text-sm tracking-wide transition-all"
+                                    className="w-full flex items-center gap-3 px-4 py-3 text-emerald-600 hover:bg-emerald-50 rounded-xl font-bold text-sm tracking-wide transition-all"
                                 >
                                     <Settings size={18} />
                                     Admin Dashboard
@@ -136,134 +242,211 @@ export default function AccountManagement() {
 
                     {/* Main Content Area */}
                     <div className="lg:col-span-3">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-white rounded-[2rem] p-8 sm:p-10 shadow-sm border border-gray-100"
-                        >
+                        <AnimatePresence mode="wait">
+                            {activeTab === 'profile' && (
+                                <motion.div
+                                    key="profile"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="bg-white rounded-[2rem] p-8 sm:p-10 shadow-sm border border-gray-100"
+                                >
 
-                            <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-2xl font-black uppercase tracking-tight text-gray-950">
-                                    Profile Information
-                                </h2>
-                                {!isEditing && (
-                                    <button
-                                        onClick={() => setIsEditing(true)}
-                                        className="px-5 py-2 rounded-full border border-gray-200 text-sm font-bold tracking-wider hover:bg-gray-50 transition-colors uppercase"
-                                    >
-                                        Edit Profile
-                                    </button>
-                                )}
-                            </div>
-
-                            {errorMsg && (
-                                <div className="mb-6 p-4 bg-red-50 text-red-600 text-sm font-bold uppercase tracking-wide rounded-xl border border-red-100">
-                                    {errorMsg}
-                                </div>
-                            )}
-                            {successMsg && (
-                                <div className="mb-6 p-4 bg-emerald-50 text-emerald-600 text-sm font-bold uppercase tracking-wide rounded-xl border border-emerald-100">
-                                    {successMsg}
-                                </div>
-                            )}
-
-                            {isEditing ? (
-                                <form onSubmit={handleUpdateProfile} className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Full Name</label>
-                                            <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                                                    <UserIcon size={16} />
-                                                </div>
-                                                <input type="text" value={name} onChange={e => setName(e.target.value)} required
-                                                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all font-medium text-gray-950" />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Email Address (Read-Only)</label>
-                                            <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                                                    <Mail size={16} />
-                                                </div>
-                                                <input type="email" value={user?.email} disabled
-                                                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-100 border border-gray-200 text-gray-500 font-medium cursor-not-allowed" />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Phone Number</label>
-                                            <div className="relative">
-                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-                                                    <Phone size={16} />
-                                                </div>
-                                                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Add Phone Number"
-                                                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all font-medium text-gray-950" />
-                                            </div>
-                                        </div>
+                                    <div className="flex items-center justify-between mb-8">
+                                        <h2 className="text-2xl font-black uppercase tracking-tight text-gray-950">
+                                            Profile Information
+                                        </h2>
+                                        {!isEditing && (
+                                            <button
+                                                onClick={() => setIsEditing(true)}
+                                                className="px-5 py-2 rounded-full border border-gray-200 text-sm font-bold tracking-wider hover:bg-gray-50 transition-colors uppercase"
+                                            >
+                                                Edit Profile
+                                            </button>
+                                        )}
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Shipping Address</label>
-                                        <div className="relative">
-                                            <div className="absolute top-4 left-0 pl-4 flex items-start pointer-events-none text-gray-400">
-                                                <MapPin size={16} />
-                                            </div>
-                                            <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="Enter full shipping address..." rows={3}
-                                                className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:border-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all font-medium text-gray-950 resize-none" />
+                                    {(errorMsg || successMsg) && (
+                                        <div className={`mb-6 p-4 text-sm font-bold uppercase tracking-wide rounded-xl border ${errorMsg ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                                            {errorMsg || successMsg}
                                         </div>
-                                    </div>
+                                    )}
 
-                                    <div className="flex items-center gap-4 pt-4">
-                                        <button type="button" onClick={() => setIsEditing(false)} className="px-6 py-3 rounded-xl font-bold bg-white border border-gray-200 hover:bg-gray-50 transition-colors uppercase tracking-widest text-sm">
-                                            Cancel
+                                    {isEditing ? (
+                                        <form onSubmit={handleUpdateProfile} className="space-y-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Full Name</label>
+                                                    <input type="text" value={name} onChange={e => setName(e.target.value)} required
+                                                        className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-gray-950 outline-none transition-all font-medium text-gray-950" />
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Email (Read-Only)</label>
+                                                    <input type="email" value={user?.email} disabled
+                                                        className="w-full px-6 py-4 rounded-xl bg-gray-100 border border-transparent text-gray-500 font-medium cursor-not-allowed" />
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Phone Number</label>
+                                                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Add Phone Number"
+                                                        className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-gray-950 outline-none transition-all font-medium text-gray-950" />
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Default Shipping Address</label>
+                                                <textarea value={address} onChange={e => setAddress(e.target.value)} placeholder="Full shipping address..." rows={3}
+                                                    className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-gray-950 outline-none transition-all font-medium text-gray-950 resize-none" />
+                                            </div>
+
+                                            <div className="flex items-center gap-4 pt-4">
+                                                <button type="button" onClick={() => setIsEditing(false)} className="px-6 py-3 rounded-xl font-bold bg-white border border-gray-200 hover:bg-gray-50 transition-colors uppercase tracking-widest text-sm">
+                                                    Cancel
+                                                </button>
+                                                <button type="submit" disabled={isLoading} className="px-8 py-3 rounded-xl font-bold bg-gray-950 text-white hover:bg-emerald-500 transition-all uppercase tracking-widest text-sm disabled:opacity-70">
+                                                    Save Changes
+                                                </button>
+                                            </div>
+                                        </form>
+                                    ) : (
+                                        <div className="space-y-8">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div>
+                                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Full Name</h3>
+                                                    <p className="text-lg font-bold text-gray-950">{user?.name}</p>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Email Address</h3>
+                                                    <p className="text-lg font-bold text-gray-950">{user?.email}</p>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Phone Number</h3>
+                                                    <p className="text-lg font-bold text-gray-950">{user?.phone || <span className="text-gray-400 italic">Not provided</span>}</p>
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Account Role</h3>
+                                                    <span className="inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-950 shadow-sm">
+                                                        {user?.role}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Shipping Address</h3>
+                                                <div className="bg-gray-50 rounded-[1.5rem] p-6 border border-gray-100 italic text-gray-600 font-medium">
+                                                    {user?.address || "No address provided yet."}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+
+                            {activeTab === 'security' && (
+                                <motion.div
+                                    key="security"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="bg-white rounded-[2rem] p-8 sm:p-10 shadow-sm border border-gray-100"
+                                >
+                                    <h2 className="text-2xl font-black uppercase tracking-tight text-gray-950 mb-8">
+                                        Security Settings
+                                    </h2>
+
+                                    {(errorMsg || successMsg) && (
+                                        <div className={`mb-6 p-4 text-sm font-bold uppercase tracking-wide rounded-xl border ${errorMsg ? 'bg-red-50 text-red-600 border-red-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                                            {errorMsg || successMsg}
+                                        </div>
+                                    )}
+
+                                    <form onSubmit={handlePasswordChange} className="space-y-6 max-w-md">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Current Password</label>
+                                            <input
+                                                type="password" required value={pwdData.current}
+                                                onChange={e => setPwdData({ ...pwdData, current: e.target.value })}
+                                                className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-gray-950 outline-none transition-all font-medium text-gray-950"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">New Password</label>
+                                            <input
+                                                type="password" required value={pwdData.new}
+                                                onChange={e => setPwdData({ ...pwdData, new: e.target.value })}
+                                                className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-gray-950 outline-none transition-all font-medium text-gray-950"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Confirm New Password</label>
+                                            <input
+                                                type="password" required value={pwdData.confirm}
+                                                onChange={e => setPwdData({ ...pwdData, confirm: e.target.value })}
+                                                className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-gray-950 outline-none transition-all font-medium text-gray-950"
+                                            />
+                                        </div>
+                                        <button type="submit" className="w-full py-4 rounded-xl font-bold bg-gray-950 text-white hover:bg-emerald-500 transition-all uppercase tracking-widest text-sm shadow-xl shadow-gray-200">
+                                            Update Password
                                         </button>
-                                        <button type="submit" disabled={isLoading} className="px-8 py-3 rounded-xl font-bold bg-gray-950 text-white hover:bg-gray-900 transition-colors uppercase tracking-widest text-sm disabled:opacity-70 flex items-center gap-2">
-                                            {isLoading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
-                                            Save Changes
-                                        </button>
-                                    </div>
-                                </form>
-                            ) : (
-                                <div className="space-y-8">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div>
-                                            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Full Name</h3>
-                                            <p className="text-lg font-bold text-gray-950">{user?.name}</p>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Email Address</h3>
-                                            <p className="text-lg font-bold text-gray-950">{user?.email}</p>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Phone Number</h3>
-                                            <p className="text-lg font-bold text-gray-950">{user?.phone || <span className="text-gray-400 italic font-medium">Not provided</span>}</p>
-                                        </div>
-                                        <div>
-                                            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Account Role</h3>
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-gray-100 text-gray-800">
-                                                {user?.role}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Shipping Address</h3>
-                                        <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-                                            {user?.address ? (
-                                                <p className="text-gray-900 font-medium whitespace-pre-wrap">{user.address}</p>
-                                            ) : (
-                                                <p className="text-gray-400 italic font-medium">No address provided</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
+                                    </form>
+                                </motion.div>
                             )}
-                        </motion.div>
+
+                            {activeTab === 'orders' && (
+                                <motion.div
+                                    key="orders"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="bg-white rounded-[2rem] p-8 sm:p-10 shadow-sm border border-gray-100 min-h-[400px]"
+                                >
+                                    <h2 className="text-2xl font-black uppercase tracking-tight text-gray-950 mb-8">
+                                        Order History
+                                    </h2>
+
+                                    {orders.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-20 text-center">
+                                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-4">
+                                                <Package size={32} />
+                                            </div>
+                                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">No orders found.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {orders.map(order => (
+                                                <div
+                                                    key={order._id}
+                                                    onClick={() => setSelectedOrder(order)}
+                                                    className="p-6 rounded-[2rem] border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-2xl hover:shadow-gray-100 hover:scale-[1.01] transition-all cursor-pointer group"
+                                                >
+                                                    <div className="flex flex-wrap items-center justify-between gap-4">
+                                                        <div>
+                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Shipping ID</p>
+                                                            <h4 className="text-sm font-black text-gray-950 uppercase group-hover:text-emerald-500 transition-colors">#{order.orderId}</h4>
+                                                        </div>
+                                                        <div className="text-right">
+                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Dispatched</p>
+                                                            <p className="text-xs font-bold text-gray-950">{new Date(order.createdAt).toLocaleDateString()}</p>
+                                                        </div>
+                                                        <div className="flex items-center gap-6">
+                                                            <p className="text-lg font-black text-gray-950 tracking-tighter">₹{order.total.toLocaleString('en-IN')}</p>
+                                                            <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-600' : 'bg-white border border-gray-100 text-gray-950'}`}>
+                                                                {order.status}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </main>
+            <Footer />
         </div>
     );
 }

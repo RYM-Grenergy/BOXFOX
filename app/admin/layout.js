@@ -1,7 +1,7 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard,
     Box,
@@ -13,14 +13,36 @@ import {
     Bell,
     Search,
     Menu,
-    X,
-    Layers
+    X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminLayout({ children }) {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
     const pathname = usePathname();
+    const router = useRouter();
+
+    useEffect(() => {
+        fetch('/api/auth/me')
+            .then(res => {
+                if (!res.ok) throw new Error('Unauthenticated');
+                return res.json();
+            })
+            .then(data => {
+                setUser(data.user);
+                setLoading(false);
+            })
+            .catch(() => {
+                setLoading(false);
+            });
+    }, []);
+
+    const handleLogout = async () => {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/login';
+    };
 
     const menuItems = [
         { label: 'Dashboard', icon: <LayoutDashboard size={20} />, href: '/admin' },
@@ -30,6 +52,22 @@ export default function AdminLayout({ children }) {
         { label: 'Analytics', icon: <BarChart3 size={20} />, href: '/admin/analytics' },
         { label: 'Settings', icon: <Settings size={20} />, href: '/admin/settings' },
     ];
+
+    if (loading) return (
+        <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <img src="/BOXFOX-1.png" alt="Logo" className="h-12 w-auto animate-pulse" />
+                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+                    <motion.div
+                        initial={{ x: '-100%' }}
+                        animate={{ x: '100%' }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                        className="w-full h-full bg-emerald-500"
+                    />
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
@@ -73,12 +111,15 @@ export default function AdminLayout({ children }) {
                         ))}
                     </nav>
 
-                    <div className="p-4 border-t border-gray-900">
-                        <button className="flex items-center gap-4 w-full px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl transition-all font-bold text-sm">
+                    <nav className="p-4 border-t border-gray-900">
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-4 w-full px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl transition-all font-bold text-sm"
+                        >
                             <LogOut size={20} />
                             {isSidebarOpen && <span>Logout</span>}
                         </button>
-                    </div>
+                    </nav>
                 </div>
             </aside>
 
@@ -102,11 +143,11 @@ export default function AdminLayout({ children }) {
                         </button>
                         <div className="flex items-center gap-3 pl-6 border-l border-gray-100">
                             <div className="text-right hidden sm:block">
-                                <p className="text-sm font-black text-gray-950">Harshavardhan</p>
-                                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Super Admin</p>
+                                <p className="text-sm font-black text-gray-950 truncate max-w-[120px]">{user?.name || 'Admin User'}</p>
+                                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{user?.role === 'admin' ? 'Super Admin' : 'Admin'}</p>
                             </div>
-                            <div className="w-10 h-10 rounded-xl bg-gray-950 text-white flex items-center justify-center font-black">
-                                H
+                            <div className="w-10 h-10 rounded-xl bg-gray-950 text-white flex items-center justify-center font-black uppercase">
+                                {user?.name?.charAt(0) || 'A'}
                             </div>
                         </div>
                     </div>

@@ -189,7 +189,7 @@ export default function Navbar() {
               <div className="p-10 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
                 <div>
                   <h2 className="text-3xl font-black text-gray-950 tracking-tighter uppercase">
-                    Cart Overview
+                    Your Cart
                   </h2>
                   <p className="text-[11px] font-black tracking-[0.2em] text-emerald-500 uppercase">
                     {cart.length} Items Selected
@@ -211,7 +211,7 @@ export default function Navbar() {
                     </div>
                     <div>
                       <h3 className="text-2xl font-black text-gray-950 uppercase tracking-tighter">
-                        Empty Lab
+                        Empty Cart
                       </h3>
                       <p className="text-gray-400 font-medium text-sm max-w-[200px] mx-auto">
                         Your design selections will appear here.
@@ -281,7 +281,7 @@ export default function Navbar() {
                     onClick={() => setIsCartOpen(false)}
                     className="w-full py-6 bg-gray-950 text-white rounded-[2rem] flex items-center justify-center gap-4 font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-2xl shadow-gray-200"
                   >
-                    Proceed to Lab Checkout <ArrowRight size={20} />
+                    Proceed to Secure Checkout <ArrowRight size={20} />
                   </Link>
                 </div>
               )}

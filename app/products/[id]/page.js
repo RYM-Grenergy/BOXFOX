@@ -172,157 +172,208 @@ export default function ProductPage() {
                             </div>
                         </div>
 
-                        {/* Right Column: Info */}
-                        <div className="lg:col-span-5 flex flex-col space-y-10">
+                        <div className="lg:col-span-5 flex flex-col space-y-8">
                             <div>
                                 <div className="flex items-center gap-3 mb-6">
-                                    <span className="px-3 py-1 bg-accent/10 text-accent rounded-full text-[10px] font-bold tracking-[0.2em] uppercase">
+                                    <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-full text-[10px] font-black tracking-widest uppercase">
                                         {product.category || 'Packaging'}
                                     </span>
-                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">By {product.brand || 'BoxFox'}</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">By {product.brand || 'BoxFox'}</span>
                                     <div className="h-[1px] flex-1 bg-gray-100" />
                                 </div>
 
-                                <h1 className="text-4xl lg:text-5xl font-extrabold text-gray-950 tracking-tight leading-[1.1] mb-6 font-display uppercase">
+                                <h1 className="text-4xl lg:text-5xl font-black text-gray-950 tracking-tighter leading-none mb-6 uppercase">
                                     {product.name}
                                 </h1>
-
-                                <div className="flex items-baseline gap-4 mb-8">
-                                    <p className="text-5xl font-bold text-gray-950 tracking-tight">
-                                        {product.price}
-                                    </p>
-                                    <span className="text-accent font-bold uppercase text-[10px] tracking-[0.2em] px-4 py-1.5 bg-accent/5 rounded-full border border-accent/20">
-                                        In Stock
-                                    </span>
-                                </div>
-
-                                {/* Tags */}
-                                {product.tags && product.tags.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 mb-8">
-                                        {product.tags.map(tag => (
-                                            <span key={tag} className="px-3 py-1 bg-gray-50 text-[9px] font-bold uppercase tracking-widest text-gray-400 rounded-lg border border-gray-100">
-                                                #{tag}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
-
-                                <p className="text-gray-500 text-lg leading-relaxed max-w-lg mb-8">
-                                    {product.short_description || `Premium quality ${product.name.toLowerCase()} designed for durability and aesthetic appeal. Perfect for your business packaging needs.`}
-                                </p>
-
-                                {/* Features Quick View */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-5 bg-gray-50/50 rounded-3xl border border-gray-100 flex flex-col gap-2">
-                                        <div className="flex items-center gap-2 text-gray-400">
-                                            <Maximize2 size={16} />
-                                            <span className="text-[10px] font-bold uppercase tracking-widest">Dimensions</span>
-                                        </div>
-                                        <p className="text-sm font-bold text-gray-950 tabular-nums">
-                                            {product.dimensions?.length} x {product.dimensions?.width} x {product.dimensions?.height} {product.dimensions?.unit || 'inch'}
-                                        </p>
-                                    </div>
-                                    <div className="p-5 bg-gray-50/50 rounded-3xl border border-gray-100 flex flex-col gap-2">
-                                        <div className="flex items-center gap-2 text-gray-400">
-                                            <Zap size={16} />
-                                            <span className="text-[10px] font-bold uppercase tracking-widest">Lead Time</span>
-                                        </div>
-                                        <p className="text-sm font-bold text-gray-950 uppercase">4-6 Working Days</p>
-                                    </div>
-                                </div>
                             </div>
 
-                            {/* Attributes / Options */}
-                            {product.attributes && product.attributes.length > 0 && (
-                                <div className="space-y-8">
-                                    {product.attributes.map((attr, idx) => (
-                                        <div key={idx}>
-                                            <div className="flex items-center justify-between mb-4">
-                                                <label className="text-[11px] font-bold uppercase tracking-[0.15em] text-gray-500 block">Select {attr.name}</label>
-                                                <span className="text-[10px] text-accent font-bold uppercase underline cursor-pointer">Size Guide</span>
-                                            </div>
-                                            <div className="flex flex-wrap gap-3">
-                                                {attr.options.map(option => (
-                                                    <button
-                                                        key={option}
-                                                        onClick={() => setActiveAttribute(prev => ({ ...prev, [attr.name]: option }))}
-                                                        className={`px-8 py-4 rounded-2xl border-2 font-bold text-sm transition-all duration-300 ${activeAttribute[attr.name] === option ? 'border-gray-950 bg-gray-950 text-white shadow-xl shadow-gray-200' : 'border-gray-100 bg-white text-gray-500 hover:border-gray-300'}`}
-                                                    >
-                                                        {option}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
+                            {/* Calculator & Price Area */}
+                            <div className="bg-gray-50 rounded-[2.5rem] p-8 border border-gray-100 space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Order Estimator</span>
+                                    <div className="flex items-center gap-2 text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full">
+                                        <Zap size={12} />
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Real-time Pricing</span>
+                                    </div>
                                 </div>
-                            )}
 
-                            {/* CTAs */}
-                            <div className="flex flex-col gap-6 pt-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center bg-white border-2 border-gray-100 rounded-3xl p-2 h-20 w-36 shrink-0 shadow-sm">
+                                <div className="flex items-end justify-between gap-4 border-b border-gray-200 pb-6">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Calculated Unit Price</p>
+                                        <h3 className="text-3xl font-black text-gray-950">
+                                            ₹{((parseFloat(product.maxPrice) || unitPrice) - ((parseFloat(product.maxPrice) || unitPrice) - (parseFloat(product.minPrice) || unitPrice)) * Math.min(1, (quantity - (product.minOrderQuantity || 100)) / 5000)).toFixed(2)}
+                                        </h3>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Value</p>
+                                        <h3 className="text-4xl font-black text-emerald-500 tracking-tighter">
+                                            ₹{(quantity * ((parseFloat(product.maxPrice) || unitPrice) - ((parseFloat(product.maxPrice) || unitPrice) - (parseFloat(product.minPrice) || unitPrice)) * Math.min(1, (quantity - (product.minOrderQuantity || 100)) / 5000))).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                                        </h3>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 italic">Adjust Volume</label>
+                                        <span className="text-[10px] font-black text-gray-950 uppercase tracking-widest bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm">Min. Order: {product.minOrderQuantity || 100} units</span>
+                                    </div>
+                                    <div className="flex items-center bg-white border border-gray-200 rounded-2xl p-2 h-16 shadow-inner">
                                         <button
-                                            onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                                            className="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-950"
+                                            onClick={() => setQuantity(q => Math.max(product.minOrderQuantity || 100, q - 100))}
+                                            className="w-12 h-full flex items-center justify-center rounded-xl hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-950"
                                         >
-                                            <Minus size={18} />
+                                            <Minus size={20} />
                                         </button>
-                                        <span className="flex-1 text-center font-bold text-gray-950 text-lg tabular-nums">{quantity}</span>
+                                        <input
+                                            type="number"
+                                            value={quantity}
+                                            onChange={(e) => setQuantity(Math.max(product.minOrderQuantity || 100, parseInt(e.target.value) || 0))}
+                                            className="flex-1 text-center font-black text-gray-950 text-xl outline-none bg-transparent"
+                                        />
                                         <button
-                                            onClick={() => setQuantity(q => q + 1)}
-                                            className="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-950"
+                                            onClick={() => setQuantity(q => q + 100)}
+                                            className="w-12 h-full flex items-center justify-center rounded-xl hover:bg-gray-50 transition-all text-gray-400 hover:text-gray-950"
                                         >
-                                            <Plus size={18} />
+                                            <Plus size={20} />
                                         </button>
                                     </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
                                     <button
                                         onClick={() => addToCart(product, quantity)}
-                                        className="flex-1 h-20 bg-gray-950 text-white rounded-[2rem] font-bold uppercase tracking-[0.2em] text-[11px] flex items-center justify-center gap-3 hover:bg-gray-800 hover:scale-[1.02] active:scale-98 transition-all shadow-xl shadow-gray-200"
+                                        className="h-16 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-gray-800 hover:scale-[1.02] active:scale-98 transition-all shadow-xl shadow-gray-200"
                                     >
                                         <ShoppingCart size={18} />
-                                        Add to Cart
+                                        Update Cart
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            addToCart(product, quantity);
+                                            window.location.href = '/checkout';
+                                        }}
+                                        className="h-16 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:opacity-90 hover:scale-[1.02] active:scale-98 transition-all shadow-xl shadow-emerald-100"
+                                    >
+                                        Checkout Now
                                     </button>
                                 </div>
-                                <button
-                                    onClick={() => {
-                                        addToCart(product, quantity);
-                                        window.location.href = '/checkout';
-                                    }}
-                                    className="h-20 bg-accent text-white rounded-[2rem] font-bold uppercase tracking-[0.2em] text-[11px] flex items-center justify-center gap-3 hover:opacity-90 hover:scale-[1.02] active:scale-98 transition-all shadow-xl shadow-accent/20"
-                                >
-                                    Instant Purchase
-                                </button>
                             </div>
 
                             {/* Trust Markers */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8 border-t border-gray-100">
-                                <div className="flex flex-col items-center text-center gap-2">
-                                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-accent">
-                                        <Truck size={18} />
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 px-2">
+                                {[
+                                    { icon: <Truck size={18} />, label: 'Fast Express Shipping' },
+                                    { icon: <ShieldCheck size={18} />, label: 'Structural Guarantee' },
+                                    { icon: <RotateCcw size={18} />, label: 'Eco-Certified' },
+                                    { icon: <Package size={18} />, label: 'Bulk Support' }
+                                ].map((marker, i) => (
+                                    <div key={i} className="flex flex-col items-center gap-2 text-center group">
+                                        <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-emerald-500 group-hover:bg-emerald-50 transition-all">
+                                            {marker.icon}
+                                        </div>
+                                        <span className="text-[8px] font-black uppercase tracking-wider text-gray-400">{marker.label}</span>
                                     </div>
-                                    <span className="text-[9px] font-bold uppercase tracking-widest text-gray-500">Free Shipping</span>
-                                </div>
-                                <div className="flex flex-col items-center text-center gap-2">
-                                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-accent">
-                                        <RotateCcw size={18} />
-                                    </div>
-                                    <span className="text-[9px] font-bold uppercase tracking-widest text-gray-500">Easy Returns</span>
-                                </div>
-                                <div className="flex flex-col items-center text-center gap-2">
-                                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-accent">
-                                        <Package size={18} />
-                                    </div>
-                                    <span className="text-[9px] font-bold uppercase tracking-widest text-gray-500">Bulk Discounts</span>
-                                </div>
-                                <div className="flex flex-col items-center text-center gap-2">
-                                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-accent">
-                                        <ShieldCheck size={18} />
-                                    </div>
-                                    <span className="text-[9px] font-bold uppercase tracking-widest text-gray-500">Secure Payment</span>
-                                </div>
+                                ))}
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* Tabs Section for Deep Analytics */}
+                <div className="mt-40 border-t border-gray-100 pt-20">
+                    <div className="flex gap-12 mb-16 border-b border-gray-100">
+                        {['description', 'specifications', 'shipping'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`pb-8 text-xs font-black uppercase tracking-[0.3em] transition-all relative ${activeTab === tab ? 'text-gray-950' : 'text-gray-300 hover:text-gray-500'}`}
+                            >
+                                {tab}
+                                {activeTab === tab && (
+                                    <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500 rounded-full" />
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeTab}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="min-h-[300px]"
+                        >
+                            {activeTab === 'description' && (
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
+                                    <div className="prose prose-gray max-w-none">
+                                        <h3 className="text-2xl font-black text-gray-950 uppercase tracking-tighter mb-6">Product Story</h3>
+                                        <p className="text-gray-500 leading-relaxed text-lg italic mb-6">"Crafted for brands that demand structural excellence and visual impact."</p>
+                                        <div dangerouslySetInnerHTML={{ __html: product.description || product.short_description }} className="text-gray-600 leading-relaxed space-y-4" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-8">
+                                        {product.tags?.map(tag => (
+                                            <div key={tag} className="p-8 bg-gray-50 rounded-[2.5rem] border border-gray-100 flex flex-col gap-4">
+                                                <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-emerald-500 shadow-sm border border-gray-50">
+                                                    <CheckCircle2 size={18} />
+                                                </div>
+                                                <h4 className="text-sm font-black text-gray-950 uppercase tracking-widest">Premium {tag}</h4>
+                                                <p className="text-xs text-gray-400 font-bold leading-relaxed uppercase">Strictly quality tested in our production center for maximum durability.</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'specifications' && (
+                                <div className="max-w-4xl">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-20 gap-y-4">
+                                        {(product.specifications?.length > 0 ? product.specifications : [
+                                            { key: 'Material', value: '3-Ply Corrugated / Duplex' },
+                                            { key: 'GSM', value: '350 - 450 GSM' },
+                                            { key: 'Finish', value: 'Matte/Gloss Lamination' },
+                                            { key: 'Printing', value: 'CMYK / Pantone' },
+                                            { key: 'Brand', value: product.brand },
+                                            { key: 'Origin', value: 'Made in India' }
+                                        ]).map((spec, i) => (
+                                            <div key={i} className="flex items-center justify-between py-5 border-b border-gray-50 group hover:border-emerald-500/20 transition-all">
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{spec.key}</span>
+                                                <span className="text-sm font-bold text-gray-950">{spec.value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab === 'shipping' && (
+                                <div className="max-w-2xl space-y-12">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                        <div className="space-y-4">
+                                            <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center">
+                                                <Truck className="text-emerald-500" size={24} />
+                                            </div>
+                                            <h4 className="text-xs font-black uppercase tracking-widest">Doorstep Delivery</h4>
+                                            <p className="text-xs text-gray-400 font-medium tracking-tight">Standard delivery across all metro cities in India.</p>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center">
+                                                <RotateCcw className="text-emerald-500" size={24} />
+                                            </div>
+                                            <h4 className="text-xs font-black uppercase tracking-widest">Design Support</h4>
+                                            <p className="text-xs text-gray-400 font-medium tracking-tight">Dedicated team for artwork and structural approval.</p>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center">
+                                                <ShieldCheck className="text-emerald-500" size={24} />
+                                            </div>
+                                            <h4 className="text-xs font-black uppercase tracking-widest">Order Tracking</h4>
+                                            <p className="text-xs text-gray-400 font-medium tracking-tight">Real-time tracking available in your account dashboard.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
                 </div>
             </main>
 

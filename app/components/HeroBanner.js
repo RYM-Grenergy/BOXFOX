@@ -74,88 +74,8 @@ export default function HeroBanner() {
 
   return (
     <section
-      className="relative h-screen min-h-[800px] w-full overflow-hidden cursor-none"
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
+      className="relative h-screen min-h-[800px] w-full overflow-hidden"
     >
-      {/* SVG Box Structure Cursor */}
-      <motion.div
-        className="pointer-events-none absolute z-50"
-        style={{
-          x: cursorX,
-          y: cursorY,
-          translateX: "-50%",
-          translateY: "-50%",
-        }}
-      >
-        <motion.svg
-          width="60"
-          height="60"
-          viewBox="0 0 60 60"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          animate={{
-            opacity: isHovering ? 1 : 0.35,
-            scale: isHovering ? 1 : 0.45,
-          }}
-          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        >
-          {/* Top-left corner */}
-          <path
-            d="M4 16 L4 4 L16 4"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Top-right corner */}
-          <path
-            d="M44 4 L56 4 L56 16"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Bottom-left corner */}
-          <path
-            d="M4 44 L4 56 L16 56"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Bottom-right corner */}
-          <path
-            d="M44 56 L56 56 L56 44"
-            stroke="white"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Center crosshair */}
-          <line
-            x1="30"
-            y1="26"
-            x2="30"
-            y2="34"
-            stroke="white"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-          <line
-            x1="26"
-            y1="30"
-            x2="34"
-            y2="30"
-            stroke="white"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-          {/* Center dot */}
-          <circle cx="30" cy="30" r="1.5" fill="white" />
-        </motion.svg>
-      </motion.div>
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={active}
@@ -174,8 +94,8 @@ export default function HeroBanner() {
             animate={{ scale: 1.05 }}
             transition={{ duration: 12, ease: "linear" }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-gray-950/90 via-gray-950/40 to-transparent" />
-          <div className="absolute inset-0 bg-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/40 to-transparent" />
+          <div className="absolute inset-0 bg-gray-50/10" />
         </motion.div>
       </AnimatePresence>
 
@@ -189,8 +109,8 @@ export default function HeroBanner() {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="flex items-center gap-4 mb-6"
           >
-            <div className="h-[2px] w-12 bg-white/40 rounded-full" />
-            <span className="text-xs font-black text-white/90 uppercase tracking-[0.4em]">
+            <div className="h-[2px] w-12 bg-emerald-500 rounded-full" />
+            <span className="text-xs font-black text-emerald-600 uppercase tracking-[0.4em]">
               {slide.label}
             </span>
           </motion.div>
@@ -200,7 +120,7 @@ export default function HeroBanner() {
             animate={{ opacity: 1, y: 0 }}
             key={`head-${active}`}
             transition={{ delay: 0.4, duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="text-5xl sm:text-7xl lg:text-9xl font-black text-white leading-[0.9] tracking-[-0.04em] mb-8 whitespace-pre-line"
+            className="text-5xl sm:text-7xl lg:text-9xl font-black text-gray-950 leading-[0.9] tracking-[-0.04em] mb-8 whitespace-pre-line"
           >
             {slide.headline}
           </motion.h1>
@@ -210,7 +130,7 @@ export default function HeroBanner() {
             animate={{ opacity: 1, y: 0 }}
             key={`sub-${active}`}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-lg sm:text-xl text-white/50 leading-relaxed mb-12 max-w-xl font-medium tracking-tight"
+            className="text-lg sm:text-xl text-gray-500 leading-relaxed mb-12 max-w-xl font-medium tracking-tight"
           >
             {slide.sub}
           </motion.p>
@@ -222,33 +142,33 @@ export default function HeroBanner() {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="flex flex-wrap gap-6"
           >
-            <button className="px-10 py-5 bg-white text-gray-950 rounded-full font-black text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-white/10">
+            <button className="px-10 py-5 bg-gray-950 text-white rounded-full font-black text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-2xl">
               {slide.cta}
             </button>
-            <button className="px-10 py-5 bg-white/5 backdrop-blur-xl text-white border border-white/10 rounded-full font-black text-sm uppercase tracking-widest hover:bg-white/10 transition-all shadow-2xl">
+            <button className="px-10 py-5 bg-white border border-gray-100 text-gray-950 rounded-full font-black text-sm uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm">
               Custom Orders
             </button>
           </motion.div>
         </div>
       </div>
 
-      {/* Controls Container (Repositioned slightly up to accommodate features) */}
+      {/* Controls Container */}
       <div className="absolute bottom-10 right-10 sm:right-20 md:right-32 z-20 flex gap-4">
         <button
           onClick={() => paginate(-1)}
-          className="w-14 h-14 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-gray-950 transition-all active:scale-90"
+          className="w-14 h-14 rounded-full border border-gray-100 bg-white/50 backdrop-blur-xl text-gray-950 flex items-center justify-center hover:bg-gray-950 hover:text-white transition-all active:scale-90 shadow-sm"
         >
           <ChevronLeft size={20} strokeWidth={3} />
         </button>
         <button
           onClick={() => paginate(1)}
-          className="w-14 h-14 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl text-white flex items-center justify-center hover:bg-white hover:text-gray-950 transition-all active:scale-90"
+          className="w-14 h-14 rounded-full border border-gray-100 bg-white/50 backdrop-blur-xl text-gray-950 flex items-center justify-center hover:bg-gray-950 hover:text-white transition-all active:scale-90 shadow-sm"
         >
           <ChevronRight size={20} strokeWidth={3} />
         </button>
       </div>
 
-      {/* Indicators (Repositioned slightly up) */}
+      {/* Indicators */}
       <div className="absolute bottom-10 left-10 sm:left-20 md:left-32 z-20 flex gap-4 items-center">
         {slides.map((_, i) => (
           <button
@@ -257,12 +177,12 @@ export default function HeroBanner() {
               setDirection(i > active ? 1 : -1);
               setActive(i);
             }}
-            className="relative h-1 rounded-full overflow-hidden bg-white/10 transition-all"
+            className="relative h-1 rounded-full overflow-hidden bg-gray-200 transition-all"
             style={{ width: i === active ? "70px" : "30px" }}
           >
             {i === active && (
               <motion.div
-                className="absolute inset-0 bg-white"
+                className="absolute inset-0 bg-gray-950"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ duration: 8, ease: "linear" }}

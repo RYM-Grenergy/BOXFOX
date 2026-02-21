@@ -1,109 +1,164 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Users, ShoppingCart, ArrowUpRight, ArrowDownRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React from "react";
+import {
+    Activity,
+    ArrowUpRight,
+    MousePointer2,
+    Users,
+    CreditCard,
+    BarChart3
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function AnalyticsPage() {
-    const [stats, setStats] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [data, setData] = React.useState(null);
+    const [loading, setLoading] = React.useState(true);
 
-    useEffect(() => {
+    React.useEffect(() => {
         fetch('/api/admin/analytics')
             .then(res => res.json())
-            .then(data => {
-                setStats(data);
+            .then(json => {
+                setData(json);
                 setLoading(false);
             })
             .catch(() => setLoading(false));
     }, []);
 
-    if (loading || !stats) {
-        return <div className="p-20 text-center animate-pulse text-gray-400 font-black uppercase tracking-widest text-xs">Loading Analytics...</div>;
-    }
+    if (loading) return (
+        <div className="space-y-10 animate-pulse">
+            <div className="h-10 bg-gray-100 rounded-xl w-64" />
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className="xl:col-span-2 h-96 bg-gray-100 rounded-[2.5rem]" />
+                <div className="h-96 bg-gray-950 rounded-[2.5rem]" />
+            </div>
+        </div>
+    );
+
+    const maxRevenue = Math.max(...(data.dailyRevenue?.map(d => d.total) || [100]));
 
     return (
         <div className="space-y-10">
-            <div>
-                <h1 className="text-4xl font-black text-gray-950 tracking-tighter">Business Analytics</h1>
-                <p className="text-gray-400 font-medium tracking-tight">Real-time performance metrics and growth insights.</p>
-            </div>
-
-            {/* Performance Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                    <div className="flex justify-between items-start mb-6">
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                            <TrendingUp size={24} />
-                        </div>
-                        <span className="text-xs font-black text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full">+14.2%</span>
-                    </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Conversion Rate</p>
-                    <h3 className="text-3xl font-black text-gray-950">3.24%</h3>
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                <div>
+                    <h1 className="text-4xl font-black text-gray-950 tracking-tighter uppercase">Performance Analytics</h1>
+                    <p className="text-gray-400 font-medium">Deep insights into your packaging lab throughput.</p>
                 </div>
-
-                <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                    <div className="flex justify-between items-start mb-6">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                            <Users size={24} />
-                        </div>
-                        <span className="text-xs font-black text-blue-500 bg-blue-50 px-3 py-1 rounded-full">+8.1%</span>
+                <div className="flex gap-4 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="px-4 py-2 border-r border-gray-100">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Users</p>
+                        <p className="text-lg font-black text-gray-950">{data.totalCustomers}</p>
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">New Customers</p>
-                    <h3 className="text-3xl font-black text-gray-950">124</h3>
-                </div>
-
-                <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                    <div className="flex justify-between items-start mb-6">
-                        <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                            <ShoppingCart size={24} />
-                        </div>
-                        <span className="text-xs font-black text-red-500 bg-red-50 px-3 py-1 rounded-full">-2.4%</span>
+                    <div className="px-4 py-2">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Avg Order</p>
+                        <p className="text-lg font-black text-emerald-500">₹{parseFloat(data.avgOrderValue).toLocaleString('en-IN')}</p>
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Avg. Order Value</p>
-                    <h3 className="text-3xl font-black text-gray-950">₹14,500</h3>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                {/* Revenue Overview Mock */}
-                <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm">
-                    <h2 className="text-xl font-black text-gray-950 mb-10">Revenue Overview</h2>
-                    <div className="flex items-end gap-4 h-64 h-full">
-                        {stats.revenueByMonth.map((item, idx) => (
-                            <div key={idx} className="flex-1 flex flex-col items-center gap-4 group">
-                                <motion.div
-                                    initial={{ height: 0 }}
-                                    animate={{ height: `${(item.value / 100000) * 100}%` }}
-                                    className="w-full bg-gray-50 group-hover:bg-emerald-500 rounded-2xl transition-all min-h-[10px]"
-                                />
-                                <span className="text-[10px] font-black text-gray-400 uppercase">{item.month}</span>
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className="xl:col-span-2 bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm min-h-[400px] flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="text-2xl font-black text-gray-950 uppercase tracking-tighter">Revenue Stream</h2>
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Last 30 Days (Daily)</p>
+                        </div>
+                        <div className="flex bg-gray-50 p-1.5 rounded-xl border border-gray-200">
+                            <button className="px-6 py-2 bg-white text-[10px] font-black uppercase rounded-lg shadow-sm">Sales</button>
+                            <button className="px-6 py-2 text-[10px] font-black uppercase text-gray-400">Growth</button>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 flex items-end justify-between gap-2 pb-8 h-[250px]">
+                        {data.dailyRevenue?.length === 0 ? (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300 font-black uppercase text-xs tracking-widest">No data available for this period</div>
+                        ) : data.dailyRevenue?.map((d, i) => (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
+                                <div className="relative w-full h-full flex items-end">
+                                    <motion.div
+                                        initial={{ height: 0 }}
+                                        animate={{ height: `${(d.total / maxRevenue) * 100}%` }}
+                                        transition={{ delay: i * 0.02, type: 'spring', damping: 20 }}
+                                        className="w-full bg-emerald-500 rounded-t-lg opacity-80 group-hover:opacity-100 group-hover:bg-gray-950 transition-all cursor-pointer relative"
+                                    >
+                                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[8px] font-black px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
+                                            ₹{d.total.toLocaleString()}
+                                        </div>
+                                    </motion.div>
+                                </div>
+                                <span className="text-[8px] font-black text-gray-300 uppercase rotate-45 mt-2 origin-left">{new Date(d._id).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Top Categories */}
-                <div className="bg-gray-950 p-10 rounded-[3rem] text-white">
-                    <h2 className="text-xl font-black mb-10">Sales by Category</h2>
-                    <div className="space-y-8">
-                        {stats.topProducts.map((item, idx) => (
-                            <div key={idx} className="space-y-3">
-                                <div className="flex justify-between text-xs font-black uppercase tracking-widest">
-                                    <span>{item.name}</span>
-                                    <span>{item.count}%</span>
+                <div className="bg-white rounded-[2.5rem] p-10 border border-emerald-100 shadow-xl shadow-emerald-500/5 flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -translate-y-12 translate-x-12"></div>
+                    <div className="space-y-10">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                            <Activity className="text-emerald-500" />
+                        </div>
+                        <h2 className="text-3xl font-black text-gray-950 tracking-tighter uppercase leading-none">Conversion Engine</h2>
+
+                        <div className="space-y-6">
+                            <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100 group hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all">
+                                <div className="flex justify-between items-end mb-2">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Checkout CTR</p>
+                                    <p className="text-emerald-500 text-[10px] font-black underline">+12.4%</p>
                                 </div>
-                                <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
+                                <h4 className="text-3xl font-black text-gray-950">{data.conversionRate}%</h4>
+                                <div className="mt-4 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
                                     <motion.div
                                         initial={{ width: 0 }}
-                                        animate={{ width: `${item.count}%` }}
-                                        className={`h-full ${item.color}`}
+                                        animate={{ width: `${data.conversionRate}%` }}
+                                        className="h-full bg-emerald-500"
                                     />
                                 </div>
                             </div>
-                        ))}
+
+                            <div className="p-6 bg-gray-50 rounded-3xl border border-gray-100 group hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all">
+                                <div className="flex justify-between items-end mb-2">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Repeat Customer Rate</p>
+                                    <p className="text-blue-500 text-[10px] font-black underline">+5.2%</p>
+                                </div>
+                                <h4 className="text-3xl font-black text-gray-950">{data.repeatCustomerRate}%</h4>
+                                <div className="mt-4 h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${data.repeatCustomerRate}%` }}
+                                        className="h-full bg-blue-500"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <button className="mt-12 w-full py-5 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-emerald-500 transition-all shadow-xl shadow-gray-200">
+                        Download Full Report
+                    </button>
+                </div>
+
+
+            </div>
+
+            {/* Status Distribution */}
+            <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-sm">
+                <h3 className="text-xl font-black text-gray-950 uppercase tracking-tighter mb-8 flex items-center gap-3">
+                    <BarChart3 className="text-gray-400" />
+                    Fulfillment Distribution
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                    {['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].map(status => {
+                        const count = data.statusDistribution?.find(s => s._id === status)?.count || 0;
+                        return (
+                            <div key={status} className="p-6 bg-gray-50 rounded-[2rem] border border-gray-100 text-center">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">{status}</p>
+                                <p className="text-3xl font-black text-gray-950">{count}</p>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         </div>
     );
 }
+

@@ -7,6 +7,7 @@ export const metadata = {
 };
 
 import { CartProvider } from "./context/CartContext";
+import CustomCursor from "./components/CustomCursor";
 
 export default function RootLayout({ children }) {
   return (
@@ -24,6 +25,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="antialiased" suppressHydrationWarning>
+        <CustomCursor />
         <CartProvider>
           {children}
         </CartProvider>

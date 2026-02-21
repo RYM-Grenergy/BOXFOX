@@ -41,6 +41,7 @@
     @apply bg-white text-gray-950 antialiased;
     font-family: var(--font-sans);
     margin: 0;
+    cursor: none;
   }
 
   h1,

@@ -1,94 +1,149 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { Search, Filter, MoreHorizontal, Mail, Phone, MapPin } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React from "react";
+import {
+    Users,
+    ShieldCheck,
+    Trash2,
+    Search,
+    Mail,
+    Phone,
+    Calendar
+} from "lucide-react";
 
-export default function CustomersPage() {
-    const [customers, setCustomers] = useState([]);
-    const [loading, setLoading] = useState(true);
+export default function CustomersManager() {
+    const [customers, setCustomers] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+    const [searchTerm, setSearchTerm] = React.useState('');
 
-    useEffect(() => {
-        fetch('/api/admin/customers')
-            .then(res => res.json())
-            .then(data => {
-                setCustomers(data);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
+    const fetchCustomers = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch('/api/admin/customers');
+            const data = await res.json();
+            setCustomers(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    React.useEffect(() => {
+        fetchCustomers();
     }, []);
 
+    const handleDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this customer?')) return;
+        try {
+            const res = await fetch(`/api/admin/customers?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                fetchCustomers();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    const filteredCustomers = customers.filter(c =>
+        c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.phone?.includes(searchTerm)
+    );
+
     return (
-        <div className="space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-4xl font-black text-gray-950 tracking-tighter">Customers</h1>
-                    <p className="text-gray-400 font-medium tracking-tight">Manage and view your user base and their activity.</p>
-                </div>
+        <div className="space-y-10">
+            <div>
+                <h1 className="text-4xl font-black text-gray-950 tracking-tighter uppercase">Customer Directory</h1>
+                <p className="text-gray-400 font-medium tracking-tight">Manage and view your B2B & B2C customer relationships.</p>
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
+            <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
+                <div className="flex-1 flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm w-full max-w-md focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
                     <Search size={18} className="text-gray-400" />
-                    <input type="text" placeholder="Search customers..." className="bg-transparent outline-none w-full text-sm font-medium" />
+                    <input
+                        type="text"
+                        placeholder="Search by name, email or phone..."
+                        className="bg-transparent outline-none w-full text-sm font-medium"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
-                <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-500 hover:text-gray-950 transition-all">
-                    <Filter size={18} />
-                    Filters
-                </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {loading ? (
-                    [1, 2, 3].map(i => <div key={i} className="h-64 bg-white rounded-[2rem] animate-pulse border border-gray-100" />)
-                ) : (
-                    customers.map((user, idx) => (
-                        <motion.div
-                            key={user._id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                            className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-100 transition-all group"
-                        >
-                            <div className="flex justify-between items-start mb-6">
-                                <div className="w-16 h-16 rounded-2xl bg-gray-950 text-white flex items-center justify-center text-2xl font-black">
-                                    {user.name.charAt(0)}
-                                </div>
-                                <button className="p-2 text-gray-400 hover:text-gray-950 transition-colors">
-                                    <MoreHorizontal size={20} />
-                                </button>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div>
-                                    <h3 className="text-xl font-black text-gray-950">{user.name}</h3>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-50 px-2 py-1 rounded-full">
-                                        {user.role}
-                                    </span>
-                                </div>
-
-                                <div className="space-y-2 pt-4 border-t border-gray-50">
-                                    <div className="flex items-center gap-3 text-gray-400">
-                                        <Mail size={14} />
-                                        <span className="text-xs font-bold">{user.email}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-gray-400">
-                                        <Phone size={14} />
-                                        <span className="text-xs font-bold">{user.phone || 'No phone'}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-gray-400">
-                                        <MapPin size={14} />
-                                        <span className="text-xs font-bold line-clamp-1">{user.address || 'No address'}</span>
-                                    </div>
-                                </div>
-
-                                <button className="w-full mt-6 py-4 bg-gray-50 group-hover:bg-gray-950 group-hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">
-                                    View Full Profile
-                                </button>
-                            </div>
-                        </motion.div>
-                    ))
-                )}
+            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                    {loading ? (
+                        <div className="p-20 text-center animate-pulse">
+                            <div className="w-12 h-12 bg-gray-50 rounded-full mx-auto mb-4" />
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Accessing global registry...</p>
+                        </div>
+                    ) : (
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50/50">
+                                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Customer Profile</th>
+                                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Contact Info</th>
+                                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Joined Date</th>
+                                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Account Role</th>
+                                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Global Status</th>
+                                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {filteredCustomers.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" className="px-8 py-20 text-center text-gray-400 font-medium">No customers found</td>
+                                    </tr>
+                                ) : (
+                                    filteredCustomers.map((user) => (
+                                        <tr key={user._id} className="hover:bg-gray-50/50 transition-colors group">
+                                            <td className="px-8 py-6 whitespace-nowrap">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 font-black border border-gray-100">
+                                                        {user.name?.charAt(0) || 'U'}
+                                                    </div>
+                                                    <p className="text-sm font-black text-gray-950">{user.name}</p>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6 whitespace-nowrap">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+                                                        <Mail size={12} className="text-gray-300" /> {user.email}
+                                                    </div>
+                                                    {user.phone && (
+                                                        <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+                                                            <Phone size={12} className="text-gray-300" /> {user.phone}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6 whitespace-nowrap text-xs font-bold text-gray-500">
+                                                {new Date(user.createdAt).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-8 py-6 whitespace-nowrap">
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${user.role === 'admin' ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-600'}`}>
+                                                    {user.role}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-6 whitespace-nowrap">
+                                                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-600">
+                                                    Active
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-6 whitespace-nowrap text-right">
+                                                <button onClick={() => handleDelete(user._id)} className="p-2 text-gray-300 hover:text-red-500 transition-all hover:bg-red-50 rounded-lg">
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
             </div>
         </div>
     );
 }
+
