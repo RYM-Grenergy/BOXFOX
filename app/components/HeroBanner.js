@@ -1,6 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const slides = [
@@ -33,10 +38,21 @@ const slides = [
   },
 ];
 
-
 export default function HeroBanner() {
   const [active, setActive] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
+
+  const rawX = useMotionValue(-200);
+  const rawY = useMotionValue(-200);
+  const cursorX = useSpring(rawX, { stiffness: 150, damping: 18, mass: 0.6 });
+  const cursorY = useSpring(rawY, { stiffness: 150, damping: 18, mass: 0.6 });
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    rawX.set(e.clientX - rect.left);
+    rawY.set(e.clientY - rect.top);
+  };
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -48,13 +64,98 @@ export default function HeroBanner() {
 
   const paginate = (newDirection) => {
     setDirection(newDirection);
-    setActive((prevActive) => (prevActive + newDirection + slides.length) % slides.length);
+    setActive(
+      (prevActive) =>
+        (prevActive + newDirection + slides.length) % slides.length,
+    );
   };
 
   const slide = slides[active];
 
   return (
-    <section className="relative h-screen min-h-[800px] w-full overflow-hidden">
+    <section
+      className="relative h-screen min-h-[800px] w-full overflow-hidden cursor-none"
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      {/* SVG Box Structure Cursor */}
+      <motion.div
+        className="pointer-events-none absolute z-50"
+        style={{
+          x: cursorX,
+          y: cursorY,
+          translateX: "-50%",
+          translateY: "-50%",
+        }}
+      >
+        <motion.svg
+          width="60"
+          height="60"
+          viewBox="0 0 60 60"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          animate={{
+            opacity: isHovering ? 1 : 0.35,
+            scale: isHovering ? 1 : 0.45,
+          }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        >
+          {/* Top-left corner */}
+          <path
+            d="M4 16 L4 4 L16 4"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Top-right corner */}
+          <path
+            d="M44 4 L56 4 L56 16"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Bottom-left corner */}
+          <path
+            d="M4 44 L4 56 L16 56"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Bottom-right corner */}
+          <path
+            d="M44 56 L56 56 L56 44"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Center crosshair */}
+          <line
+            x1="30"
+            y1="26"
+            x2="30"
+            y2="34"
+            stroke="white"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <line
+            x1="26"
+            y1="30"
+            x2="34"
+            y2="30"
+            stroke="white"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          {/* Center dot */}
+          <circle cx="30" cy="30" r="1.5" fill="white" />
+        </motion.svg>
+      </motion.div>
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={active}
@@ -130,7 +231,6 @@ export default function HeroBanner() {
           </motion.div>
         </div>
       </div>
-
 
       {/* Controls Container (Repositioned slightly up to accommodate features) */}
       <div className="absolute bottom-10 right-10 sm:right-20 md:right-32 z-20 flex gap-4">

@@ -82,8 +82,8 @@ export default function ProductCard({ product, imageOnly = false }) {
               href={`/products/${id}`}
               className="w-full bg-gray-950 text-white text-[10px] font-black py-5 rounded-2xl flex items-center justify-center gap-3 hover:bg-emerald-500 transition-all shadow-2xl uppercase tracking-[0.2em]"
             >
-              <ShoppingCart size={14} className="mb-0.5" />
-              Configure in Lab
+              <ArrowUpRight size={14} className="mb-0.5" />
+              View Details
             </Link>
           </div>
         )}

@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { motion } from "framer-motion";
@@ -7,6 +7,8 @@ import { ShoppingBag, Search, Filter } from "lucide-react";
 import ProductSection from "../components/ProductSection";
 
 export default function ShopPage() {
+    const [searchQuery, setSearchQuery] = useState("");
+
     return (
         <div className="min-h-screen bg-white">
             <Navbar />
@@ -26,13 +28,19 @@ export default function ShopPage() {
 
                         <div className="flex items-center gap-4 bg-gray-100 rounded-2xl px-6 py-4 w-full md:w-96 shadow-inner">
                             <Search size={20} className="text-gray-400" />
-                            <input type="text" placeholder="Search products..." className="bg-transparent outline-none w-full font-bold text-gray-950" />
+                            <input
+                                type="text"
+                                placeholder="Search products..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="bg-transparent outline-none w-full font-bold text-gray-950"
+                            />
                             <Filter size={20} className="text-gray-400 cursor-pointer hover:text-gray-950 transition-colors" />
                         </div>
                     </div>
                 </header>
 
-                <ProductSection />
+                <ProductSection searchQuery={searchQuery} />
             </main>
             <Footer />
         </div>

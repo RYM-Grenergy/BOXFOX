@@ -11,6 +11,7 @@ import {
   Clock,
   XCircle,
   Download,
+  ShoppingBag,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -147,7 +148,7 @@ export default function OrdersManager() {
                         {order.orderId}
                       </p>
                       <p className="text-[10px] font-bold text-gray-400 uppercase">
-                        {new Date(order.date).toLocaleDateString("en-IN", {
+                        {new Date(order.createdAt).toLocaleDateString("en-IN", {
                           day: "numeric",
                           month: "short",
                           year: "numeric",

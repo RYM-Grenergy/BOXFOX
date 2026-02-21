@@ -11,6 +11,8 @@ const productSchema = new mongoose.Schema({
     regular_price: String,
     sale_price: String,
     price: String,
+    minPrice: String,
+    maxPrice: String,
     categories: [String],
     tags: [String],
     images: [String],
@@ -19,16 +21,23 @@ const productSchema = new mongoose.Schema({
     parent_id: { type: Number, default: 0 },
 
     // New Enhanced Fields
+    brand: { type: String, default: 'BoxFox' },
+    minOrderQuantity: { type: Number, default: 100 },
+    badge: String,
     weight: Number,
     dimensions: {
         length: Number,
         width: Number,
         height: Number,
-        unit: { type: String, default: 'cm' }
+        unit: { type: String, default: 'inch' }
     },
     attributes: [{
         name: String,
         options: [String]
+    }],
+    specifications: [{
+        key: String,
+        value: String
     }],
     meta: {
         features_desc: String,

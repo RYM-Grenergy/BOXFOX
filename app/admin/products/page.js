@@ -23,12 +23,23 @@ export default function ProductsManager() {
     const [formData, setFormData] = useState({
         name: '',
         category: 'Packaging',
-        price: '',
+        minPrice: '',
+        maxPrice: '',
         originalPrice: '',
         discount: '',
-        img: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80',
+        images: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80',
         badge: '',
-        hasVariants: true
+        hasVariants: true,
+        description: '',
+        short_description: '',
+        brand: 'BoxFox',
+        minOrderQuantity: 100,
+        tags: '',
+        specifications: [],
+        length: 8.5,
+        width: 6.5,
+        height: 2,
+        unit: 'inch'
     });
 
     const fetchProducts = () => {
@@ -55,13 +66,13 @@ export default function ProductsManager() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...formData,
-                    id: `prod-${Date.now()}`,
+                    id: formData.id || `prod-${Date.now()}`,
                     originalPrice: parseFloat(formData.originalPrice) || undefined
                 })
             });
             const data = await res.json();
             if (data.success) {
-                setSuccessMsg('Product added successfully!');
+                setSuccessMsg('Product saved successfully!');
                 fetchProducts();
                 setTimeout(() => {
                     setIsModalOpen(false);
@@ -69,12 +80,23 @@ export default function ProductsManager() {
                     setFormData({
                         name: '',
                         category: 'Packaging',
-                        price: '',
+                        minPrice: '',
+                        maxPrice: '',
                         originalPrice: '',
                         discount: '',
-                        img: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80',
+                        images: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80',
                         badge: '',
-                        hasVariants: true
+                        hasVariants: true,
+                        description: '',
+                        short_description: '',
+                        brand: 'BoxFox',
+                        minOrderQuantity: 100,
+                        tags: '',
+                        specifications: [],
+                        length: 8.5,
+                        width: 6.5,
+                        height: 2,
+                        unit: 'inch'
                     });
                 }, 1500);
             }
@@ -83,6 +105,45 @@ export default function ProductsManager() {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this product?')) return;
+        try {
+            const res = await fetch(`/api/products?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                fetchProducts();
+            }
+        } catch (e) {
+            console.error('Failed to delete product', e);
+        }
+    };
+
+    const handleEdit = (product) => {
+        setFormData({
+            _id: product._id,
+            id: product.id,
+            name: product.name,
+            category: product.category,
+            minPrice: product.minPrice || '',
+            maxPrice: product.maxPrice || '',
+            originalPrice: product.originalPrice || '',
+            discount: product.discount || '',
+            images: Array.isArray(product.images) ? product.images.join(', ') : (product.img || ''),
+            badge: product.badge || '',
+            hasVariants: product.hasVariants,
+            description: product.description || '',
+            short_description: product.short_description || '',
+            brand: product.brand || 'BoxFox',
+            minOrderQuantity: product.minOrderQuantity || 100,
+            tags: Array.isArray(product.tags) ? product.tags.join(', ') : '',
+            specifications: product.specifications || [],
+            length: product.dimensions?.length || 8.5,
+            width: product.dimensions?.width || 6.5,
+            height: product.dimensions?.height || 2,
+            unit: product.dimensions?.unit || 'inch'
+        });
+        setIsModalOpen(true);
     };
 
     const flatProducts = products;
@@ -162,7 +223,14 @@ export default function ProductsManager() {
                                                     <img src={product.img} alt="" className="w-full h-full object-cover" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-black text-gray-950 line-clamp-1">{product.name}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-sm font-black text-gray-950 line-clamp-1">{product.name}</p>
+                                                        {product.badge && (
+                                                            <span className="px-1.5 py-0.5 bg-accent/10 text-accent rounded text-[8px] font-black uppercase tracking-tighter">
+                                                                {product.badge}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-[10px] font-bold text-gray-400 uppercase">ID: {product.id}</p>
                                                 </div>
                                             </div>
@@ -181,8 +249,8 @@ export default function ProductsManager() {
                                         </td>
                                         <td className="px-8 py-5">
                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><Edit size={16} /></button>
-                                                <button className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+                                                <button onClick={() => handleEdit(product)} className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><Edit size={16} /></button>
+                                                <button onClick={() => handleDelete(product._id || product.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -259,9 +327,12 @@ export default function ProductsManager() {
                                                         onChange={e => setFormData({ ...formData, category: e.target.value })}
                                                         className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all appearance-none"
                                                     >
-                                                        <option>Packaging</option>
-                                                        <option>Duplex Boxes</option>
-                                                        <option>3Ply n More</option>
+                                                        <option value="Packaging">Packaging</option>
+                                                        <option value="Pizza Boxes">Pizza Boxes</option>
+                                                        <option value="Cake Boxes">Cake Boxes</option>
+                                                        <option value="Sweet Boxes">Sweet Boxes</option>
+                                                        <option value="Mailer Boxes">Mailer Boxes</option>
+                                                        <option value="Carry Bags">Carry Bags / Paper Bags</option>
                                                     </select>
                                                 </div>
                                                 <div className="space-y-2">
@@ -275,69 +346,220 @@ export default function ProductsManager() {
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-3 gap-6">
+                                            <div className="grid grid-cols-2 gap-6">
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Price Range/Price</label>
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Min Price</label>
                                                     <input
                                                         required
-                                                        value={formData.price}
-                                                        onChange={e => setFormData({ ...formData, price: e.target.value })}
-                                                        placeholder="₹12.00 - ₹25.00"
+                                                        value={formData.minPrice}
+                                                        onChange={e => setFormData({ ...formData, minPrice: e.target.value })}
+                                                        placeholder="₹12.00"
                                                         className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Orig. Price</label>
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Max Price (Optional)</label>
+                                                    <input
+                                                        value={formData.maxPrice}
+                                                        onChange={e => setFormData({ ...formData, maxPrice: e.target.value })}
+                                                        placeholder="₹25.00"
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Brand</label>
+                                                    <input
+                                                        value={formData.brand}
+                                                        onChange={e => setFormData({ ...formData, brand: e.target.value })}
+                                                        placeholder="e.g. BoxFox"
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Min Order Qty</label>
                                                     <input
                                                         type="number"
-                                                        value={formData.originalPrice}
-                                                        onChange={e => setFormData({ ...formData, originalPrice: e.target.value })}
-                                                        placeholder="36"
-                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Discount Label</label>
-                                                    <input
-                                                        value={formData.discount}
-                                                        onChange={e => setFormData({ ...formData, discount: e.target.value })}
-                                                        placeholder="60%"
+                                                        value={formData.minOrderQuantity}
+                                                        onChange={e => setFormData({ ...formData, minOrderQuantity: e.target.value })}
+                                                        placeholder="100"
                                                         className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
                                                     />
                                                 </div>
                                             </div>
 
                                             <div className="space-y-2">
-                                                <label className="text-xs font-black uppercase tracking-widest text-gray-400">Image URL</label>
-                                                <div className="flex gap-4">
+                                                <label className="text-xs font-black uppercase tracking-widest text-gray-400">Tags (Comma separated)</label>
+                                                <input
+                                                    value={formData.tags}
+                                                    onChange={e => setFormData({ ...formData, tags: e.target.value })}
+                                                    placeholder="Pizza, Eco-friendly, Premium"
+                                                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black uppercase tracking-widest text-gray-400">Short Description</label>
+                                                <textarea
+                                                    rows="2"
+                                                    value={formData.short_description}
+                                                    onChange={e => setFormData({ ...formData, short_description: e.target.value })}
+                                                    placeholder="Brief overview for product cards..."
+                                                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all resize-none"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black uppercase tracking-widest text-gray-400">Full Description</label>
+                                                <textarea
+                                                    required
+                                                    rows="4"
+                                                    value={formData.description}
+                                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                                    placeholder="Detailed description of the product..."
+                                                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all resize-none"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Specifications</label>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData({
+                                                            ...formData,
+                                                            specifications: [...(formData.specifications || []), { key: '', value: '' }]
+                                                        })}
+                                                        className="text-[10px] font-black text-emerald-600 uppercase tracking-widest"
+                                                    >
+                                                        + Add Spec
+                                                    </button>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    {(formData.specifications || []).map((spec, i) => (
+                                                        <div key={i} className="flex gap-3">
+                                                            <input
+                                                                placeholder="Key (e.g. Material)"
+                                                                value={spec.key}
+                                                                onChange={e => {
+                                                                    const newSpecs = [...formData.specifications];
+                                                                    newSpecs[i].key = e.target.value;
+                                                                    setFormData({ ...formData, specifications: newSpecs });
+                                                                }}
+                                                                className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold"
+                                                            />
+                                                            <input
+                                                                placeholder="Value (e.g. Corrugated)"
+                                                                value={spec.value}
+                                                                onChange={e => {
+                                                                    const newSpecs = [...formData.specifications];
+                                                                    newSpecs[i].value = e.target.value;
+                                                                    setFormData({ ...formData, specifications: newSpecs });
+                                                                }}
+                                                                className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm font-bold"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const newSpecs = formData.specifications.filter((_, idx) => idx !== i);
+                                                                    setFormData({ ...formData, specifications: newSpecs });
+                                                                }}
+                                                                className="p-3 text-red-500 hover:bg-red-50 rounded-xl"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-4 gap-6">
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Length</label>
                                                     <input
-                                                        required
-                                                        value={formData.img}
-                                                        onChange={e => setFormData({ ...formData, img: e.target.value })}
-                                                        className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
+                                                        type="number"
+                                                        step="0.1"
+                                                        value={formData.length}
+                                                        onChange={e => setFormData({ ...formData, length: e.target.value })}
+                                                        placeholder="8.5"
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
                                                     />
-                                                    <div className="w-14 h-14 rounded-2xl border border-gray-100 overflow-hidden shrink-0">
-                                                        <img src={formData.img} className="w-full h-full object-cover" alt="Preview" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Width</label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.1"
+                                                        value={formData.width}
+                                                        onChange={e => setFormData({ ...formData, width: e.target.value })}
+                                                        placeholder="6.5"
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Height</label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.1"
+                                                        value={formData.height}
+                                                        onChange={e => setFormData({ ...formData, height: e.target.value })}
+                                                        placeholder="2"
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Unit</label>
+                                                    <select
+                                                        value={formData.unit}
+                                                        onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all appearance-none"
+                                                    >
+                                                        <option value="inch">Inch</option>
+                                                        <option value="cm">CM</option>
+                                                        <option value="mm">MM</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black uppercase tracking-widest text-gray-400">Image URLs (Comma separated)</label>
+                                                <div className="space-y-4">
+                                                    <textarea
+                                                        required
+                                                        rows="3"
+                                                        value={formData.images}
+                                                        onChange={e => setFormData({ ...formData, images: e.target.value })}
+                                                        placeholder="Add image URLs separated by commas..."
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all resize-none"
+                                                    />
+                                                    <div className="flex flex-wrap gap-4 mt-4">
+                                                        {formData.images.split(',').map((url, i) => url.trim() && (
+                                                            <div key={i} className="w-20 h-20 rounded-2xl border border-gray-100 overflow-hidden shrink-0">
+                                                                <img src={url.trim()} className="w-full h-full object-cover" alt={`Preview ${i + 1}`} />
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div className="pt-10 border-t border-gray-100 flex items-center gap-4">
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsModalOpen(false)}
-                                            className="flex-1 py-5 bg-gray-50 text-gray-400 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-100 hover:text-gray-950 transition-all"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            disabled={isSaving}
-                                            className="flex-[2] py-5 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-gray-200 disabled:opacity-50"
-                                        >
-                                            {isSaving ? 'Saving...' : 'Save Product'}
-                                        </button>
+                                        <div className="pt-10 border-t border-gray-100 flex items-center gap-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsModalOpen(false)}
+                                                className="flex-1 py-5 bg-gray-50 text-gray-400 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-100 hover:text-gray-950 transition-all"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                disabled={isSaving}
+                                                className="flex-[2] py-5 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-gray-200 disabled:opacity-50"
+                                            >
+                                                {isSaving ? 'Saving...' : 'Save Product'}
+                                            </button>
+                                        </div>
                                     </div>
                                 </form>
                             )}
@@ -348,3 +570,5 @@ export default function ProductsManager() {
         </div>
     );
 }
+
+

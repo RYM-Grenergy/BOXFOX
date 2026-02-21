@@ -32,7 +32,10 @@ export async function GET(req, { params }) {
         const result = {
             id: product.wpId,
             name: product.name,
-            price: product.price ? `₹${product.price}` : "Price on Request",
+            price: product.minPrice
+                ? (product.maxPrice ? `₹${product.minPrice} - ₹${product.maxPrice}` : `₹${product.minPrice}`)
+                : (product.price ? (product.price.toString().startsWith('₹') ? product.price : `₹${product.price}`) : "Price on Request"),
+            badge: product.badge,
             regular_price: product.regular_price,
             sale_price: product.sale_price,
             description: product.description,
@@ -45,6 +48,10 @@ export async function GET(req, { params }) {
             weight: product.weight,
             dimensions: product.dimensions,
             attributes: product.attributes,
+            brand: product.brand || 'BoxFox',
+            minOrderQuantity: product.minOrderQuantity || 100,
+            tags: product.tags || [],
+            specifications: product.specifications || [],
             meta: product.meta
         };
 

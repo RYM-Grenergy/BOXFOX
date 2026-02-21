@@ -54,9 +54,11 @@ export async function GET() {
                 time: 'Just now'
             })),
             labUtilization: [
-                { label: 'Pizza Box Presets', percent: 0, color: 'bg-emerald-500' },
-                { label: 'Rigid Box Custom', percent: 0, color: 'bg-blue-500' },
-                { label: 'Mailer Box Samples', percent: 0, color: 'bg-purple-500' },
+                { label: 'Pizza Boxes', percent: Math.round(((await Product.countDocuments({ name: { $regex: /Pizza/i } })) / (totalProducts || 1)) * 100) || 0, color: 'bg-emerald-500' },
+                { label: 'Cake Boxes', percent: Math.round(((await Product.countDocuments({ name: { $regex: /Cake/i } })) / (totalProducts || 1)) * 100) || 0, color: 'bg-blue-500' },
+                { label: 'Mailer Boxes', percent: Math.round(((await Product.countDocuments({ name: { $regex: /Mailer/i } })) / (totalProducts || 1)) * 100) || 0, color: 'bg-purple-500' },
+                { label: 'Sweet Boxes', percent: Math.round(((await Product.countDocuments({ name: { $regex: /Sweet/i } })) / (totalProducts || 1)) * 100) || 0, color: 'bg-orange-500' },
+                { label: 'Carry Bags', percent: Math.round(((await Product.countDocuments({ name: { $regex: /Bag|Carry/i } })) / (totalProducts || 1)) * 100) || 0, color: 'bg-yellow-500' },
             ]
         };
 

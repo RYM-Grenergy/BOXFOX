@@ -28,7 +28,6 @@ export default function AdminLayout({ children }) {
         { label: 'Orders', icon: <ShoppingBag size={20} />, href: '/admin/orders' },
         { label: 'Customers', icon: <Users size={20} />, href: '/admin/customers' },
         { label: 'Analytics', icon: <BarChart3 size={20} />, href: '/admin/analytics' },
-        { label: 'Lab Settings', icon: <Layers size={20} />, href: '/admin/lab-settings' },
         { label: 'Settings', icon: <Settings size={20} />, href: '/admin/settings' },
     ];
 

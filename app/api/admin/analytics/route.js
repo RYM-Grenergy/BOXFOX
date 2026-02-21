@@ -19,10 +19,11 @@ export async function GET() {
         ];
 
         const topProducts = [
-            { name: 'Pizza Boxes', count: 45, color: 'bg-emerald-500' },
-            { name: 'Mailer Boxes', count: 32, color: 'bg-blue-500' },
-            { name: 'Cake Boxes', count: 22, color: 'bg-purple-500' },
-            { name: 'Rigid Boxes', count: 12, color: 'bg-orange-500' },
+            { name: 'Pizza Boxes', count: await Product.countDocuments({ name: { $regex: /Pizza/i } }), color: 'bg-emerald-500' },
+            { name: 'Cake Boxes', count: await Product.countDocuments({ name: { $regex: /Cake/i } }), color: 'bg-blue-500' },
+            { name: 'Mailer Boxes', count: await Product.countDocuments({ name: { $regex: /Mailer/i } }), color: 'bg-purple-500' },
+            { name: 'Sweet Boxes', count: await Product.countDocuments({ name: { $regex: /Sweet/i } }), color: 'bg-orange-500' },
+            { name: 'Carry Bags', count: await Product.countDocuments({ name: { $regex: /Bag|Carry/i } }), color: 'bg-yellow-500' },
         ];
 
         const trafficSources = [

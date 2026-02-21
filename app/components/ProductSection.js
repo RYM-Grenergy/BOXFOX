@@ -4,12 +4,14 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import ProductCard from "./ProductCard";
 
-export default function ProductSection() {
+export default function ProductSection({ searchQuery = "" }) {
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/products')
+    setLoading(true);
+    const url = searchQuery ? `/api/products?search=${encodeURIComponent(searchQuery)}` : '/api/products';
+    fetch(url)
       .then(async res => {
         if (!res.ok) {
           const text = await res.text();
@@ -25,7 +27,7 @@ export default function ProductSection() {
         console.error("Failed to fetch products:", err);
         setLoading(false);
       });
-  }, []);
+  }, [searchQuery]);
 
   if (loading) {
     return (
