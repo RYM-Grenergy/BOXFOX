@@ -43,8 +43,8 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-700 ${shouldBeSolid
-          ? "bg-white/70 backdrop-blur-2xl border-b border-gray-100 py-4 shadow-sm"
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-700 ${isScrolled
+          ? "bg-white/80 backdrop-blur-2xl border-b border-gray-100 py-4 shadow-sm"
           : "bg-transparent py-8"
           }`}
       >
@@ -65,10 +65,7 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`text-xs font-black uppercase tracking-[0.3em] transition-all hover:opacity-100 ${shouldBeSolid
-                    ? "text-gray-500 hover:text-gray-950"
-                    : "text-white/60 hover:text-white"
-                    }`}
+                  className="text-xs font-black uppercase tracking-[0.3em] transition-all text-gray-400 hover:text-gray-950"
                 >
                   {link.label}
                 </Link>
@@ -79,46 +76,34 @@ export default function Navbar() {
             <div className="flex items-center gap-6">
               {/* Premium Pill Search */}
               <div
-                className={`hidden md:flex items-center rounded-full transition-all duration-500 px-6 py-2.5 w-72 border ${shouldBeSolid
-                  ? "bg-gray-50 border-gray-200 focus-within:bg-white focus-within:ring-4 focus-within:ring-gray-950/5"
-                  : "bg-black/30 border-white/40 focus-within:bg-black/40"
-                  }`}
+                className="hidden md:flex items-center rounded-full transition-all duration-500 px-6 py-2.5 w-72 border bg-gray-50/50 border-gray-100 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-500/5 focus-within:border-emerald-500/20"
               >
                 <Search
                   size={16}
-                  className={shouldBeSolid ? "text-gray-400" : "text-white"}
+                  className="text-gray-400"
                 />
                 <input
                   type="text"
                   placeholder="Search packaging..."
-                  className={`bg-transparent text-xs font-bold outline-none ml-3 w-full transition-colors tracking-tight ${shouldBeSolid
-                    ? "text-gray-900 placeholder-gray-400"
-                    : "text-white font-bold placeholder-white/90"
-                    }`}
+                  className="bg-transparent text-xs font-bold outline-none ml-3 w-full transition-colors tracking-tight text-gray-950 placeholder-gray-400"
                 />
               </div>
 
               <div className="flex items-center gap-2">
                 <Link
                   href="/account"
-                  className={`p-3 rounded-full transition-all ${shouldBeSolid
-                    ? "hover:bg-gray-100 text-gray-900"
-                    : "hover:bg-white/20 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]"
-                    }`}
+                  className="p-3 rounded-full transition-all hover:bg-gray-100 text-gray-950"
                 >
                   <User size={20} />
                 </Link>
 
                 <button
                   onClick={() => setIsCartOpen(true)}
-                  className={`relative p-3 rounded-full transition-all drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] ${shouldBeSolid
-                    ? "hover:bg-gray-100 text-gray-900"
-                    : "hover:bg-white/20 text-white"
-                    }`}
+                  className="relative p-3 rounded-full transition-all hover:bg-gray-100 text-gray-950"
                 >
                   <ShoppingCart size={20} />
                   {cart.length > 0 && (
-                    <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-black rounded-full h-4 w-4 flex items-center justify-center ring-2 ring-current ring-offset-2 ring-offset-transparent">
+                    <span className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-black rounded-full h-4 w-4 flex items-center justify-center ring-2 ring-white">
                       {cart.length}
                     </span>
                   )}
@@ -126,10 +111,7 @@ export default function Navbar() {
 
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
-                  className={`lg:hidden p-3 rounded-full transition-all drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] ${shouldBeSolid
-                    ? "hover:bg-gray-100 text-gray-900"
-                    : "hover:bg-white/20 text-white"
-                    }`}
+                  className="lg:hidden p-3 rounded-full transition-all hover:bg-gray-100 text-gray-950"
                 >
                   {menuOpen ? <X size={20} /> : <Menu size={20} />}
                 </button>
