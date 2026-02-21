@@ -13,7 +13,8 @@ import {
     Bell,
     Search,
     Menu,
-    X
+    X,
+    ClipboardList
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -47,6 +48,8 @@ export default function AdminLayout({ children }) {
     const menuItems = [
         { label: 'Dashboard', icon: <LayoutDashboard size={20} />, href: '/admin' },
         { label: 'Products', icon: <Box size={20} />, href: '/admin/products' },
+        { label: 'B2B Ops', icon: <Settings size={20} />, href: '/admin/b2b' },
+        { label: 'B2B Leads', icon: <ClipboardList size={20} />, href: '/admin/b2b/inquiries' },
         { label: 'Orders', icon: <ShoppingBag size={20} />, href: '/admin/orders' },
         { label: 'Customers', icon: <Users size={20} />, href: '/admin/customers' },
         { label: 'Analytics', icon: <BarChart3 size={20} />, href: '/admin/analytics' },
