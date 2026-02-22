@@ -65,40 +65,40 @@ export default function CustomCursor() {
     >
       <div
         ref={cubeRef}
-        className={`relative w-9 h-9 preserve-3d transition-transform duration-[0.18s] ease-out ${clicked ? "scale-[0.75] duration-[0.12s]" : ""
+        className={`relative w-7 h-7 preserve-3d transition-transform duration-[0.18s] ease-out ${clicked ? "scale-[0.75] duration-[0.12s]" : ""
           }`}
       >
-        <div className="absolute w-9 h-9 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-sm font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] translate-z-[18px]">
-          L
+        <div className="absolute w-7 h-7 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] translate-z-[14px]">
+          B
         </div>
-        <div className="absolute w-9 h-9 bg-emerald-500/15 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-sm font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] rotate-y-180 translate-z-[18px]"></div>
-        <div className="absolute w-9 h-9 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-sm font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] rotate-y-90 translate-z-[18px]"></div>
-        <div className="absolute w-9 h-9 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-sm font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] -rotate-y-90 translate-z-[18px]"></div>
-        <div className="absolute w-9 h-9 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-sm font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] rotate-x-90 translate-z-[18px]"></div>
-        <div className="absolute w-9 h-9 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-sm font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] -rotate-x-90 translate-z-[18px]"></div>
+        <div className="absolute w-7 h-7 bg-emerald-500/15 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] rotate-y-180 translate-z-[14px]"></div>
+        <div className="absolute w-7 h-7 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] rotate-y-90 translate-z-[14px]"></div>
+        <div className="absolute w-7 h-7 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] -rotate-y-90 translate-z-[14px]"></div>
+        <div className="absolute w-7 h-7 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] rotate-x-90 translate-z-[14px]"></div>
+        <div className="absolute w-7 h-7 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] -rotate-x-90 translate-z-[14px]"></div>
       </div>
 
       <style jsx global>{`
         .preserve-3d {
           transform-style: preserve-3d;
         }
-        .translate-z-\\[18px\\] {
-          transform: translateZ(18px);
+        .translate-z-\\[14px\\] {
+          transform: translateZ(14px);
         }
         .rotate-y-180 {
-          transform: rotateY(180deg) translateZ(18px);
+          transform: rotateY(180deg) translateZ(14px);
         }
         .rotate-y-90 {
-          transform: rotateY(90deg) translateZ(18px);
+          transform: rotateY(90deg) translateZ(14px);
         }
         .-rotate-y-90 {
-          transform: rotateY(-90deg) translateZ(18px);
+          transform: rotateY(-90deg) translateZ(14px);
         }
         .rotate-x-90 {
-          transform: rotateX(90deg) translateZ(18px);
+          transform: rotateX(90deg) translateZ(14px);
         }
         .-rotate-x-90 {
-          transform: rotateX(-90deg) translateZ(18px);
+          transform: rotateX(-90deg) translateZ(14px);
         }
       `}</style>
     </div>
