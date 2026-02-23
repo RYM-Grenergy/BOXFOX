@@ -1,80 +1,84 @@
 "use client";
+import React from "react";
 import { motion } from "framer-motion";
-import { Truck, RefreshCw, ShieldCheck, Headphones, Award, Globe, Zap, Cpu } from "lucide-react";
+import { Truck, ShieldCheck, Cpu, Headphones } from "lucide-react";
+import MatrixBackground from "./MatrixBackground";
 
 const features = [
   {
     icon: Truck,
-    title: "Velocity Logistics",
-    desc: "Optimized shipping for mission-critical timelines.",
-    tag: "FAST_TRACK"
+    title: "Fast Delivery",
+    desc: "Quick and reliable shipping for all your orders.",
+    tag: "PRIORITY"
   },
   {
     icon: ShieldCheck,
-    title: "Structural Integrity",
-    desc: "100% replacement guarantee on all shipments.",
-    tag: "CERTIFIED"
+    title: "Top Quality",
+    desc: "Durable boxes that protect your goods perfectly.",
+    tag: "TRUSTED"
   },
   {
     icon: Cpu,
-    title: "Precision Engineering",
-    desc: "CAD-perfect dimensions for every structural node.",
-    tag: "AUTO_SPEC"
+    title: "Custom Designs",
+    desc: "Your brand, your design—exactly how you want it.",
+    tag: "UNIQUE"
   },
   {
     icon: Headphones,
-    title: "Support Protocol",
-    desc: "Dedicated engineering consultants for your brand.",
-    tag: "24/7_INTEL"
+    title: "24/7 Support",
+    desc: "Our friendly team is always here to help you.",
+    tag: "ONLINE"
   },
 ];
 
 export default function FeaturesStrip() {
   return (
-    <section className="py-16 md:py-24 bg-white border-y border-gray-100 relative overflow-hidden">
-      {/* Background Tech Elements */}
-      <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
-        <div className="absolute top-1/2 left-1/4 w-[500px] h-[500px] bg-emerald-500/10 blur-[120px] rounded-full -translate-y-1/2" />
+    <section className="py-16 sm:py-24 md:py-32 bg-white border-y border-gray-100 relative overflow-hidden">
+      <MatrixBackground />
+
+      {/* Continuing the 'Packaging' labels from Hero */}
+      <div className="absolute right-0 top-0 flex flex-col gap-2 opacity-[0.02] sm:opacity-[0.04] select-none pointer-events-none hidden md:flex pr-2 sm:pr-4">
+        {[...Array(18)].map((_, i) => (
+          <span key={i} className="text-[10rem] sm:text-[14rem] font-black leading-[0.8] rotate-90 origin-right tracking-tighter">
+            PACKAGING
+          </span>
+        ))}
       </div>
 
-      <div className="max-w-[1700px] mx-auto px-6 lg:px-12 relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+      <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
           {features.map(({ icon: Icon, title, desc, tag }, idx) => (
             <motion.div
               key={title}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: idx * 0.1, duration: 0.5 }}
-              className="group relative p-10 rounded-[2.5rem] bg-gray-50/50 border border-gray-100 hover:border-emerald-500/30 hover:bg-white hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-500"
+              transition={{ delay: idx * 0.1, duration: 0.6, ease: "easeOut" }}
+              className="group relative p-6 sm:p-8 md:p-12 rounded-[1.5rem] sm:rounded-[2.5rem] bg-white/80 backdrop-blur-sm border border-gray-100 hover:border-emerald-500/30 hover:bg-white hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500"
             >
-              <div className="flex flex-col gap-8">
+              <div className="flex flex-col gap-6 sm:gap-10">
                 <div className="flex items-center justify-between">
-                  <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-950 group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white transition-all duration-500 shadow-sm">
-                    <Icon size={28} strokeWidth={2} />
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-950 group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white transition-all duration-500 shadow-sm">
+                    <Icon className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={2} />
                   </div>
-                  <span className="text-[10px] font-black text-gray-300 group-hover:text-emerald-500 tracking-[0.3em] transition-colors">
+                  <span className="text-[9px] sm:text-[11px] font-black text-gray-300 group-hover:text-emerald-500 tracking-[0.3em] transition-colors">
                     {tag}
                   </span>
                 </div>
 
                 <div>
-                  <h4 className="text-xl font-black text-gray-950 mb-3 uppercase tracking-tight group-hover:text-emerald-600 transition-colors">
+                  <h4 className="text-lg sm:text-xl md:text-2xl font-black text-gray-950 mb-2 sm:mb-4 uppercase tracking-tight group-hover:text-emerald-600 transition-colors">
                     {title}
                   </h4>
-                  <p className="text-base font-medium text-gray-400 leading-relaxed max-w-[220px]">
+                  <p className="text-sm sm:text-base md:text-lg font-medium text-gray-500 leading-relaxed">
                     {desc}
                   </p>
                 </div>
               </div>
 
-              {/* Technical Corner */}
-              <div className="absolute bottom-6 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="flex gap-1.5">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce" />
-                  <div className="w-1.5 h-1.5 bg-emerald-500/60 rounded-full animate-bounce [animation-delay:0.1s]" />
-                  <div className="w-1.5 h-1.5 bg-emerald-500/30 rounded-full animate-bounce [animation-delay:0.2s]" />
-                </div>
+              {/* Technical active indicator */}
+              <div className="absolute top-4 right-4 flex gap-1">
+                <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" />
               </div>
             </motion.div>
           ))}

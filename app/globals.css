@@ -111,6 +111,14 @@
     opacity: 0.05;
     mix-blend-mode: overlay;
   }
+
+  .bg-ai-glow {
+    background: radial-gradient(circle at center, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+  }
+
+  .glass-dark {
+    @apply bg-gray-950/80 backdrop-blur-2xl border border-white/10 shadow-2xl;
+  }
 }
 
 /* Custom Scrollbar */
@@ -143,4 +151,13 @@
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

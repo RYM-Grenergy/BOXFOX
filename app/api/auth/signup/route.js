@@ -7,10 +7,10 @@ export async function POST(req) {
     try {
         await dbConnect();
 
-        const { name, email, password } = await req.json();
+        const { name, email, password, phone, businessName } = await req.json();
 
-        if (!name || !email || !password) {
-            return NextResponse.json({ error: 'Please provide all required fields' }, { status: 400 });
+        if (!name || !email || !password || !phone) {
+            return NextResponse.json({ error: 'Please provide all required fields (Name, Email, Password, Phone)' }, { status: 400 });
         }
 
         const userExists = await User.findOne({ email });
@@ -26,6 +26,8 @@ export async function POST(req) {
             name,
             email,
             password: hashedPassword,
+            phone,
+            businessName
         });
 
         // Don't send password back in response

@@ -7,7 +7,9 @@ export const metadata = {
 };
 
 import { CartProvider } from "./context/CartContext";
+import { AuthProvider } from "./context/AuthContext";
 import CustomCursor from "./components/CustomCursor";
+import SiteLoader from "./components/SiteLoader";
 
 export default function RootLayout({ children }) {
   return (
@@ -25,10 +27,11 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="antialiased" suppressHydrationWarning>
+        <SiteLoader />
         <CustomCursor />
-        <CartProvider>
-          {children}
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>{children}</CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

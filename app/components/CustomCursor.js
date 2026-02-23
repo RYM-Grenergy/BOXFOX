@@ -1,106 +1,104 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
+import { motion, useSpring, useMotionValue } from "framer-motion";
 
 export default function CustomCursor() {
-  const containerRef = useRef(null);
-  const cubeRef = useRef(null);
   const [active, setActive] = useState(false);
-  const [clicked, setClicked] = useState(false);
-  const timeoutRef = useRef(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const [isClicked, setIsClicked] = useState(false);
+
+  // Motion values for smooth tracking
+  const mouseX = useMotionValue(-100);
+  const mouseY = useMotionValue(-100);
+
+  // Smooth springs for the outer ring
+  const springConfig = { damping: 25, stiffness: 200 };
+  const ringX = useSpring(mouseX, springConfig);
+  const ringY = useSpring(mouseY, springConfig);
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
-      // Show
+    const moveMouse = (e) => {
       setActive(true);
-
-      // Position
-      if (containerRef.current) {
-        containerRef.current.style.left = e.clientX + "px";
-        containerRef.current.style.top = e.clientY + "px";
-      }
-
-      // 3D rotation
-      const xPercent = (e.clientX / window.innerWidth) * 2 - 1;
-      const yPercent = (e.clientY / window.innerHeight) * 2 - 1;
-
-      const rotateY = xPercent * 35;
-      const rotateX = -yPercent * 35;
-
-      if (cubeRef.current) {
-        cubeRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-      }
-
-      // Hide after inactivity
-      timeoutRef.current = setTimeout(() => {
-        setActive(false);
-      }, 1400);
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
     };
 
-    const handleMouseDown = () => setClicked(true);
-    const handleMouseUp = () => setClicked(false);
+    const handleMouseDown = () => setIsClicked(true);
+    const handleMouseUp = () => setIsClicked(false);
     const handleMouseLeave = () => setActive(false);
 
-    window.addEventListener("mousemove", handleMouseMove);
+    // Event listener for hover states on interactable elements
+    const handleHoverStart = (e) => {
+      if (e.target.closest('a, button, input, [role="button"]')) {
+        setIsHovering(true);
+      } else {
+        setIsHovering(false);
+      }
+    };
+
+    window.addEventListener("mousemove", moveMouse);
     window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mouseover", handleHoverStart);
     document.addEventListener("mouseleave", handleMouseLeave);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mousemove", moveMouse);
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("mouseover", handleHoverStart);
       document.removeEventListener("mouseleave", handleMouseLeave);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, []);
+  }, [mouseX, mouseY]);
+
+  if (!active) return null;
 
   return (
-    <div
-      ref={containerRef}
-      className={`fixed top-0 left-0 pointer-events-none z-[9999] -translate-x-1/2 -translate-y-1/2 transition-opacity duration-500 will-change-transform ${active ? "opacity-100" : "opacity-0"
-        }`}
-      style={{ perspective: "600px" }}
-    >
-      <div
-        ref={cubeRef}
-        className={`relative w-7 h-7 preserve-3d transition-transform duration-[0.18s] ease-out ${clicked ? "scale-[0.75] duration-[0.12s]" : ""
-          }`}
-      >
-        <div className="absolute w-7 h-7 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] translate-z-[14px]">
-          B
-        </div>
-        <div className="absolute w-7 h-7 bg-emerald-500/15 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] rotate-y-180 translate-z-[14px]"></div>
-        <div className="absolute w-7 h-7 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] rotate-y-90 translate-z-[14px]"></div>
-        <div className="absolute w-7 h-7 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] -rotate-y-90 translate-z-[14px]"></div>
-        <div className="absolute w-7 h-7 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] rotate-x-90 translate-z-[14px]"></div>
-        <div className="absolute w-7 h-7 bg-emerald-500/25 border-2 border-emerald-400 backdrop-blur-[4px] flex items-center justify-center text-emerald-400 text-xs font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)] -rotate-x-90 translate-z-[14px]"></div>
-      </div>
+    <div className="fixed inset-0 pointer-events-none z-[99999] overflow-hidden">
+      {/* Outer Glow Ring */}
+      <motion.div
+        style={{
+          x: ringX,
+          y: ringY,
+          translateX: "-50%",
+          translateY: "-50%",
+        }}
+        animate={{
+          scale: isClicked ? 0.8 : isHovering ? 1.5 : 1,
+          opacity: isClicked ? 0.8 : 0.5,
+          borderWidth: isHovering ? "2px" : "1.5px",
+        }}
+        className="absolute w-12 h-12 border-emerald-500 rounded-full mix-blend-difference hidden md:block"
+      />
 
-      <style jsx global>{`
-        .preserve-3d {
-          transform-style: preserve-3d;
-        }
-        .translate-z-\\[14px\\] {
-          transform: translateZ(14px);
-        }
-        .rotate-y-180 {
-          transform: rotateY(180deg) translateZ(14px);
-        }
-        .rotate-y-90 {
-          transform: rotateY(90deg) translateZ(14px);
-        }
-        .-rotate-y-90 {
-          transform: rotateY(-90deg) translateZ(14px);
-        }
-        .rotate-x-90 {
-          transform: rotateX(90deg) translateZ(14px);
-        }
-        .-rotate-x-90 {
-          transform: rotateX(-90deg) translateZ(14px);
-        }
-      `}</style>
+      {/* Main Precision Dot */}
+      <motion.div
+        style={{
+          x: mouseX,
+          y: mouseY,
+          translateX: "-50%",
+          translateY: "-50%",
+        }}
+        animate={{
+          scale: isClicked ? 1.5 : isHovering ? 0.5 : 1,
+          backgroundColor: isHovering ? "#10b981" : "#10b981",
+        }}
+        className="absolute w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)] hidden md:block"
+      />
+
+      {/* Trailing Fox Tail Effect */}
+      <motion.div
+        style={{
+          x: ringX,
+          y: ringY,
+          translateX: "-50%",
+          translateY: "-50%",
+        }}
+        animate={{
+          rotate: isHovering ? 45 : 0,
+        }}
+        className="absolute w-1 h-1 bg-emerald-300 rounded-full blur-[2px] opacity-40 ml-4 hidden md:block"
+      />
     </div>
   );
 }

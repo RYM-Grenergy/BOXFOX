@@ -3,6 +3,7 @@ import HeroBanner from "./components/HeroBanner";
 import CategorySection from "./components/CategorySection";
 import ProductSection from "./components/ProductSection";
 import FeaturesStrip from "./components/FeaturesStrip";
+import TopSellingStrip from "./components/TopSellingStrip";
 import Footer from "./components/Footer";
 
 export default function Home() {
@@ -12,10 +13,8 @@ export default function Home() {
       <main>
         <HeroBanner />
         <FeaturesStrip />
+        <TopSellingStrip />
         <CategorySection />
-
-
-        <ProductSection />
       </main>
       <Footer />
     </div>
