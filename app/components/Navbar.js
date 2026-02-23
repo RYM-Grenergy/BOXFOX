@@ -71,7 +71,7 @@ export default function Navbar() {
                   <div className="flex flex-col items-center">
                     <span className="relative z-10">{link.label}</span>
                     {link.isSpecial && (
-                      <span className="text-[6px] xl:text-[7px] font-black text-emerald-600/60 -mt-1 tracking-[0.1em]">Only B2B</span>
+                      <span className="text-[6px] xl:text-[7px] font-black text-emerald-600/60 -mt-1 tracking-[0.1em]"></span>
                     )}
                   </div>
                   {pathname === link.href && (
@@ -204,9 +204,6 @@ export default function Navbar() {
                     >
                       <div className="flex flex-col">
                         <span>{link.label}</span>
-                        {link.isSpecial && (
-                          <span className="text-[10px] sm:text-xs font-black text-emerald-600/60 -mt-1 tracking-widest uppercase">Only For B2B</span>
-                        )}
                       </div>
                       <ChevronRight size={24} className={`transition-transform group-hover:translate-x-1 ${pathname === link.href ? "opacity-100" : "opacity-0"}`} />
                     </Link>

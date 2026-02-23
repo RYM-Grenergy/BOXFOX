@@ -103,7 +103,6 @@ export default function HeroBanner() {
                   Launch AI Lab
                   <ArrowRight size={20} className="sm:w-6 sm:h-6 group-hover:translate-x-1 transition-transform" />
                 </div>
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-emerald-500/80">Only For B2B</span>
               </Link>
               <Link href="/shop" className="px-8 py-4 sm:px-10 sm:py-5 md:px-12 md:py-6 bg-white border-2 border-gray-100 text-gray-950 rounded-[1.5rem] sm:rounded-[2rem] font-bold text-base sm:text-lg md:text-xl hover:bg-gray-50 transition-all active:scale-95 flex items-center gap-3 justify-center text-center shadow-lg">
                 Shop Bakery

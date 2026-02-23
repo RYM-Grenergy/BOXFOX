@@ -124,7 +124,6 @@ export default function ProductPage() {
                                         <div className="flex items-center gap-3">
                                             <Sparkles size={18} /> AI Design & Custom Size
                                         </div>
-                                        <span className="text-[8px] opacity-70 tracking-widest">Only For B2B</span>
                                     </Link>
                                     <p className="text-[9px] text-gray-400 font-bold uppercase text-center tracking-widest">OR Order Standard Size</p>
                                     <button
