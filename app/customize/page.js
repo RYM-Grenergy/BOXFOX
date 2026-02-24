@@ -1368,3 +1368,99 @@ function CustomizeLabContent() {
     </div >
   );
 }
+
+// Reusable loading UI
+const MainLoadingScreen = ({ label = "Initializing Studio…" }) => (
+  <div className="min-h-screen bg-white flex flex-col items-center justify-center overflow-hidden relative">
+    {/* Subtle grid */}
+    <div
+      className="absolute inset-0 opacity-[0.04]"
+      style={{
+        backgroundImage:
+          "linear-gradient(rgba(16,185,129,1) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,1) 1px, transparent 1px)",
+        backgroundSize: "40px 40px",
+      }}
+    />
+    {/* Soft glow */}
+    <div className="absolute w-80 h-80 rounded-full bg-emerald-100 blur-3xl animate-pulse" />
+
+    {/* Rings + logo */}
+    <div className="relative flex items-center justify-center mb-10">
+      <div
+        className="absolute w-52 h-52 rounded-full border border-emerald-200 animate-spin"
+        style={{ animationDuration: "8s" }}
+      />
+      <div
+        className="absolute w-40 h-40 rounded-full border border-emerald-300 animate-spin"
+        style={{ animationDuration: "5s", animationDirection: "reverse" }}
+      />
+      <div
+        className="absolute w-28 h-28 rounded-full border-2 border-emerald-400 animate-spin"
+        style={{ animationDuration: "3s" }}
+      />
+      {[0, 60, 120, 180, 240, 300].map((deg, i) => (
+        <div
+          key={i}
+          className="absolute w-2 h-2 rounded-full bg-emerald-500"
+          style={{
+            transform: `rotate(${deg}deg) translateX(84px)`,
+            animationDelay: `${i * 0.15}s`,
+            opacity: 0.4 + i * 0.1,
+          }}
+        />
+      ))}
+      <div className="relative z-10 w-24 h-24 rounded-2xl bg-white border border-emerald-100 shadow-xl flex items-center justify-center">
+        <img
+          src="/BOXFOX-1.png"
+          alt="BOXFOX"
+          className="w-16 object-contain"
+        />
+      </div>
+    </div>
+
+    {/* Brand label */}
+    <div className="flex items-center gap-3 mb-1.5">
+      <div className="w-8 h-px bg-emerald-400" />
+      <p className="text-gray-950 font-black tracking-[0.6em] text-xs uppercase">
+        BoxFox
+      </p>
+      <div className="w-8 h-px bg-emerald-400" />
+    </div>
+    <p className="text-emerald-500 text-[9px] font-bold tracking-[0.4em] uppercase mb-10">
+      Design Studio
+    </p>
+
+    {/* Progress bar */}
+    <div className="w-64 h-0.5 bg-gray-100 rounded-full overflow-hidden mb-5">
+      <div
+        className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full"
+        style={{ animation: "loadbar 2.2s ease-in-out forwards" }}
+      />
+    </div>
+
+    {/* Cycling steps */}
+    <div className="flex flex-col items-center gap-1.5">
+      {["Initializing Studio…", "Loading Assets…", "Calibrating Forge…"].map(
+        (step, i) => (
+          <p
+            key={step}
+            className="text-gray-400 text-[9px] font-bold tracking-[0.3em] uppercase"
+            style={{
+              animation: `fadecycle 2.4s ease-in-out ${i * 0.7}s infinite`,
+            }}
+          >
+            {step}
+          </p>
+        ),
+      ) || null}
+    </div>
+  </div>
+);
+
+export default function StandaloneCustomizePage() {
+  return (
+    <Suspense fallback={<MainLoadingScreen />}>
+      <CustomizeLabContent />
+    </Suspense>
+  );
+}
