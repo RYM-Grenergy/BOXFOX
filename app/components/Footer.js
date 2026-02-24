@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:24px_24px]" />
       </div>
 
-      <div className="max-w-[1700px] mx-auto px-6 lg:px-16 py-12 relative z-10">
+      <div className="max-w-[1700px] mx-auto px-6 lg:px-16 pt-6 pb-12 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 items-start">
 
           {/* Brand Identity - Minimal */}

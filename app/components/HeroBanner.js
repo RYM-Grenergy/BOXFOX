@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Star } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -53,8 +53,18 @@ const InfiniteColumn = ({ images, speed = 20, reverse = false }) => {
 };
 
 export default function HeroBanner() {
+  const [textIndex, setTextIndex] = React.useState(0);
+  const words = ["Bakery", "Sweets", "Pizza", "Sandwich"];
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setTextIndex((prev) => (prev + 1) % words.length);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <section className="relative min-h-[90vh] sm:min-h-[95vh] w-full flex items-center bg-white overflow-hidden pt-20 sm:pt-24 lg:pt-12">
+    <section className="relative min-h-[85vh] sm:min-h-[95vh] w-full flex items-center bg-white overflow-hidden pt-12 sm:pt-24 lg:pt-12">
       <MatrixBackground />
 
       {/* Decorative 'Packaging' text in background - Adjusted for better responsiveness */}
@@ -64,7 +74,7 @@ export default function HeroBanner() {
         ))}
       </div>
 
-      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-12 w-full py-8 sm:py-12">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-12 w-full pt-8 pb-10 sm:pb-32">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-16 lg:gap-24 items-center">
 
           {/* Left Column: Content */}
@@ -76,21 +86,15 @@ export default function HeroBanner() {
             className="flex flex-col gap-6 sm:gap-8 lg:gap-10 z-10 items-center lg:items-start text-center lg:text-left"
           >
             {/* Tag/Label */}
-            <div className="flex items-center gap-3">
-              <div className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-gray-50 border border-gray-100">
-                <span className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  Bakery & Food — 2026 Collection
-                </span>
-              </div>
-            </div>
+
 
             {/* Headline */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
               <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl 2xl:text-[115px] font-black text-gray-950 leading-[0.9] sm:leading-[0.85] tracking-[-0.05em] uppercase">
                 Freshness<br />
                 <span className="text-emerald-500 italic drop-shadow-[0_10px_30px_rgba(16,185,129,0.3)]">Meets Luxury</span>
               </h1>
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-400 leading-relaxed max-w-xl font-medium tracking-tight mt-4 sm:mt-6">
+              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-400 leading-relaxed max-w-xl font-medium tracking-tight mt-2 sm:mt-3">
                 Premium food-safe boxes for Cakes, Pastries & Pizza. <span className="text-emerald-500 font-black">High Quality Food Grade</span> design tools to keep food fresh and your brand looking beautiful.
               </p>
             </div>
@@ -104,23 +108,28 @@ export default function HeroBanner() {
                   <ArrowRight size={20} className="sm:w-6 sm:h-6 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>
-              <Link href="/shop" className="px-8 py-4 sm:px-10 sm:py-5 md:px-12 md:py-6 bg-white border-2 border-gray-100 text-gray-950 rounded-[1.5rem] sm:rounded-[2rem] font-bold text-base sm:text-lg md:text-xl hover:bg-gray-50 transition-all active:scale-95 flex items-center gap-3 justify-center text-center shadow-lg">
-                Shop Bakery
+              <Link href="/shop" className="relative px-6 py-4 sm:px-8 sm:py-5 md:px-10 md:py-6 bg-white border-2 border-gray-100 text-gray-950 rounded-[1.5rem] sm:rounded-[2rem] font-bold text-base sm:text-lg md:text-xl hover:bg-gray-50 transition-all active:scale-95 flex items-center justify-center overflow-hidden min-w-[200px] sm:min-w-[260px] shadow-lg group">
+                <div className="flex items-center justify-center translate-x-2">
+                  <span className="mr-2">Shop</span>
+                  <div className="relative h-[1.2em] w-20 sm:w-28 overflow-hidden">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={textIndex}
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -20, opacity: 0 }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        className="absolute inset-0 flex items-center"
+                      >
+                        <span className="text-emerald-600">{words[textIndex]}</span>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                </div>
+                <ArrowRight size={20} className="ml-4 text-gray-400 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
               </Link>
             </div>
 
-            {/* Viral Metrics */}
-            <div className="flex items-center gap-8 sm:gap-12 pt-8 sm:pt-10 border-t border-gray-50 w-full lg:w-fit justify-center lg:justify-start">
-              <div className="flex flex-col">
-                <span className="text-2xl sm:text-3xl font-black italic tracking-tighter text-gray-950">1.2M+</span>
-                <span className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Neural_Generations</span>
-              </div>
-              <div className="w-[1px] h-8 sm:h-10 bg-gray-100" />
-              <div className="flex flex-col">
-                <span className="text-2xl sm:text-3xl font-black italic tracking-tighter text-emerald-600 tracking-[-0.05em]">0.1s</span>
-                <span className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Real_Time_3D_Sim</span>
-              </div>
-            </div>
 
           </motion.div>
 
@@ -150,16 +159,16 @@ export default function HeroBanner() {
       </div>
 
       {/* VIRAL PACKAGING MARQUEE */}
-      <div className="absolute bottom-0 left-0 right-0 py-8 bg-gray-950 overflow-hidden whitespace-nowrap z-30">
+      <div className="absolute bottom-0 left-0 right-0 py-3 sm:py-6 md:py-8 bg-gray-950 overflow-hidden whitespace-nowrap z-30 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
         <motion.div
           animate={{ x: [0, -2500] }}
           transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
-          className="flex gap-16 items-center opacity-70 shrink-0"
+          className="flex gap-10 sm:gap-16 items-center opacity-70 shrink-0"
         >
           {[...Array(30)].map((_, i) => (
-            <div key={i} className="flex items-center gap-16 shrink-0">
-              <span className="text-white font-black text-3xl uppercase tracking-[0.5em] italic">Packaging</span>
-              <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.8)]" />
+            <div key={i} className="flex items-center gap-10 sm:gap-16 shrink-0">
+              <span className="text-white font-black text-lg sm:text-2xl md:text-3xl uppercase tracking-[0.3em] sm:tracking-[0.5em] italic">Packaging</span>
+              <div className="w-1.5 h-1.5 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.8)]" />
             </div>
           ))}
         </motion.div>

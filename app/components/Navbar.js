@@ -61,27 +61,31 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`relative px-3 xl:px-4 py-2.5 text-[11px] xl:text-[13px] font-black uppercase tracking-[0.2em] transition-all duration-300 group active:scale-90 active:bg-gray-50/50 rounded-xl ${pathname === link.href
-                    ? "text-emerald-600 shadow-[0_8px_15px_-3px_rgba(16,185,129,0.1)]"
+                  className={`relative px-3 xl:px-4 py-2.5 text-[11px] xl:text-[13px] font-black uppercase tracking-[0.2em] transition-all duration-300 group active:scale-95 rounded-xl ${pathname === link.href
+                    ? "text-emerald-600"
                     : link.isSpecial
                       ? "text-emerald-500 font-black h-fit"
-                      : "text-gray-500 hover:text-gray-950"
+                      : "text-gray-500 hover:text-emerald-600"
                     }`}
                 >
                   <div className="flex flex-col items-center">
-                    <span className="relative z-10">{link.label}</span>
+                    <span className="relative z-10 transition-colors duration-300 group-hover:text-emerald-600">{link.label}</span>
                     {link.isSpecial && (
                       <span className="text-[6px] xl:text-[7px] font-black text-emerald-600/60 -mt-1 tracking-[0.1em]"></span>
                     )}
                   </div>
+
+                  {/* Hover Glow Background */}
+                  <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/10 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] rounded-xl transition-all duration-300 -z-0" />
+
+                  {/* Active/Current Page Glow */}
                   {pathname === link.href && (
                     <motion.div
                       layoutId="nav-glow"
-                      className="absolute inset-0 bg-emerald-500/10 rounded-xl -z-0"
+                      className="absolute inset-0 bg-emerald-500/10 shadow-[0_0_25px_rgba(16,185,129,0.2)] rounded-xl -z-0"
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
-                  <div className="absolute bottom-0 left-3 right-3 h-[2px] bg-emerald-500 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
                 </Link>
               ))}
             </div>

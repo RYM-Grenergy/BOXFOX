@@ -33,7 +33,7 @@ const features = [
 
 export default function FeaturesStrip() {
   return (
-    <section className="py-16 sm:py-24 md:py-32 bg-white border-y border-gray-100 relative overflow-hidden">
+    <section className="py-8 sm:pt-16 sm:pb-4 bg-gray-50/50 relative overflow-hidden text-center sm:text-left">
       <MatrixBackground />
 
       {/* Continuing the 'Packaging' labels from Hero */}
@@ -46,7 +46,7 @@ export default function FeaturesStrip() {
       </div>
 
       <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 md:gap-8">
           {features.map(({ icon: Icon, title, desc, tag }, idx) => (
             <motion.div
               key={title}
@@ -54,23 +54,22 @@ export default function FeaturesStrip() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1, duration: 0.6, ease: "easeOut" }}
-              className="group relative p-6 sm:p-8 md:p-12 rounded-[1.5rem] sm:rounded-[2.5rem] bg-white/80 backdrop-blur-sm border border-gray-100 hover:border-emerald-500/30 hover:bg-white hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500"
+              className="group relative p-4 sm:p-8 md:p-12 rounded-[1.2rem] sm:rounded-[2.5rem] bg-white/80 backdrop-blur-sm border border-gray-100 hover:border-emerald-500/30 hover:bg-white hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500"
             >
-              <div className="flex flex-col gap-6 sm:gap-10">
+              <div className="flex flex-col gap-4 sm:gap-10">
                 <div className="flex items-center justify-between">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-950 group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white transition-all duration-500 shadow-sm">
-                    <Icon className="w-6 h-6 sm:w-8 sm:h-8" strokeWidth={2} />
+                  <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-lg sm:rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-950 group-hover:bg-emerald-500 group-hover:border-emerald-500 group-hover:text-white transition-all duration-500 shadow-sm">
+                    <Icon className="w-5 h-5 sm:w-8 sm:h-8" strokeWidth={2} />
                   </div>
-                  <span className="text-[9px] sm:text-[11px] font-black text-gray-300 group-hover:text-emerald-500 tracking-[0.3em] transition-colors">
+                  <span className="text-[7px] sm:text-[11px] font-black text-gray-300 group-hover:text-emerald-500 tracking-[0.2em] sm:tracking-[0.3em] transition-colors">
                     {tag}
                   </span>
                 </div>
-
                 <div>
-                  <h4 className="text-lg sm:text-xl md:text-2xl font-black text-gray-950 mb-2 sm:mb-4 uppercase tracking-tight group-hover:text-emerald-600 transition-colors">
+                  <h4 className="text-sm sm:text-xl md:text-2xl font-black text-gray-950 mb-1 sm:mb-4 uppercase tracking-tight group-hover:text-emerald-600 transition-colors">
                     {title}
                   </h4>
-                  <p className="text-sm sm:text-base md:text-lg font-medium text-gray-500 leading-relaxed">
+                  <p className="text-[10px] sm:text-base md:text-lg font-medium text-gray-500 leading-tight sm:leading-relaxed line-clamp-2 sm:line-clamp-none">
                     {desc}
                   </p>
                 </div>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const STEPS = [
   "Custom Boxes",
@@ -16,19 +17,38 @@ const TAGLINES = [
 ];
 
 export default function SiteLoader() {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [dotsActive, setDotsActive] = useState([false, false, false, false]);
+  const router = useRouter();
 
   useEffect(() => {
+    // Check if this is the first time the user is visiting
+    let hasSeenLoader = false;
+    try {
+      hasSeenLoader = localStorage.getItem("hasSeenLoader");
+    } catch (e) {
+      console.warn("Storage access failed", e);
+    }
+
+    if (hasSeenLoader) {
+      setVisible(false);
+      return;
+    }
+
+    // Set flag and show loader
+    try {
+      localStorage.setItem("hasSeenLoader", "true");
+    } catch (e) { }
     setVisible(true);
 
-    // Smooth progress 0→100 over 5.2s
-    const totalDuration = 5200;
+    // Smooth progress 0→100 over 1.5s
+    const totalDuration = 1500;
     const interval = 50;
     const increment = (interval / totalDuration) * 100;
+
     const progressTimer = setInterval(() => {
       setProgress((p) => {
         if (p >= 100) {
@@ -39,10 +59,10 @@ export default function SiteLoader() {
       });
     }, interval);
 
-    // Step cycling every 1.1s
+    // Step cycling every 400ms (to fit in 1.5s)
     const stepTimer = setInterval(() => {
       setStepIndex((i) => (i + 1) % STEPS.length);
-    }, 1100);
+    }, 400);
 
     // Stagger box-type dots
     STEPS.forEach((_, i) => {
@@ -54,14 +74,16 @@ export default function SiteLoader() {
             return n;
           });
         },
-        300 + i * 950,
+        100 + i * 300,
       );
     });
 
-    const fadeTimer = setTimeout(() => setFadeOut(true), 5000);
+    const fadeTimer = setTimeout(() => setFadeOut(true), 1500);
     const hideTimer = setTimeout(() => {
       setVisible(false);
-    }, 5700);
+      // Redirect to homepage after loader finishes
+      router.push("/");
+    }, 2000);
 
     return () => {
       clearInterval(progressTimer);
@@ -69,7 +91,7 @@ export default function SiteLoader() {
       clearTimeout(fadeTimer);
       clearTimeout(hideTimer);
     };
-  }, []);
+  }, [router]);
 
   if (!visible) return null;
 
@@ -102,7 +124,7 @@ export default function SiteLoader() {
           opacity: fadeOut ? 0 : 1,
           transform: fadeOut ? "scale(1.025)" : "scale(1)",
           transition:
-            "opacity .7s cubic-bezier(.4,0,.2,1), transform .7s cubic-bezier(.4,0,.2,1)",
+            "opacity .5s cubic-bezier(.4,0,.2,1), transform .5s cubic-bezier(.4,0,.2,1)",
           pointerEvents: fadeOut ? "none" : "all",
           fontFamily: "'Inter',system-ui,sans-serif",
         }}

@@ -32,12 +32,13 @@ import {
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import { useCart } from "@/app/context/CartContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Script from "next/script";
 
 export default function StandaloneCustomizePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addToCart } = useCart();
 
   // Default Product ID for the Standalone Lab
@@ -95,6 +96,19 @@ export default function StandaloneCustomizePage() {
   const prevTouch = useRef(null);
 
   useEffect(() => {
+    // Sync dimensions from URL if present
+    const l = searchParams.get('length');
+    const w = searchParams.get('width');
+    const h = searchParams.get('height');
+
+    if (l || w || h) {
+      setDimensions({
+        l: parseFloat(l) || dimensions.l,
+        w: parseFloat(w) || dimensions.w,
+        h: parseFloat(h) || dimensions.h
+      });
+    }
+
     setLoading(true);
     fetch(`/api/products/${DEFAULT_PRODUCT_ID}`)
       .then((res) => res.json())
@@ -104,7 +118,7 @@ export default function StandaloneCustomizePage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [searchParams]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -256,8 +270,8 @@ export default function StandaloneCustomizePage() {
         typeof result === "string"
           ? result
           : result?.message?.content?.[0]?.text ||
-            result?.toString() ||
-            aiPrompt;
+          result?.toString() ||
+          aiPrompt;
       setAiPrompt(enhanced.trim());
       setIsPromptEnhanced(true);
     } catch (e) {
@@ -316,10 +330,10 @@ export default function StandaloneCustomizePage() {
 
   const calculatedUnitPrice = product
     ? (
-        basePrice *
-        (currentSA / 288) *
-        (1 - Math.min(0.4, (quantity - 10) / 500))
-      ).toFixed(2)
+      basePrice *
+      (currentSA / 288) *
+      (1 - Math.min(0.4, (quantity - 10) / 500))
+    ).toFixed(2)
     : "0.00";
 
   // Reusable loading UI
@@ -811,11 +825,10 @@ export default function StandaloneCustomizePage() {
                   <button
                     key={type.id}
                     onClick={() => setBoxMode(type.id)}
-                    className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-widest transition-all text-center leading-tight ${
-                      boxMode === type.id
+                    className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-widest transition-all text-center leading-tight ${boxMode === type.id
                         ? "bg-emerald-500 text-white border-emerald-500 shadow-md"
                         : "bg-white text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-gray-950"
-                    }`}
+                      }`}
                   >
                     {type.label}
                   </button>
@@ -863,21 +876,19 @@ export default function StandaloneCustomizePage() {
                 <div className="flex p-1 sm:p-1.5 bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm w-full sm:w-auto">
                   <button
                     onClick={() => setCustomMode("texture")}
-                    className={`flex-1 sm:flex-none px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all active:scale-90 ${
-                      customMode === "texture"
+                    className={`flex-1 sm:flex-none px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all active:scale-90 ${customMode === "texture"
                         ? "bg-gray-950 text-white shadow-md"
                         : "text-gray-500 hover:text-gray-950"
-                    }`}
+                      }`}
                   >
                     Neural_Maps
                   </button>
                   <button
                     onClick={() => setCustomMode("color")}
-                    className={`flex-1 sm:flex-none px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all active:scale-90 ${
-                      customMode === "color"
+                    className={`flex-1 sm:flex-none px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all active:scale-90 ${customMode === "color"
                         ? "bg-gray-950 text-white shadow-md"
                         : "text-gray-500 hover:text-gray-950"
-                    }`}
+                      }`}
                   >
                     Solid_Lab
                   </button>
@@ -969,16 +980,15 @@ export default function StandaloneCustomizePage() {
                         <button
                           key={face}
                           onClick={() => toggleFaceMapping(face)}
-                          className={`py-3 sm:py-4 md:py-5 rounded-xl sm:rounded-2xl md:rounded-[1.5rem] text-[8px] sm:text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all border active:scale-90 ${
-                            (customMode === "texture" &&
+                          className={`py-3 sm:py-4 md:py-5 rounded-xl sm:rounded-2xl md:rounded-[1.5rem] text-[8px] sm:text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all border active:scale-90 ${(customMode === "texture" &&
                               boxTextures[face] ===
-                                assetPool[activeAssetIndex] &&
+                              assetPool[activeAssetIndex] &&
                               boxTextures[face]) ||
-                            (customMode === "color" &&
-                              boxColors[face] === activeColor)
+                              (customMode === "color" &&
+                                boxColors[face] === activeColor)
                               ? "bg-emerald-500 text-white border-emerald-500 shadow-md"
                               : "bg-gray-50 text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-gray-950"
-                          }`}
+                            }`}
                         >
                           {face}
                         </button>
@@ -1021,11 +1031,10 @@ export default function StandaloneCustomizePage() {
                     <button
                       key={cat}
                       onClick={() => setActiveChipCategory(cat)}
-                      className={`flex-1 py-2 sm:py-2.5 text-[7px] sm:text-[8px] font-black uppercase tracking-widest transition-all ${
-                        activeChipCategory === cat
+                      className={`flex-1 py-2 sm:py-2.5 text-[7px] sm:text-[8px] font-black uppercase tracking-widest transition-all ${activeChipCategory === cat
                           ? "bg-gray-950 text-white"
                           : "text-gray-400 hover:text-gray-700 hover:bg-gray-50"
-                      }`}
+                        }`}
                     >
                       {cat}
                     </button>
@@ -1036,11 +1045,10 @@ export default function StandaloneCustomizePage() {
                     <button
                       key={chip}
                       onClick={() => toggleChip(chip)}
-                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[8px] sm:text-[9px] font-bold border transition-all active:scale-95 ${
-                        selectedChips.includes(chip)
+                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[8px] sm:text-[9px] font-bold border transition-all active:scale-95 ${selectedChips.includes(chip)
                           ? "bg-emerald-500 text-white border-emerald-500 shadow-sm"
                           : "bg-gray-50 text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-emerald-600"
-                      }`}
+                        }`}
                     >
                       {chip}
                     </button>
@@ -1066,11 +1074,10 @@ export default function StandaloneCustomizePage() {
                   <button
                     onClick={enhancePrompt}
                     disabled={!aiPrompt.trim() || isEnhancing}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-widest transition-all active:scale-90 ${
-                      !aiPrompt.trim() || isEnhancing
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-widest transition-all active:scale-90 ${!aiPrompt.trim() || isEnhancing
                         ? "bg-blue-100 text-blue-300 cursor-not-allowed"
                         : "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200"
-                    }`}
+                      }`}
                   >
                     {isEnhancing ? (
                       <>
@@ -1154,14 +1161,12 @@ export default function StandaloneCustomizePage() {
                     </span>
                   </div>
                   <div
-                    className={`w-9 h-5 rounded-full transition-all duration-300 relative ${
-                      textOnBox ? "bg-emerald-500" : "bg-gray-200"
-                    }`}
+                    className={`w-9 h-5 rounded-full transition-all duration-300 relative ${textOnBox ? "bg-emerald-500" : "bg-gray-200"
+                      }`}
                   >
                     <div
-                      className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${
-                        textOnBox ? "left-[1.15rem]" : "left-0.5"
-                      }`}
+                      className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${textOnBox ? "left-[1.15rem]" : "left-0.5"
+                        }`}
                     />
                   </div>
                 </button>
@@ -1198,11 +1203,10 @@ export default function StandaloneCustomizePage() {
                           <button
                             key={s.id}
                             onClick={() => setBoxTextStyle(s.id)}
-                            className={`flex-1 py-2 sm:py-2.5 rounded-xl text-[9px] border transition-all ${
-                              boxTextStyle === s.id
+                            className={`flex-1 py-2 sm:py-2.5 rounded-xl text-[9px] border transition-all ${boxTextStyle === s.id
                                 ? "bg-gray-950 text-white border-gray-950 shadow-md"
                                 : "bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-400"
-                            } ${s.preview}`}
+                              } ${s.preview}`}
                           >
                             {s.label}
                           </button>
@@ -1228,11 +1232,10 @@ export default function StandaloneCustomizePage() {
                             key={c}
                             onClick={() => setBoxTextColor(c)}
                             style={{ backgroundColor: c }}
-                            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all ${
-                              boxTextColor === c
+                            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all ${boxTextColor === c
                                 ? "border-emerald-500 scale-90 ring-2 ring-emerald-500/20 shadow-md"
                                 : "border-gray-200 hover:border-gray-400"
-                            }`}
+                              }`}
                           />
                         ))}
                         <div className="relative ml-auto">

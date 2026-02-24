@@ -43,11 +43,11 @@ const categories = [
 
 export default function CategorySection() {
   return (
-    <section id="categories" className="py-16 md:py-24 lg:py-32 px-4 sm:px-6 md:px-12 bg-white text-gray-950 overflow-hidden selection:bg-emerald-500 selection:text-white">
+    <section id="categories" className="pt-16 pb-8 md:pt-24 md:pb-12 lg:pt-32 lg:pb-16 px-4 sm:px-6 md:px-12 bg-white text-gray-950 overflow-hidden selection:bg-emerald-500 selection:text-white">
       <div className="max-w-[1700px] mx-auto">
         {/* Technical Header */}
-        <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between mb-16 md:mb-24 lg:mb-32 gap-8 lg:gap-12 text-center lg:text-left">
-          <div className="space-y-4 md:space-y-6 lg:space-y-8 max-w-4xl">
+        <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between mb-4 sm:mb-6 gap-6 lg:gap-12 text-center lg:text-left">
+          <div className="space-y-1 max-w-4xl">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}

@@ -14,6 +14,7 @@ export default function ProductCard({ product, imageOnly = false }) {
     outOfStock,
     hasVariants,
     badge,
+    pacdoraId,
   } = product;
 
   // Handle Quick Add
@@ -50,65 +51,58 @@ export default function ProductCard({ product, imageOnly = false }) {
   }
 
   return (
-    <div className="group flex flex-col h-full relative">
-      {/* visual area */}
-      <div className="relative mb-3 sm:mb-6 aspect-[4/5] overflow-hidden rounded-[1.5rem] sm:rounded-[2.5rem] bg-gray-50 border border-gray-100 shadow-sm transition-all group-hover:shadow-2xl group-hover:shadow-gray-200/50">
-        <Link href={`/products/${id}`} className="block h-full">
-          <img
-            src={img}
-            alt={name}
-            className="w-full h-full object-contain p-4 sm:p-8 transition-transform duration-1000 group-hover:scale-105"
-          />
-        </Link>
+    <Link href={`/products/${id}`} className="group flex flex-col h-full relative">
+      <div className="relative mb-4 sm:mb-5 aspect-square overflow-hidden rounded-[1.2rem] sm:rounded-[2rem] bg-gray-50 border border-gray-950/[0.08] shadow-sm transition-all group-hover:shadow-2xl group-hover:shadow-emerald-500/10 group-hover:border-gray-950/20">
+        <img
+          src={img}
+          alt={name}
+          className="w-full h-full object-contain p-2 sm:p-4 transition-transform duration-1000 group-hover:scale-105"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
         {/* Floating Badges */}
         <div className="absolute top-2 left-2 sm:top-6 sm:left-6 flex flex-col gap-1 sm:gap-2 pointer-events-none">
           {discount && !outOfStock && (
-            <span className="bg-emerald-500 text-white text-[6px] sm:text-[9px] font-black px-1.5 sm:px-4 py-0.5 sm:py-2 rounded-full shadow-lg uppercase tracking-widest whitespace-nowrap">
+            <span className="bg-emerald-500 text-white text-[7px] sm:text-[9px] font-black px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-lg uppercase tracking-widest whitespace-nowrap">
               -{discount}
             </span>
           )}
           {badge && (
-            <span className="bg-gray-950/90 backdrop-blur-md text-white text-[6px] sm:text-[9px] font-black px-1.5 sm:px-4 py-0.5 sm:py-2 rounded-full shadow-lg uppercase tracking-widest whitespace-nowrap">
+            <span className="bg-gray-950/90 backdrop-blur-md text-white text-[7px] sm:text-[9px] font-black px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-lg uppercase tracking-widest whitespace-nowrap">
               {badge}
             </span>
           )}
-        </div>
-
-        {/* Interaction Elements - Only show on large screens or hover */}
-        {!outOfStock && (
-          <div className="absolute inset-x-0 bottom-0 p-3 sm:p-6 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 hidden sm:block">
-            <Link
-              href={`/products/${id}`}
-              className="w-full bg-gray-950 text-white text-[10px] font-black py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-emerald-500 transition-all shadow-2xl uppercase tracking-[0.2em]"
-            >
-              View Details
-            </Link>
-          </div>
-        )}
-      </div>
-
-      {/* Information Area */}
-      <div className="flex flex-col px-1">
-        <h3 className="text-[10px] sm:text-lg font-black text-gray-950 leading-tight tracking-tighter uppercase line-clamp-2 group-hover:text-emerald-500 transition-colors mb-1 sm:mb-2">
-          {name}
-        </h3>
-
-        <div className="flex items-baseline gap-2 mt-1">
-          <span className="text-sm sm:text-2xl font-black text-gray-950 tracking-tighter">
-            {typeof price === 'string' ? price : `₹${price?.toLocaleString('en-IN')}`}
-          </span>
-          {originalPrice && (
-            <span className="text-[9px] sm:text-sm font-bold text-gray-300 line-through">
-              ₹{originalPrice.toLocaleString('en-IN')}
+          {pacdoraId && (
+            <span className="bg-emerald-500 text-white text-[7px] sm:text-[9px] font-black px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-lg uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
+              <Plus size={8} /> 3D READY
             </span>
           )}
         </div>
       </div>
-    </div>
+
+      <div className="flex flex-col flex-grow px-1.5 gap-2">
+        <h3 className="text-[12px] sm:text-lg font-black text-gray-950 leading-[1.1] tracking-tighter uppercase line-clamp-2 group-hover:text-emerald-500 transition-colors">
+          {name}
+        </h3>
+
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-2 border-t border-gray-100 gap-3">
+          <div className="flex flex-col min-w-0">
+            <span className="text-[14px] sm:text-2xl font-black text-gray-950 tracking-tighter whitespace-nowrap overflow-hidden text-ellipsis">
+              {typeof price === 'string' ? price : `₹${price?.toLocaleString('en-IN')}`}
+            </span>
+            {originalPrice && (
+              <span className="text-[10px] sm:text-sm font-bold text-gray-300 line-through whitespace-nowrap">
+                ₹{originalPrice.toLocaleString('en-IN')}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center justify-center gap-2 px-4 py-2 sm:px-4 sm:py-2 bg-emerald-50 text-emerald-600 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm border border-emerald-100/50 w-full sm:w-auto mt-1 sm:mt-0">
+            View Details
+            <ArrowUpRight size={14} className="sm:w-4 sm:h-4" />
+          </div>
+        </div>
+      </div>
+    </Link>
   );
 }
-
-
-
