@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingCart,
@@ -36,7 +36,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Script from "next/script";
 
-export default function StandaloneCustomizePage() {
+function CustomizeLabContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToCart } = useCart();
@@ -424,7 +424,7 @@ export default function StandaloneCustomizePage() {
     </div>
   );
 
-  if (loading || !product) return <LoadingScreen />;
+  if (loading || !product) return <MainLoadingScreen />;
 
   const faceStyle = (face) => ({
     backgroundImage: boxTextures[face] ? `url(${boxTextures[face]})` : "none",
@@ -826,8 +826,8 @@ export default function StandaloneCustomizePage() {
                     key={type.id}
                     onClick={() => setBoxMode(type.id)}
                     className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-widest transition-all text-center leading-tight ${boxMode === type.id
-                        ? "bg-emerald-500 text-white border-emerald-500 shadow-md"
-                        : "bg-white text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-gray-950"
+                      ? "bg-emerald-500 text-white border-emerald-500 shadow-md"
+                      : "bg-white text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-gray-950"
                       }`}
                   >
                     {type.label}
@@ -877,8 +877,8 @@ export default function StandaloneCustomizePage() {
                   <button
                     onClick={() => setCustomMode("texture")}
                     className={`flex-1 sm:flex-none px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all active:scale-90 ${customMode === "texture"
-                        ? "bg-gray-950 text-white shadow-md"
-                        : "text-gray-500 hover:text-gray-950"
+                      ? "bg-gray-950 text-white shadow-md"
+                      : "text-gray-500 hover:text-gray-950"
                       }`}
                   >
                     Neural_Maps
@@ -886,8 +886,8 @@ export default function StandaloneCustomizePage() {
                   <button
                     onClick={() => setCustomMode("color")}
                     className={`flex-1 sm:flex-none px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all active:scale-90 ${customMode === "color"
-                        ? "bg-gray-950 text-white shadow-md"
-                        : "text-gray-500 hover:text-gray-950"
+                      ? "bg-gray-950 text-white shadow-md"
+                      : "text-gray-500 hover:text-gray-950"
                       }`}
                   >
                     Solid_Lab
@@ -981,13 +981,13 @@ export default function StandaloneCustomizePage() {
                           key={face}
                           onClick={() => toggleFaceMapping(face)}
                           className={`py-3 sm:py-4 md:py-5 rounded-xl sm:rounded-2xl md:rounded-[1.5rem] text-[8px] sm:text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all border active:scale-90 ${(customMode === "texture" &&
-                              boxTextures[face] ===
-                              assetPool[activeAssetIndex] &&
-                              boxTextures[face]) ||
-                              (customMode === "color" &&
-                                boxColors[face] === activeColor)
-                              ? "bg-emerald-500 text-white border-emerald-500 shadow-md"
-                              : "bg-gray-50 text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-gray-950"
+                            boxTextures[face] ===
+                            assetPool[activeAssetIndex] &&
+                            boxTextures[face]) ||
+                            (customMode === "color" &&
+                              boxColors[face] === activeColor)
+                            ? "bg-emerald-500 text-white border-emerald-500 shadow-md"
+                            : "bg-gray-50 text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-gray-950"
                             }`}
                         >
                           {face}
@@ -1032,8 +1032,8 @@ export default function StandaloneCustomizePage() {
                       key={cat}
                       onClick={() => setActiveChipCategory(cat)}
                       className={`flex-1 py-2 sm:py-2.5 text-[7px] sm:text-[8px] font-black uppercase tracking-widest transition-all ${activeChipCategory === cat
-                          ? "bg-gray-950 text-white"
-                          : "text-gray-400 hover:text-gray-700 hover:bg-gray-50"
+                        ? "bg-gray-950 text-white"
+                        : "text-gray-400 hover:text-gray-700 hover:bg-gray-50"
                         }`}
                     >
                       {cat}
@@ -1046,8 +1046,8 @@ export default function StandaloneCustomizePage() {
                       key={chip}
                       onClick={() => toggleChip(chip)}
                       className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[8px] sm:text-[9px] font-bold border transition-all active:scale-95 ${selectedChips.includes(chip)
-                          ? "bg-emerald-500 text-white border-emerald-500 shadow-sm"
-                          : "bg-gray-50 text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-emerald-600"
+                        ? "bg-emerald-500 text-white border-emerald-500 shadow-sm"
+                        : "bg-gray-50 text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-emerald-600"
                         }`}
                     >
                       {chip}
@@ -1075,8 +1075,8 @@ export default function StandaloneCustomizePage() {
                     onClick={enhancePrompt}
                     disabled={!aiPrompt.trim() || isEnhancing}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-widest transition-all active:scale-90 ${!aiPrompt.trim() || isEnhancing
-                        ? "bg-blue-100 text-blue-300 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200"
+                      ? "bg-blue-100 text-blue-300 cursor-not-allowed"
+                      : "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200"
                       }`}
                   >
                     {isEnhancing ? (
@@ -1204,8 +1204,8 @@ export default function StandaloneCustomizePage() {
                             key={s.id}
                             onClick={() => setBoxTextStyle(s.id)}
                             className={`flex-1 py-2 sm:py-2.5 rounded-xl text-[9px] border transition-all ${boxTextStyle === s.id
-                                ? "bg-gray-950 text-white border-gray-950 shadow-md"
-                                : "bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-400"
+                              ? "bg-gray-950 text-white border-gray-950 shadow-md"
+                              : "bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-400"
                               } ${s.preview}`}
                           >
                             {s.label}
@@ -1233,8 +1233,8 @@ export default function StandaloneCustomizePage() {
                             onClick={() => setBoxTextColor(c)}
                             style={{ backgroundColor: c }}
                             className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all ${boxTextColor === c
-                                ? "border-emerald-500 scale-90 ring-2 ring-emerald-500/20 shadow-md"
-                                : "border-gray-200 hover:border-gray-400"
+                              ? "border-emerald-500 scale-90 ring-2 ring-emerald-500/20 shadow-md"
+                              : "border-gray-200 hover:border-gray-400"
                               }`}
                           />
                         ))}
@@ -1321,10 +1321,9 @@ export default function StandaloneCustomizePage() {
             </button>
           </div>
         </div>
-      </main>
+      </main >
 
-      <Footer />
-      <style jsx global>{`
+      <><Footer /><style jsx global>{`
         .animate-spin-slow {
           animation: spin 12s linear infinite;
         }
@@ -1365,7 +1364,7 @@ export default function StandaloneCustomizePage() {
         input[type="number"]::-webkit-inner-spin-button {
           -webkit-appearance: none;
         }
-      `}</style>
-    </div>
+      `}</style></>
+    </div >
   );
 }
