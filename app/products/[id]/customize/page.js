@@ -370,7 +370,7 @@ export default function CustomizePage() {
                                         placeholder="Custom..."
                                         min={10}
                                     />
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase font-bold text-white/20">100 Units</span>
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase font-bold text-white/20">MOQ: 10</span>
                                 </div>
                             </div>
                         </div>

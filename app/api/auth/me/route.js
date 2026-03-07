@@ -6,9 +6,13 @@ import dns from 'dns';
 
 // Fix for querySrv ECONNREFUSED on some networks/machines
 if (typeof window === 'undefined') {
-    dns.setServers(['8.8.8.8', '8.8.4.4']);
-    if (dns.setDefaultResultOrder) {
-        dns.setDefaultResultOrder('ipv4first');
+    try {
+        dns.setServers(['1.1.1.1', '8.8.8.8', '8.8.4.4']);
+        if (dns.setDefaultResultOrder) {
+            dns.setDefaultResultOrder('ipv4first');
+        }
+    } catch (err) {
+        // Silently fail
     }
 }
 
@@ -20,7 +24,7 @@ export async function GET(req) {
         const token = req.cookies.get('token')?.value;
 
         if (!token) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({ user: null, authenticated: false }, { status: 200 });
         }
 
         // Verify token
@@ -57,7 +61,7 @@ export async function GET(req) {
 
     } catch (error) {
         console.error('Session error:', error);
-        const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const response = NextResponse.json({ user: null, authenticated: false }, { status: 200 });
         response.cookies.delete('token');
         return response;
     }

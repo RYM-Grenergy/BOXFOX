@@ -50,7 +50,7 @@ export async function GET(req, { params }) {
             dimensions: product.dimensions,
             attributes: product.attributes,
             brand: product.brand || 'BoxFox',
-            minOrderQuantity: product.minOrderQuantity || 100,
+            minOrderQuantity: product.minOrderQuantity || 10,
             minPrice: product.minPrice,
             maxPrice: product.maxPrice,
             tags: product.tags || [],

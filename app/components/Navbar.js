@@ -23,6 +23,9 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const { cart, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen, cartTotal } = useCart();
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -32,6 +35,31 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // High-performance live search with debouncing for 10k+ scalability
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(`/api/products?search=${encodeURIComponent(searchTerm)}&limit=6`);
+        const data = await res.json();
+        // Since API returns sections, flatten items for the live dropdown
+        const items = Array.isArray(data) ? data.flatMap(s => s.items || []) : [];
+        setSearchResults(items);
+      } catch (e) {
+        console.error("Nav Search Error:", e);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const navLinks = [
     { label: "Home", href: "/" },
@@ -46,22 +74,13 @@ export default function Navbar() {
     <>
       <nav className="fixed top-0 sm:top-6 left-0 right-0 z-[100] px-0 sm:px-4 w-full">
         <div className={`mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isScrolled
-          ? "max-w-[1200px] bg-white/95 backdrop-blur-3xl border-b sm:border border-white/60 shadow-xl rounded-none sm:rounded-full py-3 px-4 sm:px-10"
-          : "max-w-[1600px] bg-white sm:bg-transparent border-b border-gray-100 sm:border-none py-4 sm:py-6 px-4 sm:px-12"
+          ? "w-[96%] lg:w-[98%] xl:max-w-[1350px] bg-white/95 backdrop-blur-3xl border-b sm:border border-white/60 shadow-xl rounded-none sm:rounded-full py-3 px-4 lg:px-6 xl:px-10"
+          : "w-full max-w-[1600px] bg-white sm:bg-transparent border-b border-gray-100 sm:border-none py-4 sm:py-6 px-4 sm:px-12"
           }`}>
-          <div className="flex items-center justify-between gap-4 sm:gap-8">
-            {/* Logo */}
-            <Link href="/" className="shrink-0">
-              <img
-                src="/BOXFOX-1.png"
-                alt="BOXFOX Logo"
-                className={`transition-all duration-500 ${isScrolled ? "h-5 sm:h-6" : "h-6 sm:h-9"}`}
-              />
-            </Link>
-
-            {/* Centered Desktop Links */}
-            <div className="hidden lg:flex items-center gap-2 xl:gap-6">
-              {navLinks.map((link) => (
+          <div className="flex items-center justify-between gap-4">
+            {/* Left Nav (Desktop) */}
+            <div className="hidden lg:flex items-center justify-end flex-1 gap-2 xl:gap-6">
+              {navLinks.slice(0, 3).map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
@@ -74,9 +93,6 @@ export default function Navbar() {
                 >
                   <div className="flex flex-col items-center">
                     <span className="relative z-10 transition-colors duration-300 group-hover:text-emerald-600">{link.label}</span>
-                    {link.isSpecial && (
-                      <span className="text-[6px] xl:text-[7px] font-black text-emerald-600/60 -mt-1 tracking-[0.1em]"></span>
-                    )}
                   </div>
 
                   {/* Hover Glow Background */}
@@ -94,66 +110,112 @@ export default function Navbar() {
               ))}
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-1 sm:gap-2">
-              <button
-                onClick={() => setSearchOpen(!searchOpen)}
-                className="p-2 sm:p-2.5 rounded-full hover:bg-gray-50 hover:shadow-lg active:scale-90 active:shadow-inner transition-all text-gray-900 duration-300"
-              >
-                <Search size={16} className="sm:w-[18px] sm:h-[18px]" />
-              </button>
+            {/* Logo (Centered) */}
+            <Link href="/" className="shrink-0 lg:mx-10">
+              <img
+                src="/BOXFOX-1.png"
+                alt="BOXFOX Logo"
+                className={`transition-all duration-500 ${isScrolled ? "h-5 sm:h-6" : "h-6 sm:h-9"}`}
+              />
+            </Link>
 
-              <div className="relative group hidden sm:block">
-                <Link
-                  href={user ? "/account" : `/login?redirect=${encodeURIComponent(pathname)}`}
-                  className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full transition-all duration-500 ${user
-                    ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100"
-                    : "bg-gray-950 text-white hover:bg-emerald-600 shadow-xl shadow-gray-200"
-                    }`}
-                >
-                  <User size={16} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">
-                    {user ? "Account" : "Login"}
-                  </span>
-                </Link>
+            {/* Right Side: Nav Links (Desktop) + Actions */}
+            <div className="flex-1 flex items-center justify-between lg:justify-start gap-1 sm:gap-2">
+              <div className="hidden lg:flex items-center gap-2 xl:gap-6 mr-3 xl:mr-4">
+                {navLinks.slice(3).map((link) => (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className={`relative px-3 xl:px-4 py-2.5 text-[11px] xl:text-[13px] font-black uppercase tracking-[0.2em] transition-all duration-300 group active:scale-95 rounded-xl ${pathname === link.href
+                      ? "text-emerald-600"
+                      : link.isSpecial
+                        ? "text-emerald-500 font-black h-fit"
+                        : "text-gray-500 hover:text-emerald-600"
+                      }`}
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="relative z-10 transition-colors duration-300 group-hover:text-emerald-600">{link.label}</span>
+                    </div>
 
-                {user && (
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200]">
-                    <Link href="/account" className="block px-6 py-2 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 transition-colors">
-                      My Dashboard
-                    </Link>
-                    <Link href="/account?tab=wishlist" className="block px-6 py-2 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 transition-colors">
-                      My Wishlist
-                    </Link>
-                    <div className="h-px bg-gray-50 mx-6 my-1" />
-                    <button
-                      onClick={logout}
-                      className="w-full text-left px-6 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 transition-colors"
-                    >
-                      Logout_Session
-                    </button>
-                  </div>
-                )}
+                    {/* Hover Glow Background */}
+                    <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/10 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] rounded-xl transition-all duration-300 -z-0" />
+
+                    {/* Active/Current Page Glow */}
+                    {pathname === link.href && (
+                      <motion.div
+                        layoutId="nav-glow"
+                        className="absolute inset-0 bg-emerald-500/10 shadow-[0_0_25px_rgba(16,185,129,0.2)] rounded-xl -z-0"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      />
+                    )}
+                  </Link>
+                ))}
               </div>
 
-              <button
-                onClick={() => setIsCartOpen(true)}
-                className="relative p-2 sm:p-2.5 rounded-full hover:bg-gray-50 hover:shadow-lg active:scale-90 active:shadow-inner transition-all text-gray-900 duration-300"
-              >
-                <ShoppingCart size={16} className="sm:w-[18px] sm:h-[18px]" />
-                {cart.length > 0 && (
-                  <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 bg-emerald-500 text-white text-[7px] sm:text-[8px] font-black rounded-full h-3 sm:h-3.5 w-3 sm:w-3.5 flex items-center justify-center ring-2 ring-white">
-                    {cart.length}
-                  </span>
-                )}
-              </button>
+              {/* Actions Section */}
+              <div className="flex items-center gap-2 sm:gap-3 ml-auto lg:ml-0 shrink-0">
+                <button
+                  onClick={() => setSearchOpen(!searchOpen)}
+                  aria-label="Search"
+                  className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full hover:bg-gray-50 hover:shadow-lg active:scale-90 active:shadow-inner transition-all text-gray-900 duration-300"
+                >
+                  <Search size={16} className="sm:w-[18px] sm:h-[18px]" />
+                </button>
 
-              <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="lg:hidden p-2 sm:p-2.5 rounded-full hover:bg-gray-50 hover:shadow-lg active:scale-90 active:shadow-inner transition-all text-gray-900 duration-300"
-              >
-                {menuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
+                <div className="relative group hidden sm:flex items-center justify-center">
+                  <Link
+                    href={user ? "/account" : `/login?redirect=${encodeURIComponent(pathname)}`}
+                    className={`flex items-center justify-center gap-2.5 px-5 h-10 sm:h-11 rounded-full transition-all duration-500 ${user
+                      ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100"
+                      : "bg-gray-950 text-white hover:bg-emerald-600 shadow-xl shadow-gray-200"
+                      }`}
+                  >
+                    <User size={16} />
+                    <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">
+                      {user ? "Account" : "Login"}
+                    </span>
+                  </Link>
+
+                  {user && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200]">
+                      <Link href="/account" className="block px-6 py-2 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 transition-colors">
+                        My Dashboard
+                      </Link>
+                      <Link href="/account?tab=wishlist" className="block px-6 py-2 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 transition-colors">
+                        My Wishlist
+                      </Link>
+                      <div className="h-px bg-gray-50 mx-6 my-1" />
+                      <button
+                        onClick={logout}
+                        className="w-full text-left px-6 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 transition-colors"
+                      >
+                        Logout_Session
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  aria-label="Open Shopping Cart"
+                  className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full hover:bg-gray-50 hover:shadow-lg active:scale-90 active:shadow-inner transition-all text-gray-900 duration-300"
+                >
+                  <ShoppingCart size={18} className="sm:w-[20px] sm:h-[20px]" />
+                  {cart.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[7px] sm:text-[9px] font-black rounded-full h-4 sm:h-4.5 w-4 sm:w-4.5 flex items-center justify-center ring-2 ring-white shadow-lg">
+                      {cart.length}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  aria-label={menuOpen ? "Close Menu" : "Open Menu"}
+                  className="lg:hidden flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full hover:bg-gray-50 hover:shadow-lg active:scale-90 active:shadow-inner transition-all text-gray-900 duration-300"
+                >
+                  {menuOpen ? <X size={20} /> : <Menu size={20} />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -165,19 +227,90 @@ export default function Navbar() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="absolute top-20 sm:top-24 left-1/2 -translate-x-1/2 w-full max-w-xl px-4"
+              className="absolute top-20 sm:top-24 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 z-[300]"
             >
-              <div className="bg-white/80 backdrop-blur-2xl border border-gray-100 rounded-3xl sm:rounded-[2rem] p-3 sm:p-4 shadow-2xl flex items-center gap-3 sm:gap-4">
-                <Search className="text-gray-400 ml-2 sm:ml-4" size={18} />
-                <input
-                  autoFocus
-                  type="text"
-                  placeholder="Design search..."
-                  className="bg-transparent w-full text-[11px] sm:text-sm font-bold text-gray-950 outline-none placeholder:text-gray-300 uppercase tracking-widest"
-                />
-                <button onClick={() => setSearchOpen(false)} className="p-2 hover:bg-gray-50 rounded-full transition-all">
-                  <X size={16} className="text-gray-400" />
-                </button>
+              <div className="relative">
+                <div className="bg-white border border-gray-100 rounded-3xl sm:rounded-[2rem] p-3 sm:p-4 shadow-2xl flex items-center gap-3 sm:gap-4">
+                  <Search className={`${isSearching ? "text-emerald-500 animate-pulse" : "text-gray-400"} ml-2 sm:ml-4`} size={18} />
+                  <input
+                    autoFocus
+                    type="text"
+                    placeholder="Search designs, SKUs, or boxes..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="bg-transparent w-full text-[11px] sm:text-sm font-bold text-gray-950 outline-none placeholder:text-gray-300 uppercase tracking-widest"
+                  />
+                  <button
+                    onClick={() => {
+                      setSearchOpen(false);
+                      setSearchTerm("");
+                    }}
+                    className="p-2 hover:bg-gray-50 rounded-full transition-all"
+                  >
+                    <X size={16} className="text-gray-400" />
+                  </button>
+                </div>
+
+                {/* Search Results Dropdown (Large Scale Ready) */}
+                <AnimatePresence>
+                  {(searchResults.length > 0 || isSearching) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-100 rounded-[2rem] shadow-[0_30px_60px_rgba(0,0,0,0.12)] overflow-hidden p-2 z-[301]"
+                    >
+                      <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                        {isSearching && searchResults.length === 0 ? (
+                          <div className="py-12 flex flex-col items-center justify-center gap-3 text-gray-300">
+                            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+                              <Search size={24} />
+                            </motion.div>
+                            <span className="text-[10px] font-black uppercase tracking-widest">Searching Database...</span>
+                          </div>
+                        ) : (
+                          searchResults.map((item) => (
+                            <Link
+                              key={item.id}
+                              href={`/products/${item.id}`}
+                              onClick={() => {
+                                setSearchOpen(false);
+                                setSearchTerm("");
+                              }}
+                              className="flex items-center gap-4 p-3 hover:bg-emerald-50 rounded-2xl transition-all group"
+                            >
+                              <div className="w-12 h-12 rounded-xl bg-gray-50 border border-gray-100 overflow-hidden shrink-0">
+                                <img src={item.img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={item.name} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-[11px] font-black text-gray-950 uppercase tracking-tight truncate">{item.name}</h4>
+                                <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">{item.price}</p>
+                              </div>
+                              <ArrowRight size={14} className="text-gray-200 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+                            </Link>
+                          ))
+                        )}
+                        {searchResults.length === 0 && !isSearching && (
+                          <div className="py-12 text-center text-gray-400">
+                            <p className="text-[10px] font-black uppercase tracking-widest">No models match your search</p>
+                          </div>
+                        )}
+                        {searchResults.length > 0 && (
+                          <Link
+                            href={`/shop?search=${encodeURIComponent(searchTerm)}`}
+                            onClick={() => {
+                              setSearchOpen(false);
+                              setSearchTerm("");
+                            }}
+                            className="block p-4 text-center border-t border-gray-50 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 hover:bg-emerald-50 transition-all"
+                          >
+                            View All Search results
+                          </Link>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           )}

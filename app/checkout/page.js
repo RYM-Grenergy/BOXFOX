@@ -12,12 +12,14 @@ import {
     Lock
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useToast } from '../context/ToastContext';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function CheckoutPage() {
     const { cart, cartTotal, clearCart } = useCart();
+    const { showToast } = useToast();
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderId, setOrderId] = useState(null);
@@ -129,7 +131,7 @@ export default function CheckoutPage() {
 
     const placeOrder = async () => {
         if (!formData.shippingAddress.street || !formData.shippingAddress.city || !formData.shippingAddress.zipCode) {
-            alert("Please complete shipping details");
+            showToast("Please complete shipping details", "error");
             return;
         }
         setIsSubmitting(true);

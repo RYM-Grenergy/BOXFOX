@@ -25,10 +25,10 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-4">
               {[
-                { Icon: Instagram, href: "#", color: "hover:text-pink-600 hover:bg-pink-50" },
-                { Icon: Facebook, href: "#", color: "hover:text-blue-600 hover:bg-blue-50" },
-                { Icon: Twitter, href: "#", color: "hover:text-sky-500 hover:bg-sky-50" },
-                { Icon: Youtube, href: "#", color: "hover:text-red-600 hover:bg-red-50" }
+                { Icon: Instagram, href: "https://instagram.com/boxfox", color: "hover:text-pink-600 hover:bg-pink-50" },
+                { Icon: Facebook, href: "https://facebook.com/boxfox", color: "hover:text-blue-600 hover:bg-blue-50" },
+                { Icon: Twitter, href: "https://twitter.com/boxfox", color: "hover:text-sky-500 hover:bg-sky-50" },
+                { Icon: Youtube, href: "https://youtube.com/@boxfox", color: "hover:text-red-600 hover:bg-red-50" }
               ].map(({ Icon, href, color }, i) => (
                 <a
                   key={i}
@@ -45,9 +45,14 @@ export default function Footer() {
           <div className="space-y-6">
             <h4 className="text-[10px] font-black text-emerald-600 tracking-[0.3em] uppercase">Collection</h4>
             <ul className="space-y-3">
-              {["Bakery Luxury", "Rigid Displays", "Eco Corrugated", "Custom Prints"].map((item) => (
-                <li key={item}>
-                  <Link href="#" className="text-[12px] font-black text-gray-950 hover:text-emerald-600 transition-all uppercase tracking-wider">{item}</Link>
+              {[
+                { name: "Bakery Luxury", slug: "Bakery" },
+                { name: "Rigid Displays", slug: "Rigid" },
+                { name: "Eco Corrugated", slug: "Corrugated" },
+                { name: "Custom Prints", slug: "Custom" }
+              ].map((item) => (
+                <li key={item.name}>
+                  <Link href={`/shop?category=${item.slug}`} className="text-[12px] font-black text-gray-950 hover:text-emerald-600 transition-all uppercase tracking-wider">{item.name}</Link>
                 </li>
               ))}
             </ul>
@@ -103,7 +108,7 @@ export default function Footer() {
         {/* Minimal Bottom Bar */}
         <div className="mt-16 pt-8 border-t border-gray-50 flex flex-col md:flex-row items-center justify-between gap-6">
           <p className="text-[10px] font-black text-gray-950 tracking-[0.2em] uppercase">
-            &copy; 2020-23 Indo Omakase Pvt Ltd. All Rights Reserved
+            &copy; 2020-{new Date().getFullYear()} Indo Omakase Pvt Ltd. All Rights Reserved
           </p>
           <div className="flex gap-8 uppercase tracking-[0.2em] font-black text-[9px] text-gray-950">
             {[

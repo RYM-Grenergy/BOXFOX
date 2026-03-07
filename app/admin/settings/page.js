@@ -10,8 +10,6 @@ export default function SettingsPage() {
         { icon: <Globe size={18} />, label: 'General' },
         { icon: <Shield size={18} />, label: 'Security' },
         { icon: <Bell size={18} />, label: 'Notifications' },
-        { icon: <CreditCard size={18} />, label: 'Billing' },
-        { icon: <Layout size={18} />, label: 'Theme' },
     ];
 
     const renderContent = () => {
@@ -148,105 +146,6 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    </div>
-                );
-            case 'Billing':
-                return (
-                    <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm space-y-10">
-                        <div>
-                            <h2 className="text-xl font-black text-gray-950 mb-2">Lab Subscription</h2>
-                            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest leading-none">Manage your BoxFox SaaS tier and invoices</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="p-8 rounded-[2.5rem] bg-gray-950 text-white relative overflow-hidden group border-4 border-gray-950 hover:border-emerald-500/20 transition-all">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -translate-y-12 translate-x-12"></div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-6">Current Plan</p>
-                                <h3 className="text-4xl font-black tracking-tighter mb-2">BoxFox Enterprise</h3>
-                                <p className="text-gray-400 text-sm font-bold">Unlimited SKU & Priority Support</p>
-                                <div className="mt-8 pt-8 border-t border-white/10 flex items-end justify-between">
-                                    <div>
-                                        <p className="text-3xl font-black leading-none">₹2,499<span className="text-sm text-gray-500 font-bold tracking-normal italic">/mo</span></p>
-                                        <p className="text-[10px] font-black uppercase text-emerald-500 mt-2">Next Renewal: March 15, 2026</p>
-                                    </div>
-                                    <button className="px-6 py-2 bg-white text-gray-950 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all">Upgrade</button>
-                                </div>
-                            </div>
-
-                            <div className="space-y-6">
-                                <h3 className="text-sm font-black text-gray-950 uppercase tracking-widest ml-2">Recent Invoices</h3>
-                                {[
-                                    { date: 'Feb 15, 2026', id: '#INV-001', amt: '₹2,499', status: 'Paid' },
-                                    { date: 'Jan 15, 2026', id: '#INV-002', amt: '₹2,499', status: 'Paid' },
-                                    { date: 'Dec 15, 2025', id: '#INV-003', amt: '₹2,499', status: 'Paid' },
-                                ].map((inv, i) => (
-                                    <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 italic transition-all hover:bg-white hover:shadow-lg hover:shadow-gray-100">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-gray-400">
-                                                <ExternalLink size={16} />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-black text-gray-950">{inv.id}</p>
-                                                <p className="text-[10px] font-bold text-gray-400 uppercase">{inv.date}</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-xs font-black text-gray-950">{inv.amt}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                );
-            case 'Theme':
-                return (
-                    <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm space-y-10">
-                        <div>
-                            <h2 className="text-xl font-black text-gray-950 mb-2">Visual Identity</h2>
-                            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest leading-none">Customize the admin dashboard aesthetics</p>
-                        </div>
-
-                        <div className="space-y-10">
-                            <div className="space-y-4">
-                                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Accent Color</h3>
-                                <div className="flex gap-4">
-                                    {[
-                                        { label: 'Emerald', color: 'bg-emerald-500' },
-                                        { label: 'Royal Blue', color: 'bg-blue-600' },
-                                        { label: 'Deep Purple', color: 'bg-purple-600' },
-                                        { label: 'Sunset Orange', color: 'bg-orange-500' },
-                                        { label: 'Jet Black', color: 'bg-gray-950' },
-                                    ].map((c, i) => (
-                                        <div key={i} className="flex flex-col items-center gap-2 group cursor-pointer">
-                                            <div className={`w-14 h-14 rounded-2xl ${c.color} shadow-lg ring-4 ring-transparent hover:ring-gray-100 transition-all ${i === 0 ? 'ring-emerald-500/20 scale-110' : ''}`}></div>
-                                            <p className="text-[8px] font-black uppercase tracking-widest text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">{c.label}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Interface Mode</h3>
-                                <div className="grid grid-cols-2 gap-8 max-w-xl">
-                                    <div className="p-6 bg-white border-2 border-emerald-500 rounded-3xl shadow-xl shadow-gray-100 cursor-pointer">
-                                        <div className="w-full aspect-[4/3] bg-gray-50 rounded-xl mb-4 p-2 space-y-2">
-                                            <div className="w-1/2 h-2 bg-gray-200 rounded-full"></div>
-                                            <div className="w-full h-8 bg-white border border-gray-100 rounded-lg"></div>
-                                        </div>
-                                        <p className="text-center text-xs font-black uppercase tracking-widest text-gray-950">High Gloss Light</p>
-                                    </div>
-                                    <div className="p-6 bg-gray-950 border-2 border-transparent rounded-3xl cursor-not-allowed group relative opacity-50">
-                                        <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-[2px] rounded-3xl z-10 flex items-center justify-center">
-                                            <div className="bg-emerald-500 text-gray-950 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest">Coming Soon</div>
-                                        </div>
-                                        <div className="w-full aspect-[4/3] bg-gray-900 rounded-xl mb-4 p-2 space-y-2">
-                                            <div className="w-1/2 h-2 bg-gray-800 rounded-full"></div>
-                                            <div className="w-full h-8 bg-gray-800 rounded-lg"></div>
-                                        </div>
-                                        <p className="text-center text-xs font-black uppercase tracking-widest text-white">Midnight Vault</p>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 );

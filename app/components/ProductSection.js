@@ -14,11 +14,9 @@ export default function ProductSection({ searchQuery = "", category = "All" }) {
     const params = new URLSearchParams();
     params.append('all', 'true');
     if (searchQuery) params.append('search', searchQuery);
+    if (category && category !== "All") params.append('category', category);
 
-    // If not "All", we might want to filter, but our API returns sections.
-    // Let's assume the API handles it or we filter client-side.
-    // For now, let's fetch all and filter in UI if category != "All"
-
+    // Efficient server-side fetching with scaling support
     fetch(url + (params.toString() ? `?${params.toString()}` : ''))
       .then(res => res.json())
       .then(data => {

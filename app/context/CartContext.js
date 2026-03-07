@@ -1,11 +1,13 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useToast } from './ToastContext';
 
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
     const [cart, setCart] = useState([]);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const { showToast } = useToast();
 
     useEffect(() => {
         const savedCart = localStorage.getItem('boxfox_cart');
@@ -38,10 +40,12 @@ export function CartProvider({ children }) {
     };
 
     const addToCart = (product, quantity) => {
+        let isUpdate = false;
         setCart(prev => {
             const existing = prev.find(item => item.id === product.id);
             if (existing) {
-                const newQuantity = existing.quantity + quantity;
+                isUpdate = true;
+                const newQuantity = existing.quantity + Math.max(0, quantity);
                 return prev.map(item => item.id === product.id
                     ? {
                         ...item,
@@ -57,6 +61,8 @@ export function CartProvider({ children }) {
                 price: calculateUnitPrice(product, quantity)
             }];
         });
+
+        showToast(isUpdate ? `Updated ${product.name} quantity` : `Added ${product.name} to basket`);
         setIsCartOpen(true);
     };
 
@@ -74,7 +80,11 @@ export function CartProvider({ children }) {
     };
 
     const removeFromCart = (id) => {
+        const itemToRemove = cart.find(i => i.id === id);
         setCart(prev => prev.filter(item => item.id !== id));
+        if (itemToRemove) {
+            showToast(`Removed ${itemToRemove.name} from basket`, "info");
+        }
     };
 
     const clearCart = () => setCart([]);

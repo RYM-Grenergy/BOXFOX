@@ -52,4 +52,29 @@ const productSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Add high-performance indexes
+productSchema.index({ name: 1 });
+productSchema.index({ categories: 1 });
+productSchema.index({ tags: 1 });
+productSchema.index({ isFeatured: 1 });
+productSchema.index({ createdAt: -1 });
+
+// Scalability: Compound Text Index for ultra-fast multi-field search
+productSchema.index({
+    name: 'text',
+    sku: 'text',
+    categories: 'text',
+    tags: 'text',
+    brand: 'text'
+}, {
+    weights: {
+        name: 10,
+        sku: 5,
+        categories: 3,
+        tags: 2,
+        brand: 1
+    },
+    name: "ProductSearchIndex"
+});
+
 export default mongoose.models.Product || mongoose.model('Product', productSchema);

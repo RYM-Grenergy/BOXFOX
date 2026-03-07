@@ -41,6 +41,7 @@ import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
 import AuthModal from "@/app/components/AuthModal";
 import { useCart } from "@/app/context/CartContext";
+import { useToast } from "@/app/context/ToastContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
@@ -51,6 +52,7 @@ function CustomizeLabContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToCart } = useCart();
+  const { showToast } = useToast();
   const { user, loading: authLoading, checkUser } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -241,7 +243,7 @@ function CustomizeLabContent() {
 
         if (data && !data.error) {
           setProduct(data);
-          setQuantity(data.minOrderQuantity || 100);
+          setQuantity(data.minOrderQuantity || 10);
 
           // Sync dimensions if not already set by URL params
           if (!l && !w && !h && data.dimensions) {
@@ -692,8 +694,6 @@ function CustomizeLabContent() {
         onClose={() => router.push('/')}
       />
       {/* AI Generate overlay removed for direct lab flow */}
-      <Navbar />
-
       <main className="pt-20 sm:pt-24 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8 xl:px-12 max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10">
         {/* 3D SPATIAL CANVAS (LEFT) */}
         <div className="lg:col-span-7 lg:sticky lg:top-24 lg:h-[calc(100vh-120px)] flex flex-col space-y-4 md:space-y-6">
@@ -712,9 +712,9 @@ function CustomizeLabContent() {
                   onChange={(e) => setDesignName(e.target.value)}
                   className="bg-transparent border-none outline-none text-[9px] sm:text-[11px] md:text-sm font-black uppercase tracking-[0.15em] sm:tracking-[0.3em] text-emerald-600 italic leading-none w-full focus:ring-0"
                 />
-                <span className="text-[7px] sm:text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                <h1 className="text-[7px] sm:text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
                   Product_Type: {product?.categories?.[1] || "Standard"} Lab Edition
-                </span>
+                </h1>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -748,15 +748,16 @@ function CustomizeLabContent() {
                     if (res.ok && result.success) {
                       if (!activeDesignId && result.design?._id) setActiveDesignId(result.design._id);
                       setDraftSaved(true);
+                      showToast("Design saved successfully!");
                       setTimeout(() => setDraftSaved(false), 3000);
                     } else {
                       const errorMsg = result.error || 'Failed to save design';
-                      alert(errorMsg);
+                      showToast(errorMsg, "error");
                       if (res.status === 401) router.push('/login');
                     }
                   } catch (e) {
                     console.error('Save Design Error:', e);
-                    alert('An unexpected error occurred while saving.');
+                    showToast('An unexpected error occurred while saving.', "error");
                   } finally {
                     setIsSavingDraft(false);
                   }
@@ -809,12 +810,12 @@ function CustomizeLabContent() {
                       setTimeout(() => setShareToast(false), 6000);
                     } else {
                       const errorMsg = result.error || 'Failed to generate share link';
-                      alert(errorMsg);
+                      showToast(errorMsg, "error");
                       if (res.status === 401) router.push('/login');
                     }
                   } catch (e) {
                     console.error('Share Design Error:', e);
-                    alert('An unexpected error occurred while sharing.');
+                    showToast('An unexpected error occurred while sharing.', "error");
                   } finally {
                     setIsSharing(false);
                   }
@@ -1255,7 +1256,7 @@ function CustomizeLabContent() {
                     placeholder="Custom..."
                     min={10}
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase font-bold text-gray-400">100 Units</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase font-bold text-gray-400">MOQ: 10</span>
                 </div>
               </div>
             </div>
@@ -1736,7 +1737,7 @@ function CustomizeLabContent() {
                       if (startData.limitReached) {
                         setShowPremiumModal(true);
                       } else {
-                        alert(startData.message || startData.error || "Generation failed");
+                        showToast(startData.message || startData.error || "Generation failed", "error");
                       }
                       setIsGenerating(false);
                       return;
@@ -1830,7 +1831,7 @@ function CustomizeLabContent() {
 
                   } catch (err) {
                     console.error("Forge Error:", err);
-                    alert("Forge error: " + err.message);
+                    showToast("Forge error: " + err.message, "error");
                   } finally {
                     setIsGenerating(false);
                   }
@@ -1957,7 +1958,7 @@ function CustomizeLabContent() {
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(shareLink);
-                      alert("Link copied to clipboard!");
+                      showToast("Link copied to clipboard!", "success");
                     }}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all"
                   >
@@ -2121,7 +2122,7 @@ function CustomizeLabContent() {
                 <div className="w-full space-y-3 mt-6">
                   <button
                     onClick={() => {
-                      alert("Routing to payment gateway to subscribe for ₹59/week.");
+                      showToast("Routing to payment gateway to subscribe for ₹59/week.", "info");
                       setShowPremiumModal(false);
                     }}
                     className="w-full py-4 bg-gray-950 text-white rounded-xl font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-emerald-500 transition-all active:scale-95"

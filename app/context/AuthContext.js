@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useToast } from "./ToastContext";
 
 const AuthContext = createContext();
 
@@ -8,6 +9,7 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const { showToast } = useToast();
 
     useEffect(() => {
         checkUser();
@@ -16,14 +18,17 @@ export function AuthProvider({ children }) {
     const checkUser = async () => {
         try {
             const res = await fetch("/api/auth/me", { cache: "no-store" });
+            if (!res.ok) {
+                setUser(null);
+                return;
+            }
             const data = await res.json();
-            if (res.ok && data.user) {
+            if (data.user) {
                 setUser(data.user);
             } else {
                 setUser(null);
             }
         } catch (error) {
-            console.error("Auth check failed:", error);
             setUser(null);
         } finally {
             setLoading(false);
@@ -40,8 +45,10 @@ export function AuthProvider({ children }) {
         const data = await res.json();
         if (res.ok) {
             setUser(data.user);
+            showToast(`Welcome back, ${data.user.name}!`);
             return { success: true, user: data.user };
         }
+        showToast(data.error || "Login failed", "error");
         return { success: false, error: data.error };
     };
 
@@ -62,6 +69,7 @@ export function AuthProvider({ children }) {
     const logout = async () => {
         await fetch("/api/auth/logout", { method: "POST" });
         setUser(null);
+        showToast("Logged out successfully", "info");
         router.push("/login");
     };
 

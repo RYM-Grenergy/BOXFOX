@@ -9,8 +9,8 @@ import { ShieldCheck, Truck, Recycle, Award, CheckCircle2, Sparkles, Target, Use
 export default function AboutPage() {
     const stats = [
         { label: 'Products for sale', value: '45K', icon: <TrendingUp className="text-emerald-500" /> },
-        { label: 'Sellers Active on IOPL', value: '1.8K', icon: <Users className="text-blue-500" /> },
-        { label: 'Buyers Active on Martfury', value: '0.5K', icon: <Sparkles className="text-orange-500" /> },
+        { label: 'Production Nodes Active', value: '1.8K', icon: <Users className="text-blue-500" /> },
+        { label: 'Buyers Active on BoxFox', value: '10.5K', icon: <Sparkles className="text-orange-500" /> },
         { label: 'Annual gross sales', value: '₹1.64Cr', icon: <Award className="text-purple-500" /> },
     ];
 
@@ -20,7 +20,8 @@ export default function AboutPage() {
         { year: '2014', month: 'December', title: 'Expansion', desc: 'Started from 100 sqft, now we are in 4000sq.ft. area, with more bigger visions.' },
         { year: '2016', month: 'February', title: 'Indian Clientele', desc: 'After giving so much of services to Japanese, now we expended our reach to Indian Clientele with more products and better services...' },
         { year: '2018', month: 'September', title: 'Setback & Growth', desc: 'This was a setback period, this situation changed us and our policies towards market, situation throw us back to 2010. We changed...' },
-        { year: '2020', month: 'July', title: 'Strength & Solution', desc: 'Now we are more bigger, stronger and aggressive, this COVID19 situation gives us ample time to rethink and now we have a solution which will help us all to grow more...' },
+        { year: '2020', month: 'July', title: 'Strength & Solution', desc: 'Now we are bigger, stronger and aggressive. The global situation gave us time to rethink and innovate for the digital age.' },
+        { year: '2024', month: 'January', title: 'The AI Forge Launch', desc: 'Launched our 3D AI-powered customization lab, revolutionizing how businesses design and order premium packaging online.' },
     ];
 
     const leaders = [
@@ -60,13 +61,16 @@ export default function AboutPage() {
                             transition={{ duration: 1, delay: 0.2 }}
                             className="relative hidden md:block"
                         >
-                            <div className="aspect-square bg-gray-50 rounded-[4rem] border border-gray-100 flex items-center justify-center p-12 lg:p-20 shadow-2xl">
-                                <img src="/BOXFOX-1.png" alt="IOPL Logo" className="w-full h-auto max-w-[200px] lg:max-w-[300px] opacity-10 grayscale hover:grayscale-0 transition-all duration-700" />
-                                <div className="absolute -bottom-10 -left-10 bg-white p-6 lg:p-10 rounded-[3rem] shadow-xl border border-gray-50 max-w-[240px] lg:max-w-xs">
+                            <div className="aspect-square bg-white rounded-[4rem] border border-gray-100 overflow-hidden flex items-center justify-center shadow-2xl group">
+                                <img
+                                    src="/about.png"
+                                    alt="BoxFox Presentation"
+                                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                                />
+                                <div className="absolute -bottom-10 -left-10 bg-white p-6 lg:p-10 rounded-[3rem] shadow-xl border border-gray-200 max-w-[240px] lg:max-w-xs z-20">
                                     <div className="flex items-center gap-4 mb-4">
                                         <div className="w-10 h-10 lg:w-12 lg:h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white">
-                                            <Award size={20} className="lg:hidden" />
-                                            <Award size={24} className="hidden lg:block" />
+                                            <Award size={24} />
                                         </div>
                                         <p className="text-[10px] lg:text-xs font-black uppercase tracking-widest text-gray-400">Since_2010</p>
                                     </div>
@@ -178,9 +182,9 @@ export default function AboutPage() {
                                                         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mt-2">{item.month}</p>
                                                     </div>
                                                 </div>
-                                                <h4 className="text-xl md:text-2xl font-black text-gray-950 mb-4 md:mb-6 uppercase tracking-tighter leading-tight italic">
+                                                <h3 className="text-xl md:text-2xl font-black text-gray-950 mb-4 md:mb-6 uppercase tracking-tighter leading-tight italic">
                                                     {item.title}
-                                                </h4>
+                                                </h3>
                                                 <p className="text-xs md:text-sm font-bold text-gray-500 italic leading-relaxed uppercase tracking-tight">
                                                     {item.desc}
                                                 </p>
@@ -280,7 +284,7 @@ export default function AboutPage() {
                                         <div className="absolute inset-x-0 bottom-0 p-6 md:p-10 bg-gradient-to-t from-gray-950/90 via-gray-950/40 to-transparent">
                                             <div className="translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
                                                 <span className="text-emerald-400 text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] mb-2 block">{l.role}</span>
-                                                <h4 className="text-2xl md:text-4xl font-black text-white italic tracking-tighter leading-none mb-4">{l.name}</h4>
+                                                <h3 className="text-2xl md:text-4xl font-black text-white italic tracking-tighter leading-none mb-4">{l.name}</h3>
                                                 <div className="w-12 h-1 bg-emerald-500 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left" />
                                             </div>
                                         </div>

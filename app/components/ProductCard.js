@@ -2,9 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, Heart, ArrowUpRight, Plus } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
+import { useToast } from "@/app/context/ToastContext";
 
-export default function ProductCard({ product, imageOnly = false }) {
+export default function ProductCard({ product, imageOnly = false, priority = false }) {
   const { addToCart } = useCart();
+  const { showToast } = useToast();
   const {
     _id,
     id,
@@ -37,6 +39,7 @@ export default function ProductCard({ product, imageOnly = false }) {
           className="w-full h-full object-contain p-8 transition-transform duration-1000 group-hover:scale-105"
           placeholder="blur"
           blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+          priority={priority}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="absolute inset-x-0 bottom-0 p-6 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex items-end justify-between">
@@ -61,6 +64,7 @@ export default function ProductCard({ product, imageOnly = false }) {
           height={500}
           unoptimized={img?.includes('boxfox.in') || !img}
           className="w-full h-full object-contain p-1 sm:p-4 transition-transform duration-1000 group-hover:scale-105"
+          priority={priority}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
@@ -121,10 +125,13 @@ export default function ProductCard({ product, imageOnly = false }) {
                   }
                   const data = await res.json();
                   if (res.ok) {
-                    alert(data.message);
+                    showToast(data.message || "Added to wishlist");
+                  } else {
+                    showToast(data.error || "Failed to update wishlist", "error");
                   }
                 } catch (err) {
                   console.error(err);
+                  showToast("Connection error", "error");
                 }
               }}
               className="p-3 bg-gray-50 text-gray-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-all border border-gray-100 shadow-sm shrink-0"
