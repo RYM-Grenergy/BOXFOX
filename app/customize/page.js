@@ -620,6 +620,8 @@ function CustomizeLabContent() {
   else if (quantity >= 500) unitPriceVal = maxPrice - (diff * 0.4205);
   else if (quantity >= 100) unitPriceVal = maxPrice - (diff * 0.3364);
   else if (quantity >= 50) unitPriceVal = maxPrice - (diff * 0.1682);
+  else if (quantity >= 30) unitPriceVal = maxPrice - (diff * 0.10);
+  else if (quantity >= 20) unitPriceVal = maxPrice - (diff * 0.05);
   else unitPriceVal = maxPrice;
 
   const calculatedUnitPrice = product
@@ -1235,7 +1237,7 @@ function CustomizeLabContent() {
                 <h3 className="text-xs font-black text-gray-950 uppercase tracking-[0.3em]">Quantity_Selection</h3>
               </div>
               <div className="flex flex-wrap gap-2">
-                {[100, 200, 300, 500, 1000].map(q => (
+                {[10, 20, 30, 100, 200, 300, 500, 1000].map(q => (
                   <button
                     key={q}
                     onClick={() => setQuantity(q)}
@@ -1248,12 +1250,12 @@ function CustomizeLabContent() {
                   <input
                     type="number"
                     value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    onChange={(e) => setQuantity(Math.max(10, parseInt(e.target.value) || 10))}
                     className="w-full h-full py-3 px-4 rounded-xl bg-white border-2 border-gray-200 font-black text-xs text-gray-950 placeholder-gray-400 focus:border-emerald-500 outline-none transition-all"
                     placeholder="Custom..."
-                    min={product?.minOrderQuantity || 1}
+                    min={10}
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase font-bold text-gray-400">Units</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase font-bold text-gray-400">100 Units</span>
                 </div>
               </div>
             </div>

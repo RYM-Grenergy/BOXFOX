@@ -30,6 +30,8 @@ export function CartProvider({ children }) {
         else if (quantity >= 500) price = maxPrice - (diff * 0.4205);
         else if (quantity >= 100) price = maxPrice - (diff * 0.3364);
         else if (quantity >= 50) price = maxPrice - (diff * 0.1682);
+        else if (quantity >= 30) price = maxPrice - (diff * 0.10);
+        else if (quantity >= 20) price = maxPrice - (diff * 0.05);
         else price = maxPrice;
 
         return parseFloat(price.toFixed(2));

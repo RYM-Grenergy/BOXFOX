@@ -25,7 +25,7 @@ export default function ProductPage() {
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeImg, setActiveImg] = useState(0);
-    const [quantity, setQuantity] = useState(100);
+    const [quantity, setQuantity] = useState(10);
     const [viewMode, setViewMode] = useState('2D');
 
     useEffect(() => {
@@ -65,6 +65,8 @@ export default function ProductPage() {
     else if (quantity >= 500) unitPriceVal = maxPrice - (diff * 0.4205);
     else if (quantity >= 100) unitPriceVal = maxPrice - (diff * 0.3364);
     else if (quantity >= 50) unitPriceVal = maxPrice - (diff * 0.1682);
+    else if (quantity >= 30) unitPriceVal = maxPrice - (diff * 0.10);
+    else if (quantity >= 20) unitPriceVal = maxPrice - (diff * 0.05);
     else unitPriceVal = maxPrice;
 
     const unitPrice = unitPriceVal.toFixed(2);
@@ -179,7 +181,7 @@ export default function ProductPage() {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">MOQ</p>
-                                        <p className="text-xl font-black text-gray-950">{product.minOrderQuantity || 100} Units</p>
+                                        <p className="text-xl font-black text-gray-950">{Math.max(10, product.minOrderQuantity || 10)} Units</p>
                                     </div>
                                 </div>
 
@@ -196,7 +198,7 @@ export default function ProductPage() {
                                     <div className="pt-2">
                                         <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-2">Select Quantity (Standard Size)</p>
                                         <div className="flex flex-wrap gap-2">
-                                            {[100, 200, 300, 500, 1000].map(q => (
+                                            {[10, 20, 30, 100, 200, 300, 500, 1000].map(q => (
                                                 <button
                                                     key={q}
                                                     onClick={() => setQuantity(q)}
@@ -209,10 +211,10 @@ export default function ProductPage() {
                                                 <input
                                                     type="number"
                                                     value={quantity}
-                                                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                                    onChange={(e) => setQuantity(Math.max(10, parseInt(e.target.value) || 10))}
                                                     className="w-full h-full py-3 px-4 rounded-xl border-2 border-gray-200 font-black text-xs text-gray-950 focus:border-gray-950 outline-none transition-all"
                                                     placeholder="Custom..."
-                                                    min={product.minOrderQuantity || 1}
+                                                    min={10}
                                                 />
                                             </div>
                                         </div>
