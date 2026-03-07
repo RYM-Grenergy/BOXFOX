@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     TrendingUp,
     Box,
@@ -15,19 +16,37 @@ import { motion } from 'framer-motion';
 export default function Dashboard() {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const router = useRouter();
 
     useEffect(() => {
-        fetch('/api/admin/stats')
+        fetch('/api/auth/me')
             .then(res => res.json())
+            .then(data => {
+                if (data.user?.role === 'staff_fulfillment') {
+                    router.push('/admin/orders');
+                } else if (!data.user || data.user.role !== 'admin') {
+                    router.push('/admin/login');
+                } else {
+                    return fetch('/api/admin/stats');
+                }
+            })
+            .then(res => res && res.json())
             .then(json => {
-                setData(json);
+                if (!json) return;
+                if (json.error) {
+                    setError(json.error);
+                } else {
+                    setData(json);
+                }
                 setLoading(false);
             })
             .catch(err => {
                 console.error("Dashboard fetch error:", err);
+                setError("Failed to load dashboard data.");
                 setLoading(false);
             });
-    }, []);
+    }, [router]);
 
     if (loading) {
         return (
@@ -40,6 +59,18 @@ export default function Dashboard() {
                     <div className="xl:col-span-2 h-96 bg-gray-100 rounded-[2.5rem]" />
                     <div className="h-96 bg-gray-950 rounded-[2.5rem]" />
                 </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
+                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
+                    <ArrowDownRight size={32} />
+                </div>
+                <h2 className="text-xl font-black text-gray-950 uppercase tracking-tighter mb-2">Error Loading Dashboard</h2>
+                <p className="text-gray-500 font-medium">{error}</p>
             </div>
         );
     }

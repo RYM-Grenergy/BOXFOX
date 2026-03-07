@@ -18,7 +18,7 @@ export async function PUT(req) {
             process.env.JWT_SECRET || 'fallback_secret_for_development_purposes'
         );
 
-        const { name, phone, address } = await req.json();
+        const { name, phone, businessName, address, shippingAddress } = await req.json();
 
         // Find user and update
         const updatedUser = await User.findByIdAndUpdate(
@@ -27,7 +27,9 @@ export async function PUT(req) {
                 $set: {
                     name,
                     phone,
-                    address
+                    businessName,
+                    address,
+                    shippingAddress
                 }
             },
             { new: true, runValidators: true }

@@ -29,13 +29,13 @@ export async function GET(req) {
       const flatList = products.map((p) => {
         const formattedPrice = p.minPrice
           ? (p.maxPrice ? `₹${p.minPrice} - ₹${p.maxPrice}` : `₹${p.minPrice}`)
-          : (p.price ? (p.price.toString().startsWith('₹') ? p.price : `₹${p.price}`) : "Price on Request");
+          : (p.price ? (String(p.price).startsWith('₹') ? p.price : `₹${p.price}`) : "Price on Request");
 
         return {
           _id: p._id,
           id: p.wpId,
           name: p.name,
-          category: p.categories[p.categories.length - 1] || "Uncategorized",
+          category: (p.categories && p.categories.length > 0) ? (p.categories[p.categories.length - 1] || "Uncategorized") : "Uncategorized",
           price: formattedPrice,
           minPrice: p.minPrice,
           maxPrice: p.maxPrice,
@@ -65,7 +65,7 @@ export async function GET(req) {
 
     products.forEach((p) => {
       // Use the last category as it's usually the most specific one
-      const primaryCat = p.categories[p.categories.length - 1] || "Packaging";
+      const primaryCat = (p.categories && p.categories.length > 0) ? (p.categories[p.categories.length - 1] || "Packaging") : "Packaging";
 
       if (!sectionsMap[primaryCat]) {
         sectionsMap[primaryCat] = {
@@ -77,7 +77,7 @@ export async function GET(req) {
 
       const formattedPrice = p.minPrice
         ? (p.maxPrice ? `₹${p.minPrice} - ₹${p.maxPrice}` : `₹${p.minPrice}`)
-        : (p.price ? (p.price.toString().startsWith('₹') ? p.price : `₹${p.price}`) : "Price on Request");
+        : (p.price ? (String(p.price).startsWith('₹') ? p.price : `₹${p.price}`) : "Price on Request");
 
       sectionsMap[primaryCat].items.push({
         id: p.wpId,
@@ -100,7 +100,7 @@ export async function GET(req) {
       .filter((s) => s.items.length > 0)
       .map((s) => ({
         ...s,
-        items: s.items.slice(0, 8),
+        items: searchParams.get("all") === "true" ? s.items : s.items.slice(0, 8),
       }));
 
     return NextResponse.json(sections);

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Order from '@/models/Order';
+import Coupon from '@/models/Coupon';
 
 export async function GET(req) {
     try {
@@ -9,7 +10,9 @@ export async function GET(req) {
         const id = searchParams.get('id');
 
         if (id) {
-            const order = await Order.findOne({ $or: [{ orderId: id }, { _id: id }] });
+            const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+            const query = isValidObjectId ? { $or: [{ orderId: id }, { _id: id }] } : { orderId: id };
+            const order = await Order.findOne(query);
             if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
             return NextResponse.json(order);
         }
@@ -37,6 +40,14 @@ export async function POST(req) {
             status: 'Pending'
         });
 
+        // If coupon was used, increment usage count
+        if (orderData.couponCode) {
+            await Coupon.findOneAndUpdate(
+                { code: orderData.couponCode.toUpperCase() },
+                { $inc: { usageCount: 1 } }
+            );
+        }
+
         return NextResponse.json({ success: true, orderId: newOrder.orderId });
     } catch (e) {
         console.error("Order Creation Error:", e);
@@ -47,12 +58,19 @@ export async function POST(req) {
 export async function PATCH(req) {
     try {
         await dbConnect();
-        const { id, status } = await req.json();
+        const { id, status, labNotes } = await req.json();
 
-        // Find by orderId string or MongoDB _id
+        // Find by orderId string or MongoDB _id safely
+        const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+        const query = isValidObjectId ? { $or: [{ orderId: id }, { _id: id }] } : { orderId: id };
+
+        let updateData = {};
+        if (status !== undefined) updateData.status = status;
+        if (labNotes !== undefined) updateData.labNotes = labNotes;
+
         const order = await Order.findOneAndUpdate(
-            { $or: [{ orderId: id }, { _id: id }] },
-            { status },
+            query,
+            updateData,
             { new: true }
         );
 

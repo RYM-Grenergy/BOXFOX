@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
 
     const checkUser = async () => {
         try {
-            const res = await fetch("/api/auth/me");
+            const res = await fetch("/api/auth/me", { cache: "no-store" });
             const data = await res.json();
             if (res.ok && data.user) {
                 setUser(data.user);

@@ -22,7 +22,7 @@ const productSchema = new mongoose.Schema({
 
     // New Enhanced Fields
     brand: { type: String, default: 'BoxFox' },
-    minOrderQuantity: { type: Number, default: 100 },
+    minOrderQuantity: { type: Number, default: 10 },
     badge: String,
     weight: Number,
     dimensions: {

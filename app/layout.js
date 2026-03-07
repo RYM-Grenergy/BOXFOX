@@ -29,6 +29,34 @@ export default function RootLayout({ children }) {
       <body className="antialiased" suppressHydrationWarning>
         <SiteLoader />
         <CustomCursor />
+        {/* Security Deterrents */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (window.location.hostname !== 'localhost') {
+                // Disable Right-Click
+                document.addEventListener('contextmenu', (e) => e.preventDefault());
+                
+                // Disable common shortcuts for DevTools
+                document.onkeydown = function(e) {
+                  if (
+                    e.keyCode === 123 || // F12
+                    (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || // Ctrl+Shift+I/J
+                    (e.ctrlKey && e.keyCode === 85) // Ctrl+U (View Source)
+                  ) {
+                    return false;
+                  }
+                };
+
+                // Clear console to hide internals
+                setInterval(() => {
+                  console.clear();
+                  console.log("%c BoxFox Security Active ", "background: #f00; color: #fff; font-size: 20px; font-weight: bold;");
+                }, 5000);
+              }
+            `,
+          }}
+        />
         <AuthProvider>
           <CartProvider>{children}</CartProvider>
         </AuthProvider>

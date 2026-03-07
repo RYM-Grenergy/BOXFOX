@@ -9,7 +9,8 @@ import {
     ShieldCheck,
     Truck,
     Star,
-    ArrowRight
+    ArrowRight,
+    Heart
 } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
 import Footer from '@/app/components/Footer';
@@ -50,7 +51,23 @@ export default function ProductPage() {
 
     const images = product.images && product.images.length > 0 ? product.images : [product.img];
     const displayImage = images[activeImg];
-    const unitPrice = parseFloat(product.price) || 15;
+
+    // Dynamic Tiered Step Pricing
+    const basePrice = typeof product?.price === 'number' ? product.price : parseFloat(String(product?.price || 15).replace(/[^0-9.]/g, '')) || 15;
+    const minPrice = typeof product?.minPrice === 'number' ? product.minPrice : parseFloat(String(product?.minPrice || basePrice).replace(/[^0-9.]/g, '')) || basePrice;
+    const maxPrice = typeof product?.maxPrice === 'number' ? product.maxPrice : parseFloat(String(product?.maxPrice || basePrice).replace(/[^0-9.]/g, '')) || basePrice;
+
+    const diff = maxPrice - minPrice;
+    let unitPriceVal = maxPrice;
+
+    if (quantity >= 5000) unitPriceVal = minPrice;
+    else if (quantity >= 1000) unitPriceVal = maxPrice - (diff * 0.4651);
+    else if (quantity >= 500) unitPriceVal = maxPrice - (diff * 0.4205);
+    else if (quantity >= 100) unitPriceVal = maxPrice - (diff * 0.3364);
+    else if (quantity >= 50) unitPriceVal = maxPrice - (diff * 0.1682);
+    else unitPriceVal = maxPrice;
+
+    const unitPrice = unitPriceVal.toFixed(2);
 
     return (
         <div className="min-h-screen bg-white">
@@ -125,15 +142,40 @@ export default function ProductPage() {
                                     <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[9px] font-black tracking-widest uppercase">Premium Series</span>
                                     {product.inStock && <span className="text-[9px] font-black text-emerald-500 uppercase flex items-center gap-1"><CheckCircle2 size={10} /> In Stock</span>}
                                 </div>
-                                <h1 className="text-4xl md:text-5xl font-black text-gray-950 tracking-tighter uppercase">{product.name}</h1>
+                                <div className="flex items-start justify-between gap-4">
+                                    <h1 className="text-4xl md:text-5xl font-black text-gray-950 tracking-tighter uppercase">{product.name}</h1>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                const res = await fetch('/api/wishlist', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/json' },
+                                                    body: JSON.stringify({ productId: product._id })
+                                                });
+                                                if (res.status === 401) window.location.href = '/login';
+                                            } catch (err) {
+                                                console.error(err);
+                                            }
+                                        }}
+                                        className="p-4 rounded-full bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all border border-gray-100 shadow-sm shrink-0"
+                                    >
+                                        <Heart size={24} />
+                                    </button>
+                                </div>
                                 <p className="text-sm text-gray-500 leading-relaxed font-medium">{product.description || "The ultimate professional packaging solution for your premium brand. Structural integrity meets aesthetic perfection."}</p>
                             </div>
 
                             <div className="p-6 rounded-[2rem] bg-gray-50 border border-gray-950/10 space-y-6">
                                 <div className="flex justify-between items-end">
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pricing Starts At</p>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{quantity >= 50 ? 'Est. Unit Price' : 'Pricing Starts At'}</p>
                                         <p className="text-4xl font-black text-gray-950 tracking-tighter">₹{unitPrice}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dimensions</p>
+                                        <p className="text-xs font-black text-gray-950 uppercase">
+                                            {product.dimensions?.length}x{product.dimensions?.width}x{product.dimensions?.height} {product.dimensions?.unit || 'in'}
+                                        </p>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">MOQ</p>
@@ -141,21 +183,46 @@ export default function ProductPage() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                     <Link
-                                        href={`/customize?length=${product.dimensions?.length || 12}&width=${product.dimensions?.width || 8}&height=${product.dimensions?.height || 4}`}
+                                        href={`/customize?length=${product.dimensions?.length || 12}&width=${product.dimensions?.width || 8}&height=${product.dimensions?.height || 4}&unit=${product.dimensions?.unit || 'inch'}`}
                                         className="w-full py-6 bg-emerald-500 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.3em] flex flex-col items-center justify-center gap-1 hover:bg-emerald-400 transition-all shadow-[0_20px_40px_rgba(16,185,129,0.3)] active:scale-95"
                                     >
                                         <div className="flex items-center gap-3">
                                             <Sparkles size={18} /> AI Design & Custom Size
                                         </div>
                                     </Link>
-                                    <p className="text-[9px] text-gray-400 font-bold uppercase text-center tracking-widest">OR Order Standard Size</p>
+
+                                    <div className="pt-2">
+                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-2">Select Quantity (Standard Size)</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {[100, 200, 300, 500, 1000].map(q => (
+                                                <button
+                                                    key={q}
+                                                    onClick={() => setQuantity(q)}
+                                                    className={`flex-[1_1_0%] min-w-[60px] py-3 rounded-xl border-2 font-black text-xs transition-all ${quantity === q ? 'border-gray-950 bg-gray-950 text-white shadow-md' : 'border-gray-200 text-gray-500 hover:border-gray-950 hover:text-gray-950'}`}
+                                                >
+                                                    {q}
+                                                </button>
+                                            ))}
+                                            <div className="relative flex-[2_2_0%] min-w-[100px]">
+                                                <input
+                                                    type="number"
+                                                    value={quantity}
+                                                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                                    className="w-full h-full py-3 px-4 rounded-xl border-2 border-gray-200 font-black text-xs text-gray-950 focus:border-gray-950 outline-none transition-all"
+                                                    placeholder="Custom..."
+                                                    min={product.minOrderQuantity || 1}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <button
                                         onClick={() => addToCart(product, quantity)}
                                         className="w-full py-5 border-2 border-gray-950 text-gray-950 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-gray-950 hover:text-white transition-all flex items-center justify-center gap-3"
                                     >
-                                        <ShoppingCart size={18} /> Standard Checkout
+                                        <ShoppingCart size={18} /> Add {quantity} Units to Cart
                                     </button>
                                 </div>
                             </div>

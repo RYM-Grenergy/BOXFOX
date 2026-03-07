@@ -20,6 +20,14 @@ import Link from 'next/link';
 
 export default function CartPage() {
     const { cart, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
+    const [recommendations, setRecommendations] = React.useState([]);
+
+    React.useEffect(() => {
+        fetch('/api/products?limit=4')
+            .then(res => res.json())
+            .then(data => setRecommendations(data.products || []))
+            .catch(() => { });
+    }, []);
 
     if (cart.length === 0) {
         return (
@@ -204,21 +212,25 @@ export default function CartPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                        {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="bg-gray-50 rounded-[2rem] p-8 border border-gray-100 group cursor-pointer hover:bg-white hover:shadow-2xl transition-all">
-                                <div className="aspect-square bg-white rounded-2xl mb-6 p-6 overflow-hidden">
-                                    <div className="w-full h-full bg-gray-100 animate-pulse rounded-lg" />
+                        {recommendations.map((product) => (
+                            <Link
+                                href={`/products/${product._id || product.wpId}`}
+                                key={product._id}
+                                className="bg-gray-50 rounded-[2rem] p-8 border border-gray-100 group cursor-pointer hover:bg-white hover:shadow-2xl transition-all"
+                            >
+                                <div className="aspect-square bg-white rounded-2xl mb-6 p-6 overflow-hidden border border-gray-50">
+                                    <img src={product.images?.[0]} className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500" alt="" />
                                 </div>
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">New Arrival</p>
-                                <h4 className="text-sm font-black text-gray-950 uppercase mb-4">Structural Solution #{i}</h4>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{product.category || 'Packaging'}</p>
+                                <h4 className="text-sm font-black text-gray-950 uppercase mb-4 line-clamp-1">{product.name}</h4>
                                 <div className="h-px bg-gray-100 mb-4" />
                                 <div className="flex justify-between items-center">
-                                    <span className="text-xs font-black text-emerald-500">Discover</span>
+                                    <span className="text-sm font-black text-emerald-600">₹{product.price}</span>
                                     <div className="w-8 h-8 rounded-full bg-gray-950 text-white flex items-center justify-center group-hover:bg-emerald-500 transition-all">
                                         <Plus size={14} />
                                     </div>
                                 </div>
-                            </div>
+                            </Link>
                         ))}
                     </div>
                 </section>

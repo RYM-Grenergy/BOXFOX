@@ -12,8 +12,18 @@ export default function TopSellingStrip() {
         fetch("/api/products")
             .then((res) => res.json())
             .then((data) => {
+                if (!Array.isArray(data)) {
+                    console.warn("API returned non-array data:", data);
+                    setLoading(false);
+                    return;
+                }
                 // Flatten all items from sections and take first 10
-                const allItems = data.reduce((acc, section) => [...acc, ...section.items], []);
+                const allItems = data.reduce((acc, section) => {
+                    if (section && section.items) {
+                        return [...acc, ...section.items];
+                    }
+                    return acc;
+                }, []);
                 setProducts(allItems.slice(0, 10));
                 setLoading(false);
             })

@@ -16,19 +16,25 @@ const OrderSchema = new mongoose.Schema({
     },
     items: [
         {
-            productId: Number, // wpId
+            productId: mongoose.Schema.Types.Mixed, // Used for String (Custom IDs) and Numbers (WP IDs)
             name: String,
             quantity: Number,
-            price: String
+            price: String,
+            variant: String,
+            image: String,
+            customDesign: mongoose.Schema.Types.Mixed
         }
     ],
     total: Number,
+    discount: { type: Number, default: 0 },
+    couponCode: { type: String },
     status: {
         type: String,
         enum: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
         default: 'Pending'
     },
     paid: { type: Boolean, default: false },
+    labNotes: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now }
 }, {
     timestamps: true

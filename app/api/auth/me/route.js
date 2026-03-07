@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import dns from 'dns';
+
+// Fix for querySrv ECONNREFUSED on some networks/machines
+if (typeof window === 'undefined') {
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+    if (dns.setDefaultResultOrder) {
+        dns.setDefaultResultOrder('ipv4first');
+    }
+}
 
 export async function GET(req) {
     try {
@@ -21,16 +30,35 @@ export async function GET(req) {
         );
 
         // Fetch user completely minus password
-        const user = await User.findById(decoded.id).select('-password');
+        let user = await User.findById(decoded.id).select("-password");
 
         if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ user }, { status: 200 });
+        // Robust Daily Reset Logic
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+        if (user.lastAiGenerationDate) {
+            const lastGenDate = new Date(user.lastAiGenerationDate);
+            const lastGenStart = new Date(lastGenDate.getFullYear(), lastGenDate.getMonth(), lastGenDate.getDate()).getTime();
+
+            if (lastGenStart < todayStart && user.aiGenerationCount > 0) {
+                user.aiGenerationCount = 0;
+                await user.save();
+            }
+        }
+
+        return NextResponse.json({ user }, {
+            status: 200,
+            headers: { 'Cache-Control': 'no-store, max-age=0' }
+        });
 
     } catch (error) {
         console.error('Session error:', error);
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        response.cookies.delete('token');
+        return response;
     }
 }

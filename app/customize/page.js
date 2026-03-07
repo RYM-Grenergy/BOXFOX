@@ -28,18 +28,38 @@ import {
   Scissors,
   Shield,
   Check,
+  X,
+  Smartphone,
+  Tablet,
+  Monitor,
+  Save,
+  Share2,
+  Link2,
+  Copy,
 } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import Footer from "@/app/components/Footer";
+import AuthModal from "@/app/components/AuthModal";
 import { useCart } from "@/app/context/CartContext";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
 import Script from "next/script";
+import Cropper from 'react-easy-crop';
 
 function CustomizeLabContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToCart } = useCart();
+  const { user, loading: authLoading, checkUser } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      const currentUrl = window.location.pathname + window.location.search;
+      router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
+    }
+  }, [user, authLoading, router]);
 
   // Default Product ID for the Standalone Lab
   const DEFAULT_PRODUCT_ID = "1771670990303";
@@ -52,10 +72,21 @@ function CustomizeLabContent() {
   // Customization States
   const [dimensions, setDimensions] = useState({ l: 12, w: 8, h: 4 });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
+  const [shareLink, setShareLink] = useState(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [shareToast, setShareToast] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isPromptEnhanced, setIsPromptEnhanced] = useState(false);
   const [customText, setCustomText] = useState("");
+  const [unit, setUnit] = useState("in"); // "in" or "mm"
+  const [designName, setDesignName] = useState("");
+  const [activeDesignId, setActiveDesignId] = useState(null);
+
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   // AI Forge: Smart Prompt Builder
   const [selectedChips, setSelectedChips] = useState([]);
@@ -65,11 +96,22 @@ function CustomizeLabContent() {
   // Text-on-Box options
   const [textOnBox, setTextOnBox] = useState(false);
   const [boxTextColor, setBoxTextColor] = useState("#FFFFFF");
-  const [boxTextStyle, setBoxTextStyle] = useState("bold"); // bold | script | minimal
+  const [boxTextStyle, setBoxTextStyle] = useState("bold");
+  const [boxTextSettings, setBoxTextSettings] = useState({ x: 50, y: 50, size: 20 });
 
   // Neural Multi-Asset Pool (Max 3)
   const [assetPool, setAssetPool] = useState([]);
+  const [savedPatterns, setSavedPatterns] = useState([]);
   const [activeAssetIndex, setActiveAssetIndex] = useState(0);
+
+  // Sync saved patterns from user object
+  useEffect(() => {
+    if (user?.aiPatterns) {
+      // Sort by newest first and limit to recent 12 for the UI
+      const patterns = [...user.aiPatterns].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setSavedPatterns(patterns);
+    }
+  }, [user]);
   const [boxTextures, setBoxTextures] = useState({
     front: null,
     back: null,
@@ -86,6 +128,15 @@ function CustomizeLabContent() {
     left: "#059669",
     right: "#059669",
   });
+  const [textureSettings, setTextureSettings] = useState({
+    front: { scale: 100, x: 50, y: 50 },
+    back: { scale: 100, x: 50, y: 50 },
+    top: { scale: 100, x: 50, y: 50 },
+    bottom: { scale: 100, x: 50, y: 50 },
+    left: { scale: 100, x: 50, y: 50 },
+    right: { scale: 100, x: 50, y: 50 },
+  });
+  const [selectedFace, setSelectedFace] = useState(null);
   const [activeColor, setActiveColor] = useState("#059669");
   const [customMode, setCustomMode] = useState("texture"); // 'texture' or 'color'
   const [boxMode, setBoxMode] = useState("mailers"); // B2B Box types
@@ -95,11 +146,60 @@ function CustomizeLabContent() {
   const isDragging = useRef(false);
   const prevTouch = useRef(null);
 
+  // Crop States
+  const [imageToCrop, setImageToCrop] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const isSpatialPanning = useRef(false);
+  const lastSpatialMouse = useRef({ x: 0, y: 0 });
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [showMobileWarning, setShowMobileWarning] = useState(false);
+
+  useEffect(() => {
+    // Detect mobile/small screen for 3D Experience notification
+    if (window.innerWidth < 1024) {
+      setShowMobileWarning(true);
+    }
+  }, []);
+
+  const createImage = (url) =>
+    new Promise((resolve, reject) => {
+      const image = new Image();
+      image.addEventListener('load', () => resolve(image));
+      image.addEventListener('error', (error) => reject(error));
+      image.setAttribute('crossOrigin', 'anonymous');
+      image.src = url;
+    });
+
+  async function getCroppedImg(imageSrc, pixelCrop) {
+    const image = await createImage(imageSrc);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+    ctx.drawImage(
+      image,
+      pixelCrop.x,
+      pixelCrop.y,
+      pixelCrop.width,
+      pixelCrop.height,
+      0,
+      0,
+      pixelCrop.width,
+      pixelCrop.height
+    );
+    return canvas.toDataURL('image/jpeg');
+  }
+
   useEffect(() => {
     // Sync dimensions from URL if present
     const l = searchParams.get('length');
     const w = searchParams.get('width');
     const h = searchParams.get('height');
+    const u = searchParams.get('unit');
+    const urlId = searchParams.get('id');
 
     if (l || w || h) {
       setDimensions({
@@ -109,15 +209,98 @@ function CustomizeLabContent() {
       });
     }
 
-    setLoading(true);
-    fetch(`/api/products/${DEFAULT_PRODUCT_ID}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setProduct(data);
-        setQuantity(data.minOrderQuantity || 10);
+    if (u) {
+      setUnit(u.toLowerCase() === 'mm' ? 'mm' : 'in');
+    }
+
+    const prevName = searchParams.get('name');
+    const designId = searchParams.get('designId');
+    if (prevName) setDesignName(prevName);
+    if (designId) setActiveDesignId(designId);
+
+    const loadProduct = async () => {
+      setLoading(true);
+      try {
+        let targetId = urlId || DEFAULT_PRODUCT_ID;
+
+        // Phase 1: Try fetching the specific ID
+        let res = await fetch(`/api/products/${targetId}`);
+        let data = await res.json();
+
+        // Phase 2: If fail, fetch the first available product as fallback
+        if (data.error || !data) {
+          console.warn("Target product not found, fetching fallback...");
+          const allRes = await fetch('/api/products?admin=true');
+          const allData = await allRes.json();
+          if (Array.isArray(allData) && allData.length > 0) {
+            // Pick the first available product
+            res = await fetch(`/api/products/${allData[0].id}`);
+            data = await res.json();
+          }
+        }
+
+        if (data && !data.error) {
+          setProduct(data);
+          setQuantity(data.minOrderQuantity || 100);
+
+          // Sync dimensions if not already set by URL params
+          if (!l && !w && !h && data.dimensions) {
+            setDimensions({
+              l: data.dimensions.length || 12,
+              w: data.dimensions.width || 8,
+              h: data.dimensions.height || 4
+            });
+            if (data.dimensions.unit) {
+              setUnit(data.dimensions.unit.toLowerCase() === 'mm' ? 'mm' : 'in');
+            }
+          }
+        } else {
+          console.error("Customize Lab: No products available in system");
+        }
+
+        // Restore reorder design from sessionStorage if present
+        const isReorder = searchParams.get('reorder');
+        if (isReorder === 'true') {
+          try {
+            const savedDesign = sessionStorage.getItem('boxfox_reorder');
+            if (savedDesign) {
+              const cd = JSON.parse(savedDesign);
+              // Restore textures
+              if (cd.textures) {
+                setBoxTextures(cd.textures);
+                // Add unique textures to asset pool
+                const uniqueTextures = [...new Set(Object.values(cd.textures).filter(Boolean))];
+                setAssetPool(uniqueTextures.slice(0, 3));
+                if (uniqueTextures.length > 0) setActiveAssetIndex(0);
+              }
+              // Restore colors
+              if (cd.colors) setBoxColors(cd.colors);
+              // Restore texture settings
+              if (cd.textureSettings) setTextureSettings(cd.textureSettings);
+              // Restore text
+              if (cd.text) {
+                setCustomText(cd.text);
+                setTextOnBox(true);
+              }
+              if (cd.textStyle) setBoxTextStyle(cd.textStyle);
+              if (cd.textColor) setBoxTextColor(cd.textColor);
+              if (cd.textSettings) setBoxTextSettings(cd.textSettings);
+              // Clean up so it doesn't restore again on page refresh
+              sessionStorage.removeItem('boxfox_reorder');
+              console.log("Customize Lab: Reorder design restored successfully");
+            }
+          } catch (e) {
+            console.error("Failed to restore reorder design:", e);
+          }
+        }
+      } catch (err) {
+        console.error("Customize Lab: Initialization Error", err);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+
+    loadProduct();
   }, [searchParams]);
 
   const handleFileUpload = (e) => {
@@ -125,17 +308,106 @@ function CustomizeLabContent() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const newAsset = reader.result;
+        const imageSrc = reader.result;
+        setImageToCrop(imageSrc);
+
+        // Add original to pool immediately so they don't have to wait for crop to see it
         setAssetPool((prev) => {
-          const updated = [...prev, newAsset].slice(-3); // Keep last 3
+          const updated = [...prev, imageSrc].slice(-3);
           setActiveAssetIndex(updated.length - 1);
           return updated;
         });
-        if (assetPool.length === 0) {
-          setBoxTextures((prev) => ({ ...prev, front: newAsset }));
-        }
+
+        // Automatically apply to front if it's the first asset or for immediate feedback
+        setBoxTextures((prev) => ({ ...prev, front: imageSrc }));
+
+        setShowCropModal(true);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Direct Spatial Interaction Logic
+  const handleFaceSpatialDown = (e, face) => {
+    if (selectedFace !== face || !boxTextures[face]) return;
+    isSpatialPanning.current = true;
+    lastSpatialMouse.current = { x: e.clientX, y: e.clientY };
+    e.stopPropagation();
+  };
+
+  const handleFaceSpatialMove = (e, face) => {
+    if (!isSpatialPanning.current || selectedFace !== face) return;
+
+    const dx = (e.clientX - lastSpatialMouse.current.x) * 0.2;
+    const dy = (e.clientY - lastSpatialMouse.current.y) * 0.2;
+
+    setTextureSettings(prev => ({
+      ...prev,
+      [face]: {
+        ...prev[face],
+        x: Math.min(100, Math.max(0, prev[face].x + dx)),
+        y: Math.min(100, Math.max(0, prev[face].y + dy))
+      }
+    }));
+
+    lastSpatialMouse.current = { x: e.clientX, y: e.clientY };
+    e.stopPropagation();
+  };
+
+  const handleFaceSpatialScroll = (e, face) => {
+    if (selectedFace !== face || !boxTextures[face]) return;
+    e.stopPropagation();
+
+    const delta = e.deltaY > 0 ? -5 : 5;
+    setTextureSettings(prev => ({
+      ...prev,
+      [face]: {
+        ...prev[face],
+        scale: Math.min(400, Math.max(10, prev[face].scale + delta))
+      }
+    }));
+  };
+
+  const stopSpatialPanning = () => {
+    isSpatialPanning.current = false;
+  };
+
+  useEffect(() => {
+    window.addEventListener("mouseup", stopSpatialPanning);
+    return () => window.removeEventListener("mouseup", stopSpatialPanning);
+  }, []);
+
+  const handleCropComplete = (croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const finalizeCrop = async () => {
+    if (!croppedAreaPixels) return;
+    try {
+      const croppedImage = await getCroppedImg(imageToCrop, croppedAreaPixels);
+
+      // Update the asset in the pool at the active index (which was just added in handleFileUpload)
+      setAssetPool((prev) => {
+        const updated = [...prev];
+        updated[activeAssetIndex] = croppedImage;
+        return updated;
+      });
+
+      // Update all faces currently using the original with the cropped version
+      setBoxTextures((prev) => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(face => {
+          if (updated[face] === imageToCrop) {
+            updated[face] = croppedImage;
+          }
+        });
+        return updated;
+      });
+
+      setShowCropModal(false);
+      setImageToCrop(null);
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -240,6 +512,7 @@ function CustomizeLabContent() {
       "Artisan & Craft",
       "Health & Wellness",
     ],
+    history: [], // Mark as special category
   };
 
   const toggleChip = (chip) =>
@@ -250,63 +523,65 @@ function CustomizeLabContent() {
   const enhancePrompt = async () => {
     if (!aiPrompt.trim()) return;
     setIsEnhancing(true);
-    try {
-      const chips =
-        selectedChips.length > 0
-          ? ` Style tags: ${selectedChips.join(", ")}.`
-          : "";
-      const boxTypeMap = {
-        mailers: "e-commerce mailer box",
-        confectionary: "food-grade cake box",
-        pizza: "pizza delivery box",
-        luxury: "luxury rigid gift box",
-      };
-      const boxType = boxTypeMap[boxMode] || "packaging box";
-      const systemMsg = `You are a professional packaging design prompt engineer. The user describes their box design idea. Rewrite it as a rich, detailed design brief for AI image generation focused on ${boxType} packaging.${chips} Keep it under 60 words. No bullet points. Plain text only.`;
-      const result = await window.puter.ai.chat(
-        systemMsg + "\n\nUser idea: " + aiPrompt.trim(),
-      );
-      const enhanced =
-        typeof result === "string"
-          ? result
-          : result?.message?.content?.[0]?.text ||
-          result?.toString() ||
-          aiPrompt;
-      setAiPrompt(enhanced.trim());
+    // Note: AI Enhance is temporarily offline while migrating to the new engine.
+    // We'll keep the logic as a fallback for the user's raw prompt.
+    setTimeout(() => {
+      setIsEnhancing(false);
       setIsPromptEnhanced(true);
-    } catch (e) {
-      console.error("Enhance error", e);
-    }
-    setIsEnhancing(false);
+    }, 1000);
   };
 
   const buildSmartPrompt = () => {
-    // If the prompt was AI-enhanced, use it directly — it's already a complete design brief
-    if (isPromptEnhanced && aiPrompt.trim()) {
-      return (
-        aiPrompt.trim() + ", photorealistic packaging mockup, 8K resolution"
-      );
-    }
-    const parts = [];
-    if (aiPrompt.trim()) parts.push(aiPrompt.trim());
-    if (selectedChips.length > 0) parts.push(selectedChips.join(", "));
-    const boxTypeMap = {
-      mailers: "e-commerce mailer box packaging",
-      confectionary: "food-grade cake box packaging",
-      pizza: "pizza delivery box packaging",
-      luxury: "luxury rigid gift box packaging",
+    // If the prompt was AI-enhanced, use it directly as a base
+    let basePrompt = aiPrompt.trim();
+
+    const themeMap = {
+      mailers: "e-commerce and logistics theme",
+      confectionary: "artisan confectionery and bakery motif",
+      pizza: "gourmet Italian culinary aesthetic",
+      luxury: "bespoke luxury branding",
     };
-    parts.push(boxTypeMap[boxMode] || "product packaging box");
-    parts.push(
-      "professional packaging artwork, flat lay box wrap design, clean brand print, high quality product packaging, 8K resolution",
-    );
-    return parts.join(", ");
+
+    const targetTheme = themeMap[boxMode] || "professional product branding";
+
+    // Core technical quality strings for Flux Dev - Focusing on FLAT GRAPHICS ONLY
+    const qualityBoosters = "pure flat 2D graphic pattern, seamless surface texture, edge-to-edge wallpaper style, hi-res vector art aesthetic, no 3D objects, no shadows, no perspective, no physical box, isolated graphic";
+
+    // Style-specific modifiers - Abstract and Texture focused
+    const styleModifiers = {
+      "Luxury Premium": "gold foil embossed motifs, matte black velvet texture, sophisticated repeating geometric patterns, royal aesthetic layout",
+      "Eco & Sustainable": "recycled craft paper fiber texture, organic earth-toned leaf patterns, plant-based ink aesthetic, minimalist botanical line art motifs",
+      "Bold & Playful": "vibrant pop-art patterns, high contrast color blocks, energetic geometric repeating shapes, modern typography art layout",
+      "Minimal & Clean": "bauhaus style graphics, swiss design symmetry, ample negative space, clean grid-based texture, monochromatic surface",
+      "Festive & Celebratory": "sparkling metallic pattern motifs, celebratory decorative elements, warm glow accents, intricate festive line work",
+      "Professional Corporate": "clean corporate branding grid, blue and silver geometric motifs, organizational surface symmetry",
+      "Modern High-End": "glassmorphism texture layers, futuristic circuit patterns, sleek carbon fiber weave aesthetic, ultra-modern UI-style graphic",
+    };
+
+    let selectedStyleDetail = "";
+    selectedChips.forEach(chip => {
+      if (styleModifiers[chip]) selectedStyleDetail += styleModifiers[chip] + ", ";
+    });
+
+    const promptParts = [
+      `A seamless flat 2D surface texture pattern`,
+      targetTheme,
+      basePrompt ? `featuring ${basePrompt}` : "with professional graphic motifs",
+      selectedStyleDetail,
+      "purely 2D flat design, (ABSOLUTELY NO 3D BOX, NO PHYSICAL OBJECTS)",
+      qualityBoosters,
+      "color-accurate full-frame graphic"
+    ].filter(Boolean);
+
+    return promptParts.join(", ");
   };
 
   const textStyleMap = {
-    bold: "font-black tracking-widest text-center",
-    script: "font-bold italic tracking-wide text-center",
+    bold: "font-black tracking-widest text-center uppercase",
+    script: "font-serif italic tracking-wide text-center",
     minimal: "font-light tracking-[0.5em] uppercase text-center",
+    classic: "font-serif tracking-normal text-center",
+    modern: "font-extralight tracking-[0.2em] text-center",
   };
 
   const maxVal = Math.max(dimensions.l, dimensions.w, dimensions.h);
@@ -315,223 +590,112 @@ function CustomizeLabContent() {
   const W = dimensions.w * factor;
   const H = dimensions.h * factor;
 
+  const getInches = (val) => unit === "mm" ? val / 25.4 : val;
+  const fromInches = (val) => unit === "mm" ? val * 25.4 : val;
+
+  const dimInInches = {
+    l: getInches(dimensions.l),
+    w: getInches(dimensions.w),
+    h: getInches(dimensions.h)
+  };
+
   const currentSA =
     2 *
-    (dimensions.l * dimensions.w +
-      dimensions.w * dimensions.h +
-      dimensions.h * dimensions.l);
-  // Parse numeric price from possible string format (e.g. "₹150")
+    (dimInInches.l * dimInInches.w +
+      dimInInches.w * dimInInches.h +
+      dimInInches.h * dimInInches.l);
+  // Parse numeric base price
   const priceText = product?.price || "150";
-  const numericBasePrice =
-    typeof priceText === "string"
-      ? parseFloat(priceText.replace(/[^0-9.]/g, ""))
-      : priceText;
-  const basePrice = isNaN(numericBasePrice) ? 150 : numericBasePrice;
+  const basePrice = typeof priceText === "string" ? parseFloat(priceText.replace(/[^0-9.]/g, "")) || 150 : (priceText || 150);
+
+  // Apply User's Custom Practical Pricing Formula
+  const minPrice = typeof product?.minPrice === 'number' ? product.minPrice : parseFloat(String(product?.minPrice || basePrice).replace(/[^0-9.]/g, '')) || basePrice;
+  const maxPrice = typeof product?.maxPrice === 'number' ? product.maxPrice : parseFloat(String(product?.maxPrice || basePrice).replace(/[^0-9.]/g, '')) || basePrice;
+
+  const diff = maxPrice - minPrice;
+  let unitPriceVal = maxPrice;
+
+  if (quantity >= 5000) unitPriceVal = minPrice;
+  else if (quantity >= 1000) unitPriceVal = maxPrice - (diff * 0.4651);
+  else if (quantity >= 500) unitPriceVal = maxPrice - (diff * 0.4205);
+  else if (quantity >= 100) unitPriceVal = maxPrice - (diff * 0.3364);
+  else if (quantity >= 50) unitPriceVal = maxPrice - (diff * 0.1682);
+  else unitPriceVal = maxPrice;
 
   const calculatedUnitPrice = product
-    ? (
-      basePrice *
-      (currentSA / 288) *
-      (1 - Math.min(0.4, (quantity - 10) / 500))
-    ).toFixed(2)
+    ? (unitPriceVal * (currentSA / 288)).toFixed(2)
     : "0.00";
 
-  // Reusable loading UI
-  const LoadingScreen = ({ label = "Initializing Studio…" }) => (
+  // Reusable loading UI matching the premium Brand Loader
+  const LoadingScreen = () => (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center overflow-hidden relative">
-      {/* Subtle grid */}
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(16,185,129,1) 1px, transparent 1px), linear-gradient(90deg, rgba(16,185,129,1) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      />
-      {/* Soft glow */}
-      <div className="absolute w-80 h-80 rounded-full bg-emerald-100 blur-3xl animate-pulse" />
-
-      {/* Rings + logo */}
-      <div className="relative flex items-center justify-center mb-10">
-        <div
-          className="absolute w-52 h-52 rounded-full border border-emerald-200 animate-spin"
-          style={{ animationDuration: "8s" }}
-        />
-        <div
-          className="absolute w-40 h-40 rounded-full border border-emerald-300 animate-spin"
-          style={{ animationDuration: "5s", animationDirection: "reverse" }}
-        />
-        <div
-          className="absolute w-28 h-28 rounded-full border-2 border-emerald-400 animate-spin"
-          style={{ animationDuration: "3s" }}
-        />
-        {[0, 60, 120, 180, 240, 300].map((deg, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 rounded-full bg-emerald-500"
-            style={{
-              transform: `rotate(${deg}deg) translateX(84px)`,
-              animationDelay: `${i * 0.15}s`,
-              opacity: 0.4 + i * 0.1,
-            }}
-          />
-        ))}
-        <div className="relative z-10 w-24 h-24 rounded-2xl bg-white border border-emerald-100 shadow-xl flex items-center justify-center">
-          <img
-            src="/BOXFOX-1.png"
-            alt="BOXFOX"
-            className="w-16 object-contain"
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0, filter: "blur(15px)" }}
+        animate={{ scale: [0.8, 1.1, 1.0], opacity: 1, filter: "blur(0px)" }}
+        transition={{ duration: 2, ease: [0.16, 1, 0.3, 1] }}
+        className="relative flex items-center justify-center"
+      >
+        <div className="relative overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-emerald-500/10 border border-emerald-50/50 p-16">
+          <img src="/BOXFOX-1.png" alt="BOXFOX" className="w-64 object-contain" />
+          <motion.div
+            initial={{ x: "-150%", skewX: -25 }}
+            animate={{ x: "150%" }}
+            transition={{ duration: 1.5, delay: 0.5, ease: "easeInOut" }}
+            className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent pointer-events-none"
           />
         </div>
-      </div>
-
-      {/* Brand label */}
-      <div className="flex items-center gap-3 mb-1.5">
-        <div className="w-8 h-px bg-emerald-400" />
-        <p className="text-gray-950 font-black tracking-[0.6em] text-xs uppercase">
-          BoxFox
-        </p>
-        <div className="w-8 h-px bg-emerald-400" />
-      </div>
-      <p className="text-emerald-500 text-[9px] font-bold tracking-[0.4em] uppercase mb-10">
-        Design Studio
-      </p>
-
-      {/* Progress bar */}
-      <div className="w-64 h-0.5 bg-gray-100 rounded-full overflow-hidden mb-5">
         <div
-          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full"
-          style={{ animation: "loadbar 2.2s ease-in-out forwards" }}
+          className="absolute w-[400px] h-[400px] rounded-full blur-3xl -z-10 animate-pulse"
+          style={{ background: "radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)" }}
         />
-      </div>
-
-      {/* Cycling steps */}
-      <div className="flex flex-col items-center gap-1.5">
-        {["Initializing Studio…", "Loading Assets…", "Calibrating Forge…"].map(
-          (step, i) => (
-            <p
-              key={step}
-              className="text-gray-400 text-[9px] font-bold tracking-[0.3em] uppercase"
-              style={{
-                animation: `fadecycle 2.4s ease-in-out ${i * 0.7}s infinite`,
-              }}
-            >
-              {step}
-            </p>
-          ),
-        )}
-      </div>
+      </motion.div>
+      <motion.p
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1, duration: 0.8 }}
+        className="absolute bottom-12 text-[10px] font-black tracking-[0.4em] uppercase text-emerald-500"
+      >
+        Initializing Forge
+      </motion.p>
     </div>
   );
 
-  if (loading || !product) return <MainLoadingScreen />;
+  if ((loading || authLoading || !product) && !isGenerating) return <LoadingScreen />;
 
-  const faceStyle = (face) => ({
-    backgroundImage: boxTextures[face] ? `url(${boxTextures[face]})` : "none",
-    backgroundColor: boxColors[face] || "rgba(16, 185, 129, 0.05)",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat",
-    transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-    transformStyle: "preserve-3d",
-  });
+  const faceStyle = (face) => {
+    const settings = textureSettings[face] || { scale: 100, x: 50, y: 50 };
+    const isActive = selectedFace === face;
+    return {
+      backgroundImage: boxTextures[face] ? `url(${boxTextures[face]})` : "none",
+      backgroundColor: boxColors[face] || "rgba(16, 185, 129, 0.05)",
+      backgroundSize: boxTextures[face] ? `${settings.scale}%` : "cover",
+      backgroundPosition: `${settings.x}% ${settings.y}%`,
+      backgroundRepeat: "no-repeat",
+      transition: isSpatialPanning.current ? "none" : "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+      transformStyle: "preserve-3d",
+      cursor: boxTextures[face] ? (isActive ? "move" : "crosshair") : "pointer",
+      boxShadow: isActive ? "inset 0 0 0 4px #10b981, 0 0 40px rgba(16, 185, 129, 0.2)" : "none",
+    };
+  };
 
   return (
-    <div className="min-h-screen bg-white text-gray-950 selection:bg-emerald-500 selection:text-white font-sans overflow-x-hidden">
-      {/* AI Generate overlay */}
-      <AnimatePresence>
-        {isGenerating && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[9999] bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center overflow-hidden"
-          >
-            {/* Soft glow */}
-            <div className="absolute w-80 h-80 rounded-full bg-emerald-100 blur-3xl animate-pulse" />
-
-            {/* Rings + logo */}
-            <div className="relative flex items-center justify-center mb-10">
-              <div
-                className="absolute w-52 h-52 rounded-full border border-emerald-200 animate-spin"
-                style={{ animationDuration: "8s" }}
-              />
-              <div
-                className="absolute w-40 h-40 rounded-full border border-emerald-300 animate-spin"
-                style={{
-                  animationDuration: "5s",
-                  animationDirection: "reverse",
-                }}
-              />
-              <div
-                className="absolute w-28 h-28 rounded-full border-2 border-emerald-400 animate-spin"
-                style={{ animationDuration: "3s" }}
-              />
-              {[0, 60, 120, 180, 240, 300].map((deg, i) => (
-                <div
-                  key={i}
-                  className="absolute w-2 h-2 rounded-full bg-emerald-500"
-                  style={{
-                    transform: `rotate(${deg}deg) translateX(84px)`,
-                    opacity: 0.4 + i * 0.1,
-                  }}
-                />
-              ))}
-              <div className="relative z-10 w-24 h-24 rounded-2xl bg-white border border-emerald-100 shadow-xl flex items-center justify-center">
-                <img
-                  src="/BOXFOX-1.png"
-                  alt="BOXFOX"
-                  className="w-16 object-contain"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 mb-1.5">
-              <div className="w-8 h-px bg-emerald-400" />
-              <p className="text-gray-950 font-black tracking-[0.6em] text-xs uppercase">
-                BoxFox
-              </p>
-              <div className="w-8 h-px bg-emerald-400" />
-            </div>
-            <p className="text-emerald-500 text-[9px] font-bold tracking-[0.4em] uppercase mb-10">
-              AI Forge Active
-            </p>
-
-            <div className="w-64 h-0.5 bg-gray-100 rounded-full overflow-hidden mb-5">
-              <div
-                className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full animate-pulse"
-                style={{ width: "100%" }}
-              />
-            </div>
-
-            <div className="flex flex-col items-center gap-1.5">
-              {[
-                "Crafting your design…",
-                "Running Neural Forge…",
-                "Applying to box…",
-              ].map((step, i) => (
-                <p
-                  key={step}
-                  className="text-gray-400 text-[9px] font-bold tracking-[0.3em] uppercase"
-                  style={{
-                    animation: `fadecycle 2.4s ease-in-out ${i * 0.7}s infinite`,
-                  }}
-                >
-                  {step}
-                </p>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="min-h-screen bg-white text-gray-950 selection:bg-emerald-500 selection:text-white font-sans"
+    >
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => router.push('/')}
+      />
+      {/* AI Generate overlay removed for direct lab flow */}
       <Navbar />
-      <Script src="https://js.puter.com/v2/" strategy="afterInteractive" />
 
       <main className="pt-20 sm:pt-24 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8 xl:px-12 max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10">
         {/* 3D SPATIAL CANVAS (LEFT) */}
-        <div className="lg:col-span-7 space-y-4 md:space-y-6">
-          <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-gray-50 border border-gray-100 rounded-2xl sm:rounded-[2rem] shadow-sm">
+        <div className="lg:col-span-7 lg:sticky lg:top-24 lg:h-[calc(100vh-120px)] flex flex-col space-y-4 md:space-y-6">
+          <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-gray-50 border border-gray-100 rounded-2xl sm:rounded-[2rem] shadow-sm shrink-0">
             <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
               <div className="relative shrink-0">
                 <div className="relative w-8 h-8 md:w-10 md:h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/30">
@@ -539,30 +703,131 @@ function CustomizeLabContent() {
                 </div>
               </div>
               <div className="flex flex-col min-w-0">
-                <h2 className="text-[9px] sm:text-[11px] md:text-sm font-black uppercase tracking-[0.15em] sm:tracking-[0.3em] text-emerald-600 italic leading-none truncate">
-                  Neural_Smart_Cube_XL
-                </h2>
+                <input
+                  type="text"
+                  placeholder={product?.name || "Untitled Design"}
+                  value={designName}
+                  onChange={(e) => setDesignName(e.target.value)}
+                  className="bg-transparent border-none outline-none text-[9px] sm:text-[11px] md:text-sm font-black uppercase tracking-[0.15em] sm:tracking-[0.3em] text-emerald-600 italic leading-none w-full focus:ring-0"
+                />
                 <span className="text-[7px] sm:text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                  Master-Lab-Edition_2026
+                  Product_Type: {product?.categories?.[1] || "Standard"} Lab Edition
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-2 sm:gap-4">
-              <div className="hidden md:flex px-3 lg:px-4 py-2 bg-white rounded-xl border border-gray-100 items-center gap-2 lg:gap-3 shadow-sm">
-                <RefreshCw
-                  size={12}
-                  className="animate-spin-slow text-emerald-500"
-                />
-                <span className="text-[9px] lg:text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  Core_Link_Stable
-                </span>
-              </div>
+            <div className="flex items-center gap-2">
+              {/* Save Draft */}
+              <button
+                disabled={isSavingDraft}
+                onClick={async () => {
+                  if (isSavingDraft) return;
+                  setIsSavingDraft(true);
+                  try {
+                    const uploadedTextures = { ...boxTextures };
+                    for (let face of Object.keys(uploadedTextures)) {
+                      const t = uploadedTextures[face];
+                      if (t && t.startsWith('data:image')) {
+                        try {
+                          const res = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: t }) });
+                          const data = await res.json();
+                          if (data.url) uploadedTextures[face] = data.url;
+                        } catch (err) { console.error(err); }
+                      }
+                    }
+                    const designData = {
+                      name: designName || `${user?.name || 'My'} Design - ${dimensions.l}×${dimensions.w}×${dimensions.h}`,
+                      customDesign: { textures: uploadedTextures, colors: boxColors, textureSettings, text: customText, textStyle: boxTextStyle, textColor: boxTextColor, textSettings: boxTextSettings, dimensions, unit },
+                      productId: product?.id,
+                    };
+                    const method = activeDesignId ? 'PATCH' : 'POST';
+                    const payload = activeDesignId ? { ...designData, designId: activeDesignId } : designData;
+                    const res = await fetch('/api/designs', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    const result = await res.json();
+                    if (res.ok && result.success) {
+                      if (!activeDesignId && result.design?._id) setActiveDesignId(result.design._id);
+                      setDraftSaved(true);
+                      setTimeout(() => setDraftSaved(false), 3000);
+                    } else {
+                      const errorMsg = result.error || 'Failed to save design';
+                      alert(errorMsg);
+                      if (res.status === 401) router.push('/login');
+                    }
+                  } catch (e) {
+                    console.error('Save Design Error:', e);
+                    alert('An unexpected error occurred while saving.');
+                  } finally {
+                    setIsSavingDraft(false);
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 shadow-sm ${draftSaved ? 'bg-emerald-500 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-emerald-400 hover:text-emerald-600'
+                  }`}
+              >
+                {isSavingDraft ? <RefreshCw size={12} className="animate-spin" /> : draftSaved ? <Check size={12} /> : <Save size={12} />}
+                <span className="hidden sm:inline">{isSavingDraft ? 'Saving' : draftSaved ? 'Saved!' : 'Save'}</span>
+              </button>
+              {/* Share Design */}
+              <button
+                disabled={isSharing}
+                onClick={async () => {
+                  if (isSharing) return;
+                  setIsSharing(true);
+                  try {
+                    const uploadedTextures = { ...boxTextures };
+                    for (let face of Object.keys(uploadedTextures)) {
+                      const t = uploadedTextures[face];
+                      if (t && t.startsWith('data:image')) {
+                        try {
+                          const res = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: t }) });
+                          const data = await res.json();
+                          if (data.url) uploadedTextures[face] = data.url;
+                        } catch (err) { console.error(err); }
+                      }
+                    }
+                    const designData = {
+                      name: designName || `${user?.name || 'My'} Design - ${dimensions.l}×${dimensions.w}×${dimensions.h}`,
+                      customDesign: { textures: uploadedTextures, colors: boxColors, textureSettings, text: customText, textStyle: boxTextStyle, textColor: boxTextColor, textSettings: boxTextSettings, dimensions, unit },
+                      productId: product?.id,
+                      isPublic: true,
+                    };
+                    const method = activeDesignId ? 'PATCH' : 'POST';
+                    const payload = activeDesignId ? { ...designData, designId: activeDesignId } : designData;
+                    const res = await fetch('/api/designs', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    const result = await res.json();
+
+                    if (res.ok && result.success && (result.design?.shareId)) {
+                      if (!activeDesignId && result.design?._id) setActiveDesignId(result.design._id);
+                      const link = `${window.location.origin}/design/${result.design.shareId}`;
+                      setShareLink(link);
+                      try {
+                        await navigator.clipboard.writeText(link);
+                      } catch (err) {
+                        console.warn("Clipboard auto-copy failed, user can copy manually from toast.");
+                      }
+                      setShareToast(true);
+                      setTimeout(() => setShareToast(false), 6000);
+                    } else {
+                      const errorMsg = result.error || 'Failed to generate share link';
+                      alert(errorMsg);
+                      if (res.status === 401) router.push('/login');
+                    }
+                  } catch (e) {
+                    console.error('Share Design Error:', e);
+                    alert('An unexpected error occurred while sharing.');
+                  } finally {
+                    setIsSharing(false);
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-600 text-[9px] font-black uppercase tracking-widest hover:border-blue-400 hover:text-blue-600 transition-all active:scale-95 disabled:opacity-50 shadow-sm"
+              >
+                {isSharing ? <RefreshCw size={12} className="animate-spin" /> : <Share2 size={12} />}
+                <span className="hidden sm:inline">{isSharing ? 'Sharing' : 'Share'}</span>
+              </button>
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
             </div>
           </div>
 
           <div
-            className="relative h-[42vh] sm:h-[52vh] md:h-[60vh] lg:h-[680px] xl:h-[780px] bg-gradient-to-br from-gray-50 via-white to-emerald-50/30 rounded-2xl sm:rounded-[3rem] md:rounded-[4rem] lg:rounded-[5rem] border border-gray-200 shadow-xl overflow-hidden cursor-grab active:cursor-grabbing group touch-none"
+            className="relative h-[42vh] sm:h-[52vh] md:h-[60vh] lg:flex-1 lg:h-auto bg-gradient-to-br from-gray-50 via-white to-emerald-50/30 rounded-2xl sm:rounded-[3rem] md:rounded-[4rem] lg:rounded-[5rem] border border-gray-200 shadow-xl overflow-hidden cursor-grab active:cursor-grabbing group touch-none"
             onMouseDown={() => {
               isDragging.current = true;
             }}
@@ -635,23 +900,20 @@ function CustomizeLabContent() {
                     height: H,
                     transform: `translateZ(${W / 2}px)`,
                   }}
-                  className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (boxTextures.front) setSelectedFace(selectedFace === "front" ? null : "front");
+                    else toggleFaceMapping("front");
+                  }}
+                  onMouseDown={(e) => handleFaceSpatialDown(e, "front")}
+                  onMouseMove={(e) => handleFaceSpatialMove(e, "front")}
+                  onWheel={(e) => handleFaceSpatialScroll(e, "front")}
+                  onDoubleClick={() => setTextureSettings(prev => ({ ...prev, front: { scale: 100, x: 50, y: 50 } }))}
+                  className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50 group"
                 >
                   {!boxTextures.front && (
                     <div className="text-[10px] font-black text-gray-300 uppercase tracking-[0.6em]">
                       Front_Panel
-                    </div>
-                  )}
-                  {customText && (
-                    <div
-                      className={`absolute drop-shadow-2xl text-center px-4 ${textStyleMap[boxTextStyle]}`}
-                      style={{
-                        fontSize: `${H / 5}px`,
-                        color: boxTextColor,
-                        transform: "translateZ(2px)",
-                      }}
-                    >
-                      {customText}
                     </div>
                   )}
                 </div>
@@ -662,7 +924,16 @@ function CustomizeLabContent() {
                     height: H,
                     transform: `rotateY(180deg) translateZ(${W / 2}px)`,
                   }}
-                  className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (boxTextures.back) setSelectedFace(selectedFace === "back" ? null : "back");
+                    else toggleFaceMapping("back");
+                  }}
+                  onMouseDown={(e) => handleFaceSpatialDown(e, "back")}
+                  onMouseMove={(e) => handleFaceSpatialMove(e, "back")}
+                  onWheel={(e) => handleFaceSpatialScroll(e, "back")}
+                  onDoubleClick={() => setTextureSettings(prev => ({ ...prev, back: { scale: 100, x: 50, y: 50 } }))}
+                  className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50 group"
                 >
                   {!boxTextures.back && (
                     <div className="text-[10px] font-black text-gray-300 uppercase tracking-[0.6em]">
@@ -678,7 +949,16 @@ function CustomizeLabContent() {
                     transform: `rotateY(90deg) translateZ(${L / 2}px)`,
                     left: (L - W) / 2,
                   }}
-                  className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (boxTextures.right) setSelectedFace(selectedFace === "right" ? null : "right");
+                    else toggleFaceMapping("right");
+                  }}
+                  onMouseDown={(e) => handleFaceSpatialDown(e, "right")}
+                  onMouseMove={(e) => handleFaceSpatialMove(e, "right")}
+                  onWheel={(e) => handleFaceSpatialScroll(e, "right")}
+                  onDoubleClick={() => setTextureSettings(prev => ({ ...prev, right: { scale: 100, x: 50, y: 50 } }))}
+                  className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50 group"
                 >
                   {!boxTextures.right && (
                     <div className="text-[10px] font-black text-gray-300 uppercase tracking-[0.6em] rotate-[-90deg]">
@@ -694,7 +974,16 @@ function CustomizeLabContent() {
                     transform: `rotateY(-90deg) translateZ(${L / 2}px)`,
                     left: (L - W) / 2,
                   }}
-                  className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (boxTextures.left) setSelectedFace(selectedFace === "left" ? null : "left");
+                    else toggleFaceMapping("left");
+                  }}
+                  onMouseDown={(e) => handleFaceSpatialDown(e, "left")}
+                  onMouseMove={(e) => handleFaceSpatialMove(e, "left")}
+                  onWheel={(e) => handleFaceSpatialScroll(e, "left")}
+                  onDoubleClick={() => setTextureSettings(prev => ({ ...prev, left: { scale: 100, x: 50, y: 50 } }))}
+                  className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50 group"
                 >
                   {!boxTextures.left && (
                     <div className="text-[10px] font-black text-gray-300 uppercase tracking-[0.6em] rotate-[90deg]">
@@ -710,20 +999,32 @@ function CustomizeLabContent() {
                     transform: `rotateX(90deg) translateZ(${H / 2}px)`,
                     top: (H - W) / 2,
                   }}
-                  className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (boxTextures.top) setSelectedFace(selectedFace === "top" ? null : "top");
+                    else toggleFaceMapping("top");
+                  }}
+                  onMouseDown={(e) => handleFaceSpatialDown(e, "top")}
+                  onMouseMove={(e) => handleFaceSpatialMove(e, "top")}
+                  onWheel={(e) => handleFaceSpatialScroll(e, "top")}
+                  onDoubleClick={() => setTextureSettings(prev => ({ ...prev, top: { scale: 100, x: 50, y: 50 } }))}
+                  className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50 group"
                 >
                   {!boxTextures.top && (
                     <div className="text-[10px] font-black text-gray-300 uppercase tracking-[0.6em]">
                       Top_Header
                     </div>
                   )}
-                  {customText && (
+                  {customText && textOnBox && (
                     <div
-                      className={`absolute drop-shadow-2xl text-center px-4 ${textStyleMap[boxTextStyle]}`}
+                      className={`absolute drop-shadow-2xl flex items-center justify-center pointer-events-none ${textStyleMap[boxTextStyle]}`}
                       style={{
-                        fontSize: `${L / 12}px`,
+                        left: `${boxTextSettings.x}%`,
+                        top: `${boxTextSettings.y}%`,
+                        transform: "translate(-50%, -50%) translateZ(2px)",
+                        fontSize: `${boxTextSettings.size}px`,
                         color: boxTextColor,
-                        transform: "translateZ(2px)",
+                        width: '100%',
                       }}
                     >
                       {customText}
@@ -738,7 +1039,16 @@ function CustomizeLabContent() {
                     transform: `rotateX(-90deg) translateZ(${H / 2}px)`,
                     top: (H - W) / 2,
                   }}
-                  className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (boxTextures.bottom) setSelectedFace(selectedFace === "bottom" ? null : "bottom");
+                    else toggleFaceMapping("bottom");
+                  }}
+                  onMouseDown={(e) => handleFaceSpatialDown(e, "bottom")}
+                  onMouseMove={(e) => handleFaceSpatialMove(e, "bottom")}
+                  onWheel={(e) => handleFaceSpatialScroll(e, "bottom")}
+                  onDoubleClick={() => setTextureSettings(prev => ({ ...prev, bottom: { scale: 100, x: 50, y: 50 } }))}
+                  className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50 group"
                 >
                   {!boxTextures.bottom && (
                     <div className="text-[10px] font-black text-gray-300 uppercase tracking-[0.6em]">
@@ -768,9 +1078,9 @@ function CustomizeLabContent() {
                         {d}_DIM
                       </p>
                       <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black italic text-gray-950 leading-none">
-                        {dimensions[d]}
-                        <span className="text-[10px] sm:text-xs not-italic ml-0.5 text-gray-500">
-                          in
+                        {(parseFloat(dimensions[d]) || 0).toFixed(unit === "mm" ? 0 : 1)}
+                        <span className="text-[10px] sm:text-xs not-italic ml-0.5 text-gray-500 lowercase">
+                          {unit}
                         </span>
                       </p>
                     </div>
@@ -781,6 +1091,41 @@ function CustomizeLabContent() {
                   Real-time Rendering Active
                 </div>
               </div>
+
+              {/* Spatial UI Controls - Minimal Floating Status */}
+              <AnimatePresence>
+                {selectedFace && boxTextures[selectedFace] && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="absolute top-8 left-1/2 -translate-x-1/2 z-50 bg-gray-950 text-white px-6 py-3 rounded-full flex items-center gap-6 shadow-2xl border border-white/10 pointer-events-auto"
+                  >
+                    <div className="flex items-center gap-2 border-r border-white/10 pr-6">
+                      <Move size={14} className="text-emerald-400" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">{selectedFace} Active</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-[9px] font-bold text-gray-400 tracking-widest uppercase">
+                      <span>Drag to Pan</span>
+                      <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+                      <span>Scroll to Zoom</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setTextureSettings(prev => ({
+                          ...prev,
+                          [selectedFace]: { scale: 100, x: 50, y: 50 }
+                        }));
+                        setSelectedFace(null);
+                      }}
+                      className="ml-4 p-1 hover:text-red-400 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               <div className="group pointer-events-auto cursor-pointer flex flex-col items-center gap-1.5 sm:gap-2 bg-white/95 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-[2.5rem] border border-gray-100 shadow-lg backdrop-blur-md active:scale-90 transition-all duration-300">
                 <RotateCw
                   size={18}
@@ -795,47 +1140,11 @@ function CustomizeLabContent() {
         </div>
 
         {/* CONTROL PANEL (RIGHT) */}
-        <div className="lg:col-span-5 space-y-4 sm:space-y-6 h-fit lg:sticky lg:top-24">
+        <div className="lg:col-span-5 space-y-4 sm:space-y-6">
           <div className="bg-gray-50 rounded-2xl sm:rounded-[2.5rem] md:rounded-[3.5rem] p-5 sm:p-7 md:p-9 lg:p-10 border border-gray-100 shadow-sm space-y-6 sm:space-y-8 md:space-y-10 relative overflow-hidden">
             {/* Section 1: Geometry */}
             <div className="space-y-5 sm:space-y-6 md:space-y-8">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                    <Layers size={13} className="text-emerald-500" />
-                  </div>
-                  <h3 className="text-xs sm:text-sm font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-gray-950 italic leading-none">
-                    Structural_Config
-                  </h3>
-                </div>
-                <span className="text-[9px] sm:text-[10px] font-black text-emerald-600 uppercase tracking-widest italic flex items-center gap-1.5 sm:gap-2">
-                  <Shield size={9} /> B2B_Only
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
-                {[
-                  { id: "mailers", label: "Structural Mailers (3-Ply)" },
-                  {
-                    id: "confectionary",
-                    label: "Confectionary Lab (Food Grade)",
-                  },
-                  { id: "pizza", label: "Kinetic Pizza Nodes" },
-                  { id: "luxury", label: "Luxury Substrates (UV/Foil)" },
-                ].map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => setBoxMode(type.id)}
-                    className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border text-[9px] sm:text-[10px] md:text-xs font-black uppercase tracking-widest transition-all text-center leading-tight ${boxMode === type.id
-                      ? "bg-emerald-500 text-white border-emerald-500 shadow-md"
-                      : "bg-white text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-gray-950"
-                      }`}
-                  >
-                    {type.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between pt-5 sm:pt-6 md:pt-8 border-t border-gray-200">
                 <div className="flex items-center gap-3 sm:gap-4">
                   <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
                     <Ruler size={13} className="text-emerald-500" />
@@ -844,22 +1153,58 @@ function CustomizeLabContent() {
                     Geometry_Core
                   </h3>
                 </div>
-                <span className="text-[9px] sm:text-[10px] font-black text-gray-600 uppercase tracking-widest italic">
-                  Standard_Units (IN)
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-[7px] font-black p-1.5 bg-gray-900 text-white rounded-lg tracking-widest uppercase">{unit === 'mm' ? 'Metric' : 'Imperial'}_Active</span>
+                  <div className="flex bg-white border border-gray-100 p-1 rounded-xl shadow-inner">
+                    <button
+                      onClick={() => {
+                        if (unit === "mm") {
+                          setUnit("in");
+                          setDimensions({
+                            l: parseFloat((dimensions.l / 25.4).toFixed(1)),
+                            w: parseFloat((dimensions.w / 25.4).toFixed(1)),
+                            h: parseFloat((dimensions.h / 25.4).toFixed(1))
+                          });
+                        }
+                      }}
+                      className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${unit === 'in' ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-400'}`}
+                    >IN</button>
+                    <button
+                      onClick={() => {
+                        if (unit === "in") {
+                          setUnit("mm");
+                          setDimensions({
+                            l: Math.round(dimensions.l * 25.4),
+                            w: Math.round(dimensions.w * 25.4),
+                            h: Math.round(dimensions.h * 25.4)
+                          });
+                        }
+                      }}
+                      className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${unit === 'mm' ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-400'}`}
+                    >MM</button>
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-5">
                 {["l", "w", "h"].map((d) => (
                   <div key={d} className="space-y-2 sm:space-y-3">
                     <input
-                      type="number"
-                      value={dimensions[d]}
-                      onChange={(e) =>
-                        setDimensions({
-                          ...dimensions,
-                          [d]: Math.max(1, parseFloat(e.target.value) || 1),
-                        })
-                      }
+                      type="text"
+                      value={dimensions[d] === "" ? "" : dimensions[d]}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                          setDimensions({
+                            ...dimensions,
+                            [d]: val === "" ? "" : parseFloat(val) || 0,
+                          });
+                        }
+                      }}
+                      onBlur={() => {
+                        if (dimensions[d] === "" || dimensions[d] === 0) {
+                          setDimensions((prev) => ({ ...prev, [d]: 1 }));
+                        }
+                      }}
                       className="w-full h-14 sm:h-16 md:h-18 lg:h-20 bg-white border border-gray-200 rounded-2xl sm:rounded-[1.5rem] md:rounded-[1.8rem] px-2 sm:px-4 text-xl sm:text-2xl font-black focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all shadow-sm text-center text-gray-950"
                     />
                     <p className="text-[10px] sm:text-xs font-black text-gray-600 uppercase tracking-widest text-center">
@@ -867,6 +1212,49 @@ function CustomizeLabContent() {
                     </p>
                   </div>
                 ))}
+              </div>
+
+              {/* Real-time Metrics Pill */}
+              <div className="flex items-center gap-4 px-6 py-4 bg-white rounded-2xl border border-gray-100 shadow-inner">
+                <div className="flex-1">
+                  <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">Vol_Cubic_{unit.toUpperCase()}</p>
+                  <p className="text-sm font-black text-gray-950">{(dimensions.l * dimensions.w * dimensions.h).toFixed(unit === "mm" ? 0 : 1)}<span className="text-[10px] ml-1 opacity-40 uppercase">{unit}³</span></p>
+                </div>
+                <div className="w-px h-8 bg-gray-100" />
+                <div className="flex-1">
+                  <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">Surf_Area</p>
+                  <p className="text-sm font-black text-gray-950">{(unit === "mm" ? 2 * (dimensions.l * dimensions.w + dimensions.w * dimensions.h + dimensions.h * dimensions.l) : currentSA).toFixed(unit === "mm" ? 0 : 1)}<span className="text-[10px] ml-1 opacity-40 uppercase">{unit}²</span></p>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 1b: Quantity Selection */}
+            <div className="space-y-6 pt-6 border-t border-gray-200">
+              <div className="flex items-center gap-4">
+                <Box size={18} className="text-emerald-500" />
+                <h3 className="text-xs font-black text-gray-950 uppercase tracking-[0.3em]">Quantity_Selection</h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[100, 200, 300, 500, 1000].map(q => (
+                  <button
+                    key={q}
+                    onClick={() => setQuantity(q)}
+                    className={`flex-[1_1_0%] min-w-[60px] py-3 rounded-xl border-2 font-black text-xs transition-all ${quantity === q ? 'bg-emerald-500 text-white border-emerald-500 shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-500/40 hover:text-gray-950'}`}
+                  >
+                    {q}
+                  </button>
+                ))}
+                <div className="relative flex-[2_2_0%] min-w-[100px]">
+                  <input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-full h-full py-3 px-4 rounded-xl bg-white border-2 border-gray-200 font-black text-xs text-gray-950 placeholder-gray-400 focus:border-emerald-500 outline-none transition-all"
+                    placeholder="Custom..."
+                    min={product?.minOrderQuantity || 1}
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase font-bold text-gray-400">Units</span>
+                </div>
               </div>
             </div>
 
@@ -897,7 +1285,7 @@ function CustomizeLabContent() {
 
               {customMode === "texture" ? (
                 <div className="grid grid-cols-4 gap-4">
-                  <label className="aspect-square border-2 border-dashed border-gray-200 bg-white rounded-[2rem] flex items-center justify-center cursor-pointer hover:border-emerald-500 transition-all group overflow-hidden">
+                  <label className="aspect-square border-2 border-dashed border-gray-300 bg-white rounded-[2rem] flex items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50/30 transition-all group overflow-hidden">
                     <input
                       type="file"
                       className="hidden"
@@ -905,16 +1293,47 @@ function CustomizeLabContent() {
                     />
                     <Plus
                       size={28}
-                      className="text-gray-300 group-hover:text-emerald-500 group-hover:scale-125 transition-all"
+                      className="text-gray-400 group-hover:text-emerald-600 group-hover:scale-125 transition-all"
                     />
                   </label>
                   {assetPool.map((asset, idx) => (
                     <div
                       key={idx}
                       onClick={() => setActiveAssetIndex(idx)}
-                      className={`relative aspect-square rounded-[2rem] overflow-hidden cursor-pointer border-2 transition-all ${activeAssetIndex === idx ? "border-emerald-500 scale-95 shadow-lg" : "border-transparent opacity-60 hover:opacity-100 hover:scale-105"}`}
+                      className={`relative group aspect-square rounded-[2rem] overflow-hidden cursor-pointer border-2 transition-all ${activeAssetIndex === idx ? "border-emerald-500 scale-95 shadow-lg" : "border-transparent opacity-60 hover:opacity-100 hover:scale-105"}`}
                     >
                       <img src={asset} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setImageToCrop(asset);
+                            setShowCropModal(true);
+                          }}
+                          title="Crop Image"
+                          className="w-10 h-10 rounded-full bg-white text-gray-900 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all transform hover:scale-110 active:scale-95 shadow-xl"
+                        >
+                          <Scissors size={18} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm("Delete this texture from your session?")) {
+                              setAssetPool(prev => {
+                                const newPool = prev.filter((_, i) => i !== idx);
+                                if (activeAssetIndex >= newPool.length) {
+                                  setActiveAssetIndex(Math.max(0, newPool.length - 1));
+                                }
+                                return newPool;
+                              });
+                            }
+                          }}
+                          title="Delete Texture"
+                          className="w-10 h-10 rounded-full bg-white text-gray-900 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all transform hover:scale-110 active:scale-95 shadow-xl"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1041,18 +1460,49 @@ function CustomizeLabContent() {
                   ))}
                 </div>
                 <div className="p-3 sm:p-4 flex flex-wrap gap-1.5 sm:gap-2">
-                  {chipCategories[activeChipCategory].map((chip) => (
-                    <button
-                      key={chip}
-                      onClick={() => toggleChip(chip)}
-                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[8px] sm:text-[9px] font-bold border transition-all active:scale-95 ${selectedChips.includes(chip)
-                        ? "bg-emerald-500 text-white border-emerald-500 shadow-sm"
-                        : "bg-gray-50 text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-emerald-600"
-                        }`}
-                    >
-                      {chip}
-                    </button>
-                  ))}
+                  {activeChipCategory === 'history' ? (
+                    <div className="w-full">
+                      {savedPatterns.length > 0 ? (
+                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-4 gap-2">
+                          {savedPatterns.map((pat, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => smartApplyAI(pat.url)}
+                              className="group relative aspect-square rounded-lg overflow-hidden border border-gray-100 hover:border-emerald-500 transition-all shadow-sm"
+                            >
+                              <img
+                                src={pat.url}
+                                alt={pat.prompt}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
+                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <Plus size={16} className="text-white" />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="py-8 text-center space-y-2">
+                          <ImageIcon size={24} className="mx-auto text-gray-200" />
+                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">No Patterns Found</p>
+                          <p className="text-[8px] text-gray-300">Generate your first design above</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    chipCategories[activeChipCategory].map((chip) => (
+                      <button
+                        key={chip}
+                        onClick={() => toggleChip(chip)}
+                        className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[8px] sm:text-[9px] font-bold border transition-all active:scale-95 ${selectedChips.includes(chip)
+                          ? "bg-emerald-500 text-white border-emerald-500 shadow-sm"
+                          : "bg-gray-50 text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-emerald-600"
+                          }`}
+                      >
+                        {chip}
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
 
@@ -1071,26 +1521,7 @@ function CustomizeLabContent() {
                       Optional
                     </span>
                   </div>
-                  <button
-                    onClick={enhancePrompt}
-                    disabled={!aiPrompt.trim() || isEnhancing}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-widest transition-all active:scale-90 ${!aiPrompt.trim() || isEnhancing
-                      ? "bg-blue-100 text-blue-300 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200"
-                      }`}
-                  >
-                    {isEnhancing ? (
-                      <>
-                        <RefreshCw size={10} className="animate-spin" />
-                        Enhancing...
-                      </>
-                    ) : (
-                      <>
-                        <Zap size={10} />
-                        AI Enhance
-                      </>
-                    )}
-                  </button>
+
                 </div>
                 {/* Textarea */}
                 <div className="p-3 sm:p-4">
@@ -1172,7 +1603,7 @@ function CustomizeLabContent() {
                 </button>
 
                 {textOnBox && (
-                  <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-3 sm:space-y-4 border-t border-gray-50 pt-3">
+                  <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-5 border-t border-gray-50 pt-3">
                     <input
                       type="text"
                       placeholder="Your brand / text..."
@@ -1184,26 +1615,20 @@ function CustomizeLabContent() {
                     {/* Text Style */}
                     <div className="space-y-2">
                       <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">
-                        Text Style
+                        Font Style
                       </p>
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         {[
                           { id: "bold", label: "Bold", preview: "font-black" },
-                          {
-                            id: "script",
-                            label: "Script",
-                            preview: "italic font-semibold",
-                          },
-                          {
-                            id: "minimal",
-                            label: "Minimal",
-                            preview: "font-light tracking-widest",
-                          },
+                          { id: "classic", label: "Classic", preview: "font-serif" },
+                          { id: "script", label: "Script", preview: "italic font-serif" },
+                          { id: "minimal", label: "Minimal", preview: "font-light tracking-widest" },
+                          { id: "modern", label: "Modern", preview: "font-extralight" },
                         ].map((s) => (
                           <button
                             key={s.id}
                             onClick={() => setBoxTextStyle(s.id)}
-                            className={`flex-1 py-2 sm:py-2.5 rounded-xl text-[9px] border transition-all ${boxTextStyle === s.id
+                            className={`py-2 px-1 rounded-xl text-[8px] border transition-all ${boxTextStyle === s.id
                               ? "bg-gray-950 text-white border-gray-950 shadow-md"
                               : "bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-400"
                               } ${s.preview}`}
@@ -1214,38 +1639,65 @@ function CustomizeLabContent() {
                       </div>
                     </div>
 
+                    {/* Position & Size Sliders */}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">Font Size</p>
+                          <span className="text-[9px] font-black text-emerald-600">{boxTextSettings.size}px</span>
+                        </div>
+                        <input
+                          type="range" min="5" max="100" value={boxTextSettings.size}
+                          onChange={(e) => setBoxTextSettings(prev => ({ ...prev, size: parseInt(e.target.value) }))}
+                          className="w-full h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">Shift X</p>
+                          <input
+                            type="range" min="0" max="100" value={boxTextSettings.x}
+                            onChange={(e) => setBoxTextSettings(prev => ({ ...prev, x: parseInt(e.target.value) }))}
+                            className="w-full h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">Shift Y</p>
+                          <input
+                            type="range" min="0" max="100" value={boxTextSettings.y}
+                            onChange={(e) => setBoxTextSettings(prev => ({ ...prev, y: parseInt(e.target.value) }))}
+                            className="w-full h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Text Color */}
                     <div className="space-y-2">
                       <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">
                         Text Color
                       </p>
-                      <div className="flex gap-2 items-center">
+                      <div className="flex flex-wrap gap-2 items-center">
                         {[
-                          "#FFFFFF",
-                          "#000000",
-                          "#059669",
-                          "#F59E0B",
-                          "#EF4444",
-                          "#6366F1",
+                          "#FFFFFF", "#000000", "#059669", "#F59E0B", "#EF4444",
+                          "#6366F1", "#EC4899", "#14B8A6", "#8B5CF6"
                         ].map((c) => (
                           <button
                             key={c}
                             onClick={() => setBoxTextColor(c)}
                             style={{ backgroundColor: c }}
-                            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all ${boxTextColor === c
-                              ? "border-emerald-500 scale-90 ring-2 ring-emerald-500/20 shadow-md"
-                              : "border-gray-200 hover:border-gray-400"
+                            className={`w-7 h-7 rounded-full border-2 transition-all ${boxTextColor === c ? "border-emerald-500 scale-90 ring-2 ring-emerald-500/10" : "border-gray-200"
                               }`}
                           />
                         ))}
-                        <div className="relative ml-auto">
+                        <div className="relative">
                           <input
                             type="color"
                             value={boxTextColor}
                             onChange={(e) => setBoxTextColor(e.target.value)}
-                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full cursor-pointer opacity-0 absolute inset-0"
+                            className="w-7 h-7 rounded-full cursor-pointer opacity-0 absolute inset-0 z-10"
                           />
-                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
+                          <div className="w-7 h-7 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
                             <Palette size={12} className="text-gray-400" />
                           </div>
                         </div>
@@ -1255,21 +1707,128 @@ function CustomizeLabContent() {
                 )}
               </div>
 
-              {/* Generate Button */}
               <button
                 onClick={async () => {
-                  if (
-                    (!aiPrompt && selectedChips.length === 0) ||
-                    !window.puter
-                  )
-                    return;
+                  if ((!aiPrompt && selectedChips.length === 0)) return;
+
                   setIsGenerating(true);
                   try {
                     const finalPrompt = buildSmartPrompt();
-                    const img = await window.puter.ai.txt2img(finalPrompt);
-                    smartApplyAI(img.src);
+
+                    // Step 1: Initiate Generation — Send structured context to backend
+                    const res = await fetch('/api/customize/generate', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        userIdea: aiPrompt.trim(),
+                        styles: selectedChips.filter(c => chipCategories.style.includes(c)),
+                        industries: selectedChips.filter(c => chipCategories.industry.includes(c)),
+                        boxMode,
+                        customText: customText.trim(),
+                        boxColors: boxColors,
+                      })
+                    });
+
+                    const startData = await res.json();
+                    if (!res.ok) {
+                      if (startData.limitReached) {
+                        setShowPremiumModal(true);
+                      } else {
+                        alert(startData.message || startData.error || "Generation failed");
+                      }
+                      setIsGenerating(false);
+                      return;
+                    }
+
+                    const taskId = startData.data.task_id;
+
+                    // Trigger a session refresh immediately to update the generation count UI
+                    if (checkUser) checkUser();
+
+                    // Step 2: Poll for Status
+                    let completed = false;
+                    let attempts = 0;
+                    const maxAttempts = 100; // 5 minutes max (100 * 3s)
+
+                    while (!completed && attempts < maxAttempts) {
+                      try {
+                        await new Promise(r => setTimeout(r, 3000)); // Poll every 3s
+                        const statusRes = await fetch(`/api/customize/status/${taskId}`, { cache: 'no-store' });
+                        const statusData = await statusRes.json();
+
+
+
+                        if (!statusRes.ok) {
+                          console.warn("Status check failed, retrying...", statusData);
+                          attempts++;
+                          continue;
+                        }
+
+                        const currentStatus = statusData?.data?.status;
+
+                        if (currentStatus === 'COMPLETED') {
+                          console.log("AI Generation Completed Successfully");
+
+                          // Extract image URL from various possible response structures
+                          const data = statusData?.data;
+                          let imageUrl = null;
+
+                          if (Array.isArray(data?.generated) && data.generated.length > 0) {
+                            imageUrl = data.generated[0];
+                          } else if (Array.isArray(data?.result) && data.result.length > 0) {
+                            imageUrl = data.result[0];
+                          } else if (data?.result?.items?.length > 0) {
+                            imageUrl = data.result.items[0].url;
+                          } else if (typeof data?.result === 'string') {
+                            imageUrl = data.result;
+                          }
+
+                          if (imageUrl) {
+                            console.log("Applying AI texture:", imageUrl);
+                            smartApplyAI(imageUrl);
+
+                            // Persistent Save: Store on Website History
+                            try {
+                              const saveRes = await fetch('/api/user/save-pattern', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  url: imageUrl,
+                                  prompt: aiPrompt || "AI Generated Design"
+                                })
+                              });
+
+                              if (saveRes.ok) {
+                                setSavedPatterns(prev => [
+                                  { url: imageUrl, prompt: aiPrompt || "AI Generated Design", createdAt: new Date() },
+                                  ...prev
+                                ].slice(0, 12));
+                              }
+                            } catch (e) { console.error("Auto-save failed:", e); }
+
+                            if (checkUser) checkUser();
+                            completed = true;
+                            break; // Exit loop immediately
+                          } else {
+                            console.error("Failed to extract imageUrl from response. Structure:", data);
+                            // If we can't find the image but it's "COMPLETED", this is a structure error
+                            throw new Error("Image URL not found in completed response");
+                          }
+                        } else if (currentStatus === 'FAILED') {
+                          throw new Error(statusData?.data?.message || "Generation process failed on server");
+                        }
+                      } catch (pollErr) {
+                        console.error("Polling error:", pollErr);
+                        // Don't stop on single poll error, keep trying until timeout
+                      }
+                      attempts++;
+                    }
+
+                    if (!completed) throw new Error("Generation timed out");
+
                   } catch (err) {
                     console.error("Forge Error:", err);
+                    alert("Forge error: " + err.message);
                   } finally {
                     setIsGenerating(false);
                   }
@@ -1278,7 +1837,7 @@ function CustomizeLabContent() {
                   isGenerating ||
                   (!aiPrompt.trim() && selectedChips.length === 0)
                 }
-                className="w-full py-4 sm:py-5 md:py-6 bg-gray-950 text-white rounded-xl sm:rounded-2xl font-black uppercase text-xs sm:text-sm tracking-[0.3em] sm:tracking-[0.45em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-emerald-500 transition-all shadow-lg active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed group"
+                className="w-full py-4 sm:py-5 md:py-6 bg-gray-950 text-white rounded-xl sm:rounded-2xl font-black uppercase text-xs sm:text-sm tracking-[0.3em] sm:tracking-[0.45em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-emerald-500 transition-all shadow-lg active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed group relative overflow-hidden"
               >
                 {isGenerating ? (
                   <>
@@ -1295,6 +1854,11 @@ function CustomizeLabContent() {
                   </>
                 )}
               </button>
+              <div className="flex justify-center items-center mt-3 gap-2">
+                <div className="px-3 py-2 bg-gray-50 rounded-lg text-[9px] font-black text-gray-500 uppercase tracking-widest border border-gray-100">
+                  {user?.aiUnlimitedUntil && new Date(user.aiUnlimitedUntil) > new Date() ? 'Unlimited Generations Enabled' : `${Math.max(0, 5 - (user?.aiGenerationCount || 0))} Generations Left Today`}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1310,20 +1874,272 @@ function CustomizeLabContent() {
               </h2>
             </div>
             <button
-              onClick={() => addToCart(product, quantity)}
-              className="w-full sm:w-auto py-4 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 bg-black text-white rounded-xl sm:rounded-2xl md:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-[0.3em] sm:tracking-[0.4em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-white hover:text-black transition-all shadow-xl active:scale-95 relative z-10 group shrink-0"
+              disabled={isAddingToCart}
+              onClick={async () => {
+                if (isAddingToCart) return;
+                setIsAddingToCart(true);
+
+                try {
+                  const uploadedBoxTextures = { ...boxTextures };
+                  const faces = Object.keys(uploadedBoxTextures);
+                  for (let face of faces) {
+                    const texture = uploadedBoxTextures[face];
+                    if (texture && texture.startsWith("data:image")) {
+                      try {
+                        const res = await fetch("/api/upload", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ image: texture })
+                        });
+                        const data = await res.json();
+                        if (data.url) {
+                          uploadedBoxTextures[face] = data.url;
+                        }
+                      } catch (err) {
+                        console.error(`Failed to upload texture for ${face}:`, err);
+                      }
+                    }
+                  }
+
+                  const userName = user?.name || user?.username || "Guest";
+                  const pType = product?.productType || product?.name || "Box";
+                  const customName = `${userName}_customize ${dimensions.l}x${dimensions.w}x${dimensions.h}_${pType}`;
+
+                  const customizedProduct = {
+                    ...product,
+                    id: `${product.id}-${Date.now()}`,
+                    name: customName,
+                    customDesign: {
+                      textures: uploadedBoxTextures,
+                      colors: boxColors,
+                      textureSettings: textureSettings,
+                      text: customText,
+                      textStyle: boxTextStyle,
+                      textColor: boxTextColor,
+                      textSettings: boxTextSettings,
+                      dimensions: dimensions,
+                      unit: unit
+                    }
+                  };
+                  addToCart(customizedProduct, quantity);
+                } finally {
+                  setIsAddingToCart(false);
+                }
+              }}
+              className="w-full sm:w-auto py-4 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 bg-black text-white rounded-xl sm:rounded-2xl md:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-[0.3em] sm:tracking-[0.4em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-white hover:text-black transition-all shadow-xl active:scale-95 group shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ShoppingCart
-                size={20}
-                className="group-hover:scale-110 transition-transform"
-              />
-              Add_to_Basket
+              {isAddingToCart ? (
+                <RefreshCw size={20} className="animate-spin shrink-0" />
+              ) : (
+                <ShoppingCart
+                  size={20}
+                  className="group-hover:scale-110 transition-transform"
+                />
+              )}
+              {isAddingToCart ? "Deploying..." : "Add_to_Basket"}
             </button>
           </div>
+          {/* Share Toast Notification */}
+          <AnimatePresence>
+            {shareToast && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                className="fixed bottom-6 right-6 z-[9999] bg-gray-950 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3"
+              >
+                <Link2 size={16} className="text-emerald-400" />
+                <div>
+                  <p className="text-xs font-black uppercase tracking-widest">Design Share Link</p>
+                  <p className="text-[10px] font-bold text-gray-400 truncate max-w-[200px] sm:max-w-xs mb-2">{shareLink}</p>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(shareLink);
+                      alert("Link copied to clipboard!");
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all"
+                  >
+                    <Copy size={10} /> Copy Link
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {/* Crop Modal Overlay */}
+          <AnimatePresence>
+            {showCropModal && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[10000] bg-gray-950/80 backdrop-blur-md flex items-center justify-center p-6"
+              >
+                <motion.div
+                  initial={{ scale: 0.9, y: 20 }}
+                  animate={{ scale: 1, y: 0 }}
+                  exit={{ scale: 0.9, y: 20 }}
+                  className="bg-white rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col"
+                >
+                  <div className="p-8 border-b border-gray-50 flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-black text-gray-950 uppercase tracking-tighter">Perfect_Crop</h2>
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">Adjust mapping for structural fit</p>
+                    </div>
+                    <button onClick={() => setShowCropModal(false)} className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 hover:text-red-500 transition-all">
+                      <X size={20} />
+                    </button>
+                  </div>
+
+                  <div className="relative h-[50vh] bg-gray-950">
+                    <Cropper
+                      image={imageToCrop}
+                      crop={crop}
+                      zoom={zoom}
+                      aspect={1}
+                      onCropChange={setCrop}
+                      onCropComplete={handleCropComplete}
+                      onZoomChange={setZoom}
+                    />
+                  </div>
+
+                  <div className="p-8 bg-gray-50 space-y-8">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Zoom_Precision</p>
+                        <span className="text-sm font-black text-gray-950">{Math.round(zoom * 100)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        value={zoom}
+                        min={1}
+                        max={3}
+                        step={0.1}
+                        onChange={(e) => setZoom(parseFloat(e.target.value))}
+                        className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                      />
+                    </div>
+
+                    <button
+                      onClick={finalizeCrop}
+                      className="w-full py-6 bg-gray-950 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] hover:bg-emerald-500 transition-all shadow-xl active:scale-95"
+                    >
+                      Apply_Neural_Mapping
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowCropModal(false);
+                        setImageToCrop(null);
+                      }}
+                      className="w-full py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-950 transition-colors"
+                    >
+                      Skip & Use Original
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main >
 
-      <><Footer /><style jsx global>{`
+      <Footer />
+      {/* Mobile Experience Warning */}
+      <AnimatePresence>
+        {showMobileWarning && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-950/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              className="bg-white rounded-[2.5rem] w-full max-w-md p-8 sm:p-10 shadow-2xl border border-white/20 text-center relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -z-10" />
+
+              <div className="flex justify-center mb-8">
+                <div className="relative">
+                  <Monitor className="w-16 h-16 text-emerald-500" />
+                  <Smartphone className="w-8 h-8 text-emerald-200 absolute -bottom-1 -right-2 bg-white rounded-lg p-1 border border-emerald-50" />
+                </div>
+              </div>
+
+              <h3 className="text-xl sm:text-2xl font-black text-gray-950 uppercase tracking-widest leading-tight mb-4">
+                Upgrade Your <br />Design Canvas
+              </h3>
+
+              <p className="text-gray-500 text-xs sm:text-sm font-medium leading-relaxed mb-8">
+                The 3D Customize Lab is a high-precision spatial tool. For the absolute best creative experience, we recommend using a <span className="text-emerald-600 font-black">Laptop or Tablet</span>.
+              </p>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => setShowMobileWarning(false)}
+                  className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-emerald-500/25 hover:bg-emerald-600 transition-all active:scale-95"
+                >
+                  Continue to Lab
+                </button>
+                <button
+                  onClick={() => router.push('/shop')}
+                  className="w-full py-4 bg-gray-50 text-gray-400 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-gray-950 hover:text-white transition-all"
+                >
+                  Return to Shop
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showPremiumModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-gray-950/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-white rounded-[2.5rem] w-full max-w-md p-8 sm:p-10 shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500 blur-[80px] -z-10 rounded-full" />
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 mb-2">
+                  <Sparkles size={24} />
+                </div>
+                <h3 className="text-2xl font-black text-gray-950 uppercase tracking-widest leading-tight">Upgrade to Neural Pro</h3>
+                <p className="text-sm text-gray-500 font-medium leading-relaxed">
+                  You've reached your free limit of 5 AI generations for today.
+                  Unlock unlimited designs for just <span className="text-emerald-500 font-black text-base">₹59 / week</span>.
+                </p>
+                <div className="w-full space-y-3 mt-6">
+                  <button
+                    onClick={() => {
+                      alert("Routing to payment gateway to subscribe for ₹59/week.");
+                      setShowPremiumModal(false);
+                    }}
+                    className="w-full py-4 bg-gray-950 text-white rounded-xl font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:bg-emerald-500 transition-all active:scale-95"
+                  >
+                    Unlock Unlimited - ₹59
+                  </button>
+                  <button
+                    onClick={() => setShowPremiumModal(false)}
+                    className="w-full py-3 bg-gray-50 text-gray-400 rounded-xl font-black uppercase text-[10px] tracking-widest hover:text-gray-950 transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <style jsx global>{`
         .animate-spin-slow {
           animation: spin 12s linear infinite;
         }
@@ -1361,11 +2177,8 @@ function CustomizeLabContent() {
             transform: translateY(0);
           }
         }
-        input[type="number"]::-webkit-inner-spin-button {
-          -webkit-appearance: none;
-        }
-      `}</style></>
-    </div >
+      `}</style>
+    </motion.div>
   );
 }
 

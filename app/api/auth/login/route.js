@@ -3,6 +3,15 @@ import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import dns from 'dns';
+
+// Fix for querySrv ECONNREFUSED on some networks/machines
+if (typeof window === 'undefined') {
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+    if (dns.setDefaultResultOrder) {
+        dns.setDefaultResultOrder('ipv4first');
+    }
+}
 
 export async function POST(req) {
     try {
@@ -28,7 +37,7 @@ export async function POST(req) {
 
         const token = jwt.sign(
             { id: user._id, role: user.role },
-            process.env.JWT_SECRET || 'fallback_secret_for_development_purposes',
+            process.env.JWT_SECRET,
             { expiresIn: '30d' }
         );
 

@@ -5,7 +5,7 @@ import { ArrowRight, Star } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import MatrixBackground from "./MatrixBackground";
-
+import Image from "next/image";
 
 const column1 = [
   "https://plus.unsplash.com/premium_photo-1683133263716-731795d25343?q=80&w=800&auto=format&fit=crop",
@@ -38,12 +38,14 @@ const InfiniteColumn = ({ images, speed = 20, reverse = false }) => {
         {[...images, ...images].map((src, i) => (
           <div
             key={i}
-            className="w-full rounded-[2.5rem] overflow-hidden bg-gray-50 border border-gray-100 shadow-xl"
+            className="w-full h-[350px] relative rounded-[2.5rem] overflow-hidden bg-gray-50 border border-gray-100 shadow-xl"
           >
-            <img
+            <Image
               src={src}
               alt="Packaging"
-              className="w-full h-[350px] object-cover hover:scale-105 transition-transform duration-700"
+              fill
+              className="object-cover hover:scale-105 transition-transform duration-700"
+              sizes="(max-width: 1024px) 0vw, 25vw"
             />
           </div>
         ))}

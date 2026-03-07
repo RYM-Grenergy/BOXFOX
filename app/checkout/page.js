@@ -21,15 +21,20 @@ export default function CheckoutPage() {
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderId, setOrderId] = useState(null);
+    const [paymentError, setPaymentError] = useState(null);
 
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         phone: '',
-        address: '',
-        city: '',
-        state: '',
-        pincode: '',
+        shippingAddress: {
+            street: '',
+            apartment: '',
+            city: '',
+            state: '',
+            zipCode: '',
+            country: 'India'
+        }
     });
 
     const [user, setUser] = useState(null);
@@ -38,6 +43,15 @@ export default function CheckoutPage() {
     const [selectedAddressIndex, setSelectedAddressIndex] = useState(-1);
 
     React.useEffect(() => {
+        const query = new URLSearchParams(window.location.search);
+        if (query.get('status') === 'success') {
+            setOrderId(query.get('orderId'));
+            setStep(3);
+            clearCart();
+        } else if (query.get('status') === 'failure') {
+            setPaymentError("Your payment transaction failed. Please try again or contact support.");
+        }
+
         fetch('/api/auth/me')
             .then(res => res.json())
             .then(data => {
@@ -49,8 +63,12 @@ export default function CheckoutPage() {
                         email: data.user.email || '',
                         phone: data.user.phone || '',
                     }));
-                    if (data.user.address) {
-                        setSavedAddresses([data.user.address]);
+                    if (data.user.shippingAddress) {
+                        setSavedAddresses([data.user.shippingAddress]);
+                        setFormData(prev => ({
+                            ...prev,
+                            shippingAddress: data.user.shippingAddress
+                        }));
                     }
                 }
             })
@@ -58,16 +76,59 @@ export default function CheckoutPage() {
     }, []);
 
     const handleFormChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        if (name.includes('.')) {
+            const [parent, child] = name.split('.');
+            setFormData(prev => ({
+                ...prev,
+                [parent]: {
+                    ...prev[parent],
+                    [child]: value
+                }
+            }));
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
     const handleSelectSavedAddress = (addr, idx) => {
-        setFormData(prev => ({ ...prev, address: addr }));
+        setFormData(prev => ({ ...prev, shippingAddress: addr }));
         setSelectedAddressIndex(idx);
     };
 
+    const [couponInput, setCouponInput] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState(null);
+    const [couponError, setCouponError] = useState('');
+    const [isValidating, setIsValidating] = useState(false);
+
+    const applyCoupon = async () => {
+        if (!couponInput) return;
+        setIsValidating(true);
+        setCouponError('');
+        try {
+            const res = await fetch('/api/coupons/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: couponInput, amount: cartTotal })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setAppliedCoupon(data);
+                setCouponInput('');
+            } else {
+                setCouponError(data.error);
+            }
+        } catch (err) {
+            setCouponError("Failed to validate coupon");
+        } finally {
+            setIsValidating(false);
+        }
+    };
+
+    const finalTotal = cartTotal - (appliedCoupon?.discount || 0);
+
     const placeOrder = async () => {
-        if (!formData.address || !formData.city || !formData.pincode) {
+        if (!formData.shippingAddress.street || !formData.shippingAddress.city || !formData.shippingAddress.zipCode) {
             alert("Please complete shipping details");
             return;
         }
@@ -87,23 +148,77 @@ export default function CheckoutPage() {
                         productId: item.id,
                         name: item.name,
                         quantity: item.quantity,
-                        price: typeof item.price === 'number' ? item.price : parseFloat(item.price.replace(/[^0-9.]/g, ''))
+                        price: typeof item.price === 'number' ? item.price : parseFloat(item.price.replace(/[^0-9.]/g, '')),
+                        variant: item.variant,
+                        image: item.img || item.image,
+                        customDesign: item.customDesign
                     })),
-                    total: cartTotal,
+                    total: finalTotal,
+                    discount: appliedCoupon?.discount || 0,
+                    couponCode: appliedCoupon?.code || null,
                     status: 'Pending',
                     shipping: {
-                        address: formData.address,
-                        city: formData.city,
-                        state: formData.state,
-                        pincode: formData.pincode
+                        address: formData.shippingAddress.street,
+                        apartment: formData.shippingAddress.apartment,
+                        city: formData.shippingAddress.city,
+                        state: formData.shippingAddress.state,
+                        zipCode: formData.shippingAddress.zipCode,
+                        country: formData.shippingAddress.country
                     }
                 })
             });
             const data = await res.json();
             if (data.success) {
-                setOrderId(data.orderId);
-                setStep(3);
-                clearCart();
+                if (finalTotal <= 0) {
+                    window.location.href = `/checkout?status=success&orderId=${data.orderId}`;
+                    return;
+                }
+
+                // Now initiate PayU Payment
+                const txnId = data.orderId; // Use our order ID as transaction ID
+                const hashRes = await fetch('/api/payment/payu/hash', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        txnid: txnId,
+                        amount: finalTotal,
+                        productinfo: "BoxFox Order",
+                        firstname: formData.name,
+                        email: formData.email
+                    })
+                });
+                const { hash } = await hashRes.json();
+
+                // Build PayU Form
+                const payuData = {
+                    key: 'JPM7fg', // Use env in production
+                    txnid: txnId,
+                    amount: finalTotal.toFixed(2),
+                    productinfo: "BoxFox Order",
+                    firstname: formData.name,
+                    email: formData.email,
+                    phone: formData.phone,
+                    surl: `${window.location.origin}/api/payment/payu/response`,
+                    furl: `${window.location.origin}/api/payment/payu/response`,
+                    hash: hash,
+                    service_provider: 'payu_paisa'
+                };
+
+                // Create hidden form and submit
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'https://test.payu.in/_payment'; // Use https://secure.payu.in/_payment for prod
+
+                Object.entries(payuData).forEach(([key, value]) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = value;
+                    form.appendChild(input);
+                });
+
+                document.body.appendChild(form);
+                form.submit();
             }
         } catch (e) {
             console.error(e);
@@ -180,6 +295,15 @@ export default function CheckoutPage() {
                     </div>
                 </div>
 
+                {paymentError && (
+                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 p-6 bg-red-50 border border-red-100 rounded-[2rem] flex items-center gap-4">
+                        <div className="w-10 h-10 bg-red-500 text-white rounded-xl flex items-center justify-center shrink-0">
+                            <Lock size={20} />
+                        </div>
+                        <p className="text-[10px] font-black uppercase text-red-600 tracking-widest">{paymentError}</p>
+                    </motion.div>
+                )}
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
                     <div className="lg:col-span-7 space-y-16">
                         {/* Stepper */}
@@ -205,7 +329,7 @@ export default function CheckoutPage() {
                                     <div className="space-y-4">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Recipient Name</label>
                                         <input
-                                            name="name" value={formData.name} onChange={handleFormChange}
+                                            name="name" value={formData.name || ''} onChange={handleFormChange}
                                             placeholder="John Doe"
                                             className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all uppercase tracking-widest"
                                         />
@@ -213,7 +337,7 @@ export default function CheckoutPage() {
                                     <div className="space-y-4">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Contact Email</label>
                                         <input
-                                            type="email" name="email" value={formData.email} onChange={handleFormChange}
+                                            type="email" name="email" value={formData.email || ''} onChange={handleFormChange}
                                             placeholder="support@boxfox.in"
                                             className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
                                         />
@@ -221,7 +345,7 @@ export default function CheckoutPage() {
                                     <div className="space-y-4 md:col-span-2">
                                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Encrypted Phone</label>
                                         <input
-                                            name="phone" value={formData.phone} onChange={handleFormChange}
+                                            name="phone" value={formData.phone || ''} onChange={handleFormChange}
                                             placeholder="+91 00000 00000"
                                             className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
                                         />
@@ -252,7 +376,9 @@ export default function CheckoutPage() {
                                                         <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Address Node #{idx + 1}</span>
                                                         {selectedAddressIndex === idx && <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />}
                                                     </div>
-                                                    <p className="text-sm font-bold line-clamp-1">{addr}</p>
+                                                    <p className="text-sm font-bold line-clamp-1">
+                                                        {addr.street}, {addr.city}, {addr.state} {addr.zipCode}
+                                                    </p>
                                                 </button>
                                             ))}
                                         </div>
@@ -261,28 +387,58 @@ export default function CheckoutPage() {
 
                                 <div className="space-y-8">
                                     <div className="space-y-4">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Delivery Address</label>
-                                        <textarea
-                                            name="address" value={formData.address} onChange={handleFormChange}
-                                            placeholder="Unit/Suite, Street, Area..."
-                                            rows={2}
-                                            className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-bold text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all resize-none"
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Street Address</label>
+                                        <input
+                                            name="shippingAddress.street" value={formData.shippingAddress.street || ''} onChange={handleFormChange}
+                                            placeholder="House number and street name"
+                                            className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-bold text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Apartment, suite, etc. (optional)</label>
+                                        <input
+                                            name="shippingAddress.apartment" value={formData.shippingAddress.apartment || ''} onChange={handleFormChange}
+                                            placeholder="Apartment, suite, unit, etc."
+                                            className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-bold text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
                                         />
                                     </div>
                                     <div className="grid grid-cols-2 gap-8">
                                         <div className="space-y-4">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">District</label>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Town / City</label>
                                             <input
-                                                name="city" value={formData.city} onChange={handleFormChange}
+                                                name="shippingAddress.city" value={formData.shippingAddress.city || ''} onChange={handleFormChange}
+                                                placeholder="City"
                                                 className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all uppercase"
                                             />
                                         </div>
                                         <div className="space-y-4">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Zip Code</label>
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">State / Province</label>
                                             <input
-                                                name="pincode" value={formData.pincode} onChange={handleFormChange}
+                                                name="shippingAddress.state" value={formData.shippingAddress.state || ''} onChange={handleFormChange}
+                                                placeholder="State"
+                                                className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all uppercase"
+                                            />
+                                        </div>
+                                        <div className="space-y-4">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">ZIP / Postcode</label>
+                                            <input
+                                                name="shippingAddress.zipCode" value={formData.shippingAddress.zipCode || ''} onChange={handleFormChange}
+                                                placeholder="ZIP Code"
                                                 className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
                                             />
+                                        </div>
+                                        <div className="space-y-4">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Country / Region</label>
+                                            <select
+                                                name="shippingAddress.country" value={formData.shippingAddress.country || 'India'} onChange={handleFormChange}
+                                                className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all uppercase appearance-none"
+                                            >
+                                                <option value="India">India</option>
+                                                <option value="United States">United States</option>
+                                                <option value="United Kingdom">United Kingdom</option>
+                                                <option value="Canada">Canada</option>
+                                                <option value="UAE">UAE</option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
@@ -294,11 +450,11 @@ export default function CheckoutPage() {
                                         Back
                                     </button>
                                     <button
-                                        disabled={isSubmitting || !formData.address || !formData.city}
+                                        disabled={isSubmitting || !formData.shippingAddress.street || !formData.shippingAddress.city}
                                         onClick={placeOrder}
                                         className="flex-[2] py-6 bg-emerald-500 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] hover:bg-gray-950 transition-all shadow-2xl shadow-emerald-500/10 active:scale-95"
                                     >
-                                        {isSubmitting ? 'SECUREING...' : 'Authorize Transaction'}
+                                        {isSubmitting ? 'SECURING...' : 'Authorize Transaction'}
                                     </button>
                                 </div>
                             </motion.div>
@@ -331,11 +487,49 @@ export default function CheckoutPage() {
                                 ))}
                             </div>
 
+                            <div className="space-y-4 mb-10 pt-10 border-t border-gray-200">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 italic">Have a Gift Card / Promo Code?</p>
+                                <div className="flex gap-4">
+                                    <input
+                                        type="text"
+                                        placeholder="Vault Protocol"
+                                        value={couponInput}
+                                        onChange={(e) => setCouponInput(e.target.value)}
+                                        className="flex-1 bg-white border border-gray-100 rounded-2xl px-6 py-4 text-[10px] font-black tracking-[0.2em] outline-none focus:border-emerald-500 transition-all uppercase placeholder:italic"
+                                    />
+                                    <button
+                                        onClick={applyCoupon}
+                                        disabled={isValidating || !couponInput}
+                                        className="px-8 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all disabled:opacity-30 active:scale-95"
+                                    >
+                                        {isValidating ? '...' : 'Verify'}
+                                    </button>
+                                </div>
+                                {couponError && <p className="text-[9px] font-bold text-red-500 uppercase tracking-widest ml-4">{couponError}</p>}
+                                {appliedCoupon && (
+                                    <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center text-white">
+                                                <CheckCircle2 size={16} />
+                                            </div>
+                                            <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">{appliedCoupon.code} Applied</span>
+                                        </div>
+                                        <button onClick={() => setAppliedCoupon(null)} className="text-[9px] font-black text-gray-400 hover:text-red-500 uppercase tracking-widest">Remove</button>
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="space-y-5 pt-10 border-t border-gray-200">
                                 <div className="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                                     <span>Sub-Total</span>
                                     <span className="text-gray-950">₹{cartTotal.toLocaleString('en-IN')}</span>
                                 </div>
+                                {appliedCoupon && (
+                                    <div className="flex items-center justify-between text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">
+                                        <span>Vault Discount</span>
+                                        <span className="font-black">- ₹{appliedCoupon.discount.toLocaleString('en-IN')}</span>
+                                    </div>
+                                )}
                                 <div className="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                                     <span>Eco-Shipment</span>
                                     <span className="text-emerald-500 font-black italic">Free</span>
@@ -343,7 +537,7 @@ export default function CheckoutPage() {
                                 <div className="pt-8 flex items-end justify-between">
                                     <div>
                                         <p className="text-[10px] font-black uppercase text-emerald-500 mb-1 tracking-widest">Total Valuation</p>
-                                        <h2 className="text-5xl font-black text-gray-950 tracking-tighter leading-none">₹{cartTotal.toLocaleString('en-IN')}</h2>
+                                        <h2 className="text-5xl font-black text-gray-950 tracking-tighter leading-none">₹{finalTotal.toLocaleString('en-IN')}</h2>
                                     </div>
                                 </div>
                             </div>

@@ -1,13 +1,15 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Mail, Lock, Eye, EyeOff, ShieldCheck, Sparkles, AlertCircle, CheckCircle2 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 
-export default function Login() {
+function LoginContent() {
+    const searchParams = useSearchParams();
+    const redirect = searchParams.get("redirect") || "/";
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +29,7 @@ export default function Login() {
                 if (result.user?.role === 'admin') {
                     router.push("/admin");
                 } else {
-                    router.push("/");
+                    router.push(redirect);
                 }
             } else {
                 setErrorMsg(result.error || "Authentication failed. Please verify your credentials.");
@@ -242,7 +244,7 @@ export default function Login() {
                                     <div className="mt-12 text-center">
                                         <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
                                             NEW_TO_BOXFOX?{" "}
-                                            <Link href="/signup" className="text-emerald-500 hover:text-emerald-600 ml-2 border-b-2 border-emerald-500/10 hover:border-emerald-500 transition-all">
+                                            <Link href={`/signup?redirect=${encodeURIComponent(redirect)}`} className="text-emerald-500 hover:text-emerald-600 ml-2 border-b-2 border-emerald-500/10 hover:border-emerald-500 transition-all">
                                                 Create Account
                                             </Link>
                                         </p>
@@ -274,5 +276,18 @@ export default function Login() {
         </div>
     );
 }
+
+export default function Login() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-950"></div>
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
+    );
+}
+
 
 

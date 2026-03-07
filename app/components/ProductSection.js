@@ -12,6 +12,7 @@ export default function ProductSection({ searchQuery = "", category = "All" }) {
     setLoading(true);
     let url = `/api/products`;
     const params = new URLSearchParams();
+    params.append('all', 'true');
     if (searchQuery) params.append('search', searchQuery);
 
     // If not "All", we might want to filter, but our API returns sections.
@@ -21,10 +22,15 @@ export default function ProductSection({ searchQuery = "", category = "All" }) {
     fetch(url + (params.toString() ? `?${params.toString()}` : ''))
       .then(res => res.json())
       .then(data => {
-        if (category !== "All") {
-          setSections(data.filter(s => s.category === category));
+        if (Array.isArray(data)) {
+          if (category !== "All") {
+            setSections(data.filter(s => s.category === category));
+          } else {
+            setSections(data);
+          }
         } else {
-          setSections(data);
+          console.warn("ProductSection: API returned non-array data", data);
+          setSections([]);
         }
         setLoading(false);
       })

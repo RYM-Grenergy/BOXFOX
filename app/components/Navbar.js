@@ -10,6 +10,9 @@ import {
   ChevronRight,
   ArrowRight,
   Box,
+  Heart,
+  Minus,
+  Plus,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -20,7 +23,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const { cart, removeFromCart, isCartOpen, setIsCartOpen, cartTotal } = useCart();
+  const { cart, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen, cartTotal } = useCart();
   const { user, logout } = useAuth();
   const pathname = usePathname();
 
@@ -36,6 +39,7 @@ export default function Navbar() {
     { label: "Customize", href: "/customize", isSpecial: true },
     { label: "B2B", href: "/b2b" },
     { label: "About", href: "/about" },
+    { label: "Contact", href: "/contact" },
   ];
 
   return (
@@ -101,22 +105,27 @@ export default function Navbar() {
 
               <div className="relative group hidden sm:block">
                 <Link
-                  href={user ? "/account" : "/login"}
-                  className="flex items-center gap-2 p-2 sm:p-2.5 rounded-full hover:bg-gray-50 hover:shadow-lg active:scale-90 active:shadow-inner transition-all text-gray-900 duration-300"
+                  href={user ? "/account" : `/login?redirect=${encodeURIComponent(pathname)}`}
+                  className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full transition-all duration-500 ${user
+                    ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100"
+                    : "bg-gray-950 text-white hover:bg-emerald-600 shadow-xl shadow-gray-200"
+                    }`}
                 >
-                  <User size={18} />
-                  {user && (
-                    <span className="hidden sm:block text-[10px] font-black uppercase tracking-widest text-emerald-600">
-                      {user.name.split(" ")[0]}
-                    </span>
-                  )}
+                  <User size={16} />
+                  <span className="text-[10px] font-black uppercase tracking-widest">
+                    {user ? "Account" : "Login"}
+                  </span>
                 </Link>
 
                 {user && (
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200]">
                     <Link href="/account" className="block px-6 py-2 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 transition-colors">
-                      Dashboard
+                      My Dashboard
                     </Link>
+                    <Link href="/account?tab=wishlist" className="block px-6 py-2 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 transition-colors">
+                      My Wishlist
+                    </Link>
+                    <div className="h-px bg-gray-50 mx-6 my-1" />
                     <button
                       onClick={logout}
                       className="w-full text-left px-6 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 transition-colors"
@@ -175,7 +184,7 @@ export default function Navbar() {
         </AnimatePresence>
       </nav>
 
-      {/* Mobile Drawer */}
+
       <AnimatePresence>
         {menuOpen && (
           <>
@@ -193,6 +202,13 @@ export default function Navbar() {
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="fixed top-0 right-0 w-[280px] sm:w-[320px] h-full bg-white z-[160] lg:hidden p-8 sm:p-12 shadow-2xl flex flex-col justify-between pt-24 sm:pt-32"
             >
+              <button
+                onClick={() => setMenuOpen(false)}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-50 transition-colors"
+                aria-label="Close Menu"
+              >
+                <X size={24} className="text-gray-950" />
+              </button>
               <div className="flex flex-col gap-6 sm:gap-8">
                 {navLinks.map((link, idx) => (
                   <motion.div
@@ -229,6 +245,14 @@ export default function Navbar() {
                     </div>
 
                     <Link
+                      href="/account?tab=wishlist"
+                      className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-emerald-500 transition-all group"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <Heart size={16} className="group-hover:scale-110 transition-transform" /> My Wishlist
+                    </Link>
+
+                    <Link
                       href="/account"
                       className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-emerald-500 transition-all group"
                       onClick={() => setMenuOpen(false)}
@@ -248,17 +272,17 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <Link
-                    href="/login"
-                    className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-emerald-500 transition-all group"
+                    href={`/login?redirect=${encodeURIComponent(pathname)}`}
+                    className="flex items-center justify-center gap-4 py-5 bg-gray-950 text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-gray-200 mt-4"
                     onClick={() => setMenuOpen(false)}
                   >
-                    <User size={16} className="group-hover:scale-110 transition-transform" /> Access_Account
+                    <User size={16} /> Login
                   </Link>
                 )}
 
                 <div className="p-6 bg-gray-50 rounded-3xl">
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Support_Line</p>
-                  <a href="mailto:hello@boxfox.in" className="text-xs font-black text-gray-950 block hover:text-emerald-500 transition-colors">hello@boxfox.in</a>
+                  <a href="mailto:office.ggn@iopl.co" className="text-xs font-black text-gray-950 block hover:text-emerald-600 transition-colors">office.ggn@iopl.co</a>
                 </div>
               </div>
             </motion.div>
@@ -266,7 +290,6 @@ export default function Navbar() {
         )}
       </AnimatePresence>
 
-      {/* Cart Drawer Inherited (Simplified Styles) */}
       <AnimatePresence>
         {isCartOpen && (
           <div className="fixed inset-0 z-[200] flex justify-end">
@@ -308,10 +331,26 @@ export default function Navbar() {
                       </div>
                       <div className="flex-1">
                         <h4 className="text-[11px] font-black text-gray-950 uppercase tracking-tight line-clamp-1">{item.name}</h4>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-sm font-black text-emerald-600">₹{parseFloat(item.price).toLocaleString("en-IN")}</span>
+                        <p className="text-[10px] font-black text-gray-400 mt-1 uppercase tracking-widest">QTY: {item.quantity}</p>
+                        <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center bg-gray-50 rounded-lg p-1">
+                            <button
+                              onClick={() => updateQuantity(item.id, Math.max(100, item.quantity - 100))}
+                              className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-950"
+                            >
+                              <Minus size={12} />
+                            </button>
+                            <span className="w-8 text-[10px] font-black text-center">{item.quantity}</span>
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity + 100)}
+                              className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-950"
+                            >
+                              <Plus size={12} />
+                            </button>
+                          </div>
                           <button onClick={() => removeFromCart(item.id)} className="text-[10px] font-black text-gray-300 hover:text-red-500 uppercase">Remove</button>
                         </div>
+                        <p className="text-xs font-black text-emerald-600 mt-2">₹{(parseFloat(item.price) * item.quantity).toLocaleString("en-IN")}</p>
                       </div>
                     </div>
                   ))
@@ -319,18 +358,27 @@ export default function Navbar() {
               </div>
 
               {cart.length > 0 && (
-                <div className="p-8 border-t border-gray-50 space-y-6">
+                <div className="p-8 border-t border-gray-50 space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Grand Total</span>
                     <span className="text-3xl font-black text-gray-950">₹{cartTotal.toLocaleString("en-IN")}</span>
                   </div>
-                  <Link
-                    href="/checkout"
-                    onClick={() => setIsCartOpen(false)}
-                    className="w-full py-5 bg-gray-950 text-white rounded-2xl flex items-center justify-center gap-4 font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all"
-                  >
-                    Confirm Order <ArrowRight size={18} />
-                  </Link>
+                  <div className="grid gap-3">
+                    <Link
+                      href="/cart"
+                      onClick={() => setIsCartOpen(false)}
+                      className="w-full py-4 bg-gray-50 text-gray-950 rounded-2xl flex items-center justify-center gap-4 font-black text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all border border-gray-100"
+                    >
+                      Review Shopping Cart
+                    </Link>
+                    <Link
+                      href="/checkout"
+                      onClick={() => setIsCartOpen(false)}
+                      className="w-full py-5 bg-gray-950 text-white rounded-2xl flex items-center justify-center gap-4 font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-xl shadow-gray-100"
+                    >
+                      Confirm Order <ArrowRight size={18} />
+                    </Link>
+                  </div>
                 </div>
               )}
             </motion.div>

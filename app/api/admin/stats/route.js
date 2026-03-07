@@ -1,11 +1,22 @@
 import { NextResponse } from 'next/server';
+import jwt from 'jsonwebtoken';
+import User from '@/models/User';
 import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product';
 import Order from '@/models/Order';
 
-export async function GET() {
+export async function GET(req) {
     try {
         await dbConnect();
+
+        // Security check
+        const token = req.cookies.get('token')?.value;
+        if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_for_development_purposes');
+        const user = await User.findById(decoded.id);
+        if (!user || user.role !== 'admin') {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
         // Date ranges
         const now = new Date();

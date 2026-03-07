@@ -14,7 +14,10 @@ import {
     Search,
     Menu,
     X,
-    ClipboardList
+    ClipboardList,
+    MessageSquare,
+    Ticket,
+    Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -26,19 +29,28 @@ export default function AdminLayout({ children }) {
     const router = useRouter();
 
     useEffect(() => {
+        if (pathname === '/admin/login') {
+            setLoading(false);
+            return;
+        }
+
         fetch('/api/auth/me')
             .then(res => {
                 if (!res.ok) throw new Error('Unauthenticated');
                 return res.json();
             })
             .then(data => {
+                const isStaffOrAdmin = data.user?.role === 'admin' || data.user?.role === 'staff_fulfillment';
+                if (!isStaffOrAdmin) {
+                    throw new Error('Unauthorized role');
+                }
                 setUser(data.user);
                 setLoading(false);
             })
             .catch(() => {
-                setLoading(false);
+                window.location.href = '/admin/login';
             });
-    }, []);
+    }, [pathname]);
 
     const handleLogout = async () => {
         await fetch('/api/auth/logout', { method: 'POST' });
@@ -46,15 +58,22 @@ export default function AdminLayout({ children }) {
     };
 
     const menuItems = [
-        { label: 'Dashboard', icon: <LayoutDashboard size={20} />, href: '/admin' },
-        { label: 'Products', icon: <Box size={20} />, href: '/admin/products' },
-        { label: 'B2B Ops', icon: <Settings size={20} />, href: '/admin/b2b' },
-        { label: 'B2B Leads', icon: <ClipboardList size={20} />, href: '/admin/b2b/inquiries' },
-        { label: 'Orders', icon: <ShoppingBag size={20} />, href: '/admin/orders' },
-        { label: 'Customers', icon: <Users size={20} />, href: '/admin/customers' },
-        { label: 'Analytics', icon: <BarChart3 size={20} />, href: '/admin/analytics' },
-        { label: 'Settings', icon: <Settings size={20} />, href: '/admin/settings' },
-    ];
+        { label: 'Dashboard', icon: <LayoutDashboard size={20} />, href: '/admin', roles: ['admin'] },
+        { label: 'Products', icon: <Box size={20} />, href: '/admin/products', roles: ['admin'] },
+        { label: 'B2B Ops', icon: <Settings size={20} />, href: '/admin/b2b', roles: ['admin', 'staff_fulfillment'] },
+        { label: 'B2B Leads', icon: <ClipboardList size={20} />, href: '/admin/b2b/inquiries', roles: ['admin'] },
+        { label: 'General Queries', icon: <MessageSquare size={20} />, href: '/admin/queries', roles: ['admin', 'staff_fulfillment'] },
+        { label: 'Promo Vault', icon: <Ticket size={20} />, href: '/admin/coupons', roles: ['admin'] },
+        { label: 'Orders', icon: <ShoppingBag size={20} />, href: '/admin/orders', roles: ['admin', 'staff_fulfillment'] },
+        { label: 'Customers', icon: <Users size={20} />, href: '/admin/customers', roles: ['admin'] },
+        { label: 'Staff Roles', icon: <Shield size={20} />, href: '/admin/staff', roles: ['admin'] },
+        { label: 'Analytics', icon: <BarChart3 size={20} />, href: '/admin/analytics', roles: ['admin'] },
+        { label: 'Settings', icon: <Settings size={20} />, href: '/admin/settings', roles: ['admin'] },
+    ].filter(item => !user || item.roles.includes(user.role));
+
+    if (pathname === '/admin/login') {
+        return <>{children}</>;
+    }
 
     if (loading) return (
         <div className="min-h-screen bg-gray-950 flex items-center justify-center">

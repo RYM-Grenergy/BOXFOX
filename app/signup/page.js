@@ -1,13 +1,15 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Mail, Lock, User as UserIcon, Phone, Building2, Eye, EyeOff, ShieldCheck, CheckCircle2, AlertCircle, Sparkles } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 
-export default function SignUp() {
+function SignUpContent() {
+    const searchParams = useSearchParams();
+    const redirect = searchParams.get("redirect") || "/";
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -20,7 +22,7 @@ export default function SignUp() {
     const [errorMsg, setErrorMsg] = useState("");
     const [isSuccess, setIsSuccess] = useState(false);
 
-    const { signup } = useAuth();
+    const { signup, checkUser } = useAuth();
     const router = useRouter();
 
     const handleChange = (e) => {
@@ -36,8 +38,10 @@ export default function SignUp() {
             const result = await signup(formData);
             if (result.success) {
                 setIsSuccess(true);
+                // Auth token is now set in cookie by the backend
+                await checkUser();
                 setTimeout(() => {
-                    router.push("/login");
+                    router.push(redirect);
                 }, 2000);
             } else {
                 setErrorMsg(result.error || "Registry sequence interrupted. Please verify parameters.");
@@ -239,7 +243,7 @@ export default function SignUp() {
                                 <div className="mt-12 text-center flex flex-col gap-8">
                                     <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
                                         ALREADY_RECOGNIZED?{" "}
-                                        <Link href="/login" className="text-emerald-500 hover:text-emerald-600 ml-2 border-b-2 border-emerald-500/10 hover:border-emerald-500 transition-all">
+                                        <Link href={`/login?redirect=${encodeURIComponent(redirect)}`} className="text-emerald-500 hover:text-emerald-600 ml-2 border-b-2 border-emerald-500/10 hover:border-emerald-500 transition-all">
                                             Sign In Here
                                         </Link>
                                     </p>
@@ -256,4 +260,17 @@ export default function SignUp() {
         </div>
     );
 }
+
+export default function SignUp() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-white flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-950"></div>
+            </div>
+        }>
+            <SignUpContent />
+        </Suspense>
+    );
+}
+
 

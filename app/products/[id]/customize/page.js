@@ -68,17 +68,54 @@ export default function CustomizePage() {
     const [rotate, setRotate] = useState({ x: -20, y: 45 });
     const isDragging = useRef(false);
 
+    const [isRestored, setIsRestored] = useState(false);
+
     useEffect(() => {
         setLoading(true);
         fetch(`/api/products/${params.id}`)
             .then(res => res.json())
             .then(data => {
                 setProduct(data);
-                setQuantity(data.minOrderQuantity || 10);
+
+                const savedState = localStorage.getItem(`boxfox_custom_${params.id}`);
+                if (savedState) {
+                    try {
+                        const parsed = JSON.parse(savedState);
+                        setQuantity(parsed.quantity || data.minOrderQuantity || 10);
+                        if (parsed.dimensions) setDimensions(parsed.dimensions);
+                        if (parsed.aiPrompt) setAiPrompt(parsed.aiPrompt);
+                        if (parsed.customText) setCustomText(parsed.customText);
+                        if (parsed.assetPool) setAssetPool(parsed.assetPool);
+                        if (parsed.activeAssetIndex !== undefined) setActiveAssetIndex(parsed.activeAssetIndex);
+                        if (parsed.boxTextures) setBoxTextures(parsed.boxTextures);
+                        if (parsed.boxColors) setBoxColors(parsed.boxColors);
+                        if (parsed.activeColor) setActiveColor(parsed.activeColor);
+                        if (parsed.customMode) setCustomMode(parsed.customMode);
+                        if (parsed.rotate) setRotate(parsed.rotate);
+                    } catch (e) {
+                        console.error("Failed to restore state", e);
+                        setQuantity(data.minOrderQuantity || 10);
+                    }
+                } else {
+                    setQuantity(data.minOrderQuantity || 10);
+                }
+
+                setIsRestored(true);
                 setLoading(false);
             })
             .catch(() => setLoading(false));
     }, [params.id]);
+
+    useEffect(() => {
+        if (isRestored && product) {
+            const stateToSave = {
+                quantity, dimensions, aiPrompt, customText, assetPool,
+                activeAssetIndex, boxTextures, boxColors, activeColor,
+                customMode, rotate
+            };
+            localStorage.setItem(`boxfox_custom_${params.id}`, JSON.stringify(stateToSave));
+        }
+    }, [quantity, dimensions, aiPrompt, customText, assetPool, activeAssetIndex, boxTextures, boxColors, activeColor, customMode, rotate, isRestored, product, params.id]);
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
@@ -137,7 +174,25 @@ export default function CustomizePage() {
     const H = dimensions.h * factor;
 
     const currentSA = 2 * (dimensions.l * dimensions.w + dimensions.w * dimensions.h + dimensions.h * dimensions.l);
-    const calculatedUnitPrice = ((product?.price || 15) * (currentSA / 288) * (1 - Math.min(0.4, (quantity - 10) / 500))).toFixed(2);
+
+    // Base min/max pricing from product
+    const basePrice = typeof product?.price === 'number' ? product.price : parseFloat(String(product?.price || 15).replace(/[^0-9.]/g, '')) || 15;
+    const minPrice = typeof product?.minPrice === 'number' ? product.minPrice : parseFloat(String(product?.minPrice || basePrice).replace(/[^0-9.]/g, '')) || basePrice;
+    const maxPrice = typeof product?.maxPrice === 'number' ? product.maxPrice : parseFloat(String(product?.maxPrice || basePrice).replace(/[^0-9.]/g, '')) || basePrice;
+
+    // Practical Tiered Step Pricing
+    const diff = maxPrice - minPrice;
+    let unitPriceVal = maxPrice;
+
+    if (quantity >= 5000) unitPriceVal = minPrice;
+    else if (quantity >= 1000) unitPriceVal = maxPrice - (diff * 0.4651);
+    else if (quantity >= 500) unitPriceVal = maxPrice - (diff * 0.4205);
+    else if (quantity >= 100) unitPriceVal = maxPrice - (diff * 0.3364);
+    else if (quantity >= 50) unitPriceVal = maxPrice - (diff * 0.1682);
+    else unitPriceVal = maxPrice;
+
+    // Apply surface area multiplier
+    const calculatedUnitPrice = (unitPriceVal * (currentSA / 288)).toFixed(2);
 
     if (loading || !product) return <div className="min-h-screen bg-[#020617] flex items-center justify-center text-emerald-500 font-black tracking-tighter text-4xl animate-pulse">SYNCHRONIZING_NEURAL_MAP...</div>;
 
@@ -288,7 +343,37 @@ export default function CustomizePage() {
                             </div>
                         </div>
 
-                        {/* Section 2: Asset Library & Color Lab */}
+                        {/* Section 2: Quantity Selection */}
+                        <div className="space-y-6 pt-4 border-t border-white/5">
+                            <div className="flex items-center gap-4">
+                                <Box size={18} className="text-emerald-500" />
+                                <h3 className="text-xs font-black uppercase tracking-[0.3em] italic">02_Quantity_Selection</h3>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {[100, 200, 300, 500, 1000].map(q => (
+                                    <button
+                                        key={q}
+                                        onClick={() => setQuantity(q)}
+                                        className={`flex-[1_1_0%] min-w-[60px] py-3 rounded-xl border font-black text-xs transition-all ${quantity === q ? 'bg-emerald-500 text-black border-emerald-500 shadow-lg' : 'bg-[#030712] text-white/40 border-white/10 hover:border-emerald-500/40 hover:text-white'}`}
+                                    >
+                                        {q}
+                                    </button>
+                                ))}
+                                <div className="relative flex-[2_2_0%] min-w-[100px]">
+                                    <input
+                                        type="number"
+                                        value={quantity}
+                                        onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                        className="w-full h-full py-3 px-4 rounded-xl bg-[#030712] border border-white/10 font-black text-xs text-white placeholder-white/20 focus:border-emerald-500 outline-none transition-all"
+                                        placeholder="Custom..."
+                                        min={product.minOrderQuantity || 1}
+                                    />
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase font-bold text-white/20">Units</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Section 3: Asset Library & Color Lab */}
                         <div className="space-y-6 pt-4 border-t border-white/5">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
@@ -441,7 +526,7 @@ export default function CustomizePage() {
                         </button>
                     </div>
                 </div>
-            </main>
+            </main >
 
             <Footer />
             <style jsx global>{`
@@ -449,6 +534,6 @@ export default function CustomizePage() {
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
             `}</style>
-        </div>
+        </div >
     );
 }

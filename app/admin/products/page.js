@@ -9,7 +9,9 @@ import {
     RefreshCw,
     X,
     Image as ImageIcon,
-    CheckCircle2
+    CheckCircle2,
+    UploadCloud,
+    Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -18,11 +20,12 @@ export default function ProductsManager() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
 
     const [formData, setFormData] = useState({
         name: '',
-        category: 'Packaging',
+        category: 'CupCake',
         minPrice: '',
         maxPrice: '',
         originalPrice: '',
@@ -48,7 +51,12 @@ export default function ProductsManager() {
         fetch('/api/products?admin=true')
             .then(res => res.json())
             .then(data => {
-                setProducts(data);
+                if (Array.isArray(data)) {
+                    setProducts(data);
+                } else {
+                    console.error("Admin: Failed to fetch products", data);
+                    setProducts([]);
+                }
                 setLoading(false);
             })
             .catch(() => setLoading(false));
@@ -57,6 +65,43 @@ export default function ProductsManager() {
     useEffect(() => {
         fetchProducts();
     }, []);
+
+    const handleImageUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+
+        setIsUploading(true);
+        try {
+            const uploadedUrls = [];
+            for (const file of files) {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                await new Promise((resolve) => {
+                    reader.onload = async () => {
+                        const base64Data = reader.result;
+                        const response = await fetch('/api/upload', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ image: base64Data })
+                        });
+                        const data = await response.json();
+                        if (data.url) uploadedUrls.push(data.url);
+                        resolve();
+                    };
+                });
+            }
+            if (uploadedUrls.length > 0) {
+                const currentImages = formData.images ? formData.images.split(',').map(u => u.trim()).filter(Boolean) : [];
+                setFormData({ ...formData, images: [...currentImages, ...uploadedUrls].join(', ') });
+            }
+        } catch (error) {
+            console.error('Upload failed:', error);
+            alert('Failed to upload images');
+        } finally {
+            setIsUploading(false);
+            e.target.value = '';
+        }
+    };
 
     const handleSave = async (e) => {
         e.preventDefault();
@@ -337,12 +382,16 @@ export default function ProductsManager() {
                                                         onChange={e => setFormData({ ...formData, category: e.target.value })}
                                                         className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all appearance-none"
                                                     >
-                                                        <option value="Packaging">Packaging</option>
-                                                        <option value="Pizza Boxes">Pizza Boxes</option>
-                                                        <option value="Cake Boxes">Cake Boxes</option>
-                                                        <option value="Sweet Boxes">Sweet Boxes</option>
-                                                        <option value="Mailer Boxes">Mailer Boxes</option>
-                                                        <option value="Carry Bags">Carry Bags / Paper Bags</option>
+                                                        <option value="CupCake">CupCake</option>
+                                                        <option value="Brownie">Brownie</option>
+                                                        <option value="Hamper Box">Hamper Box</option>
+                                                        <option value="Macaron">Macaron</option>
+                                                        <option value="Chocolate Box">Chocolate Box</option>
+                                                        <option value="Pastry">Pastry</option>
+                                                        <option value="Gifting">Gifting</option>
+                                                        <option value="Loaf">Loaf</option>
+                                                        <option value="Platter">Platter</option>
+                                                        <option value="Cake Box">Cake Box</option>
                                                     </select>
                                                 </div>
                                                 <div className="space-y-2">
@@ -544,20 +593,38 @@ export default function ProductsManager() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <label className="text-xs font-black uppercase tracking-widest text-gray-400">Image URLs (Comma separated)</label>
+                                                <label className="text-xs font-black uppercase tracking-widest text-gray-400">Product Images</label>
                                                 <div className="space-y-4">
-                                                    <textarea
-                                                        required
-                                                        rows="3"
-                                                        value={formData.images}
-                                                        onChange={e => setFormData({ ...formData, images: e.target.value })}
-                                                        placeholder="Add image URLs separated by commas..."
-                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all resize-none"
-                                                    />
+                                                    <div className="flex gap-4">
+                                                        <textarea
+                                                            required
+                                                            rows="3"
+                                                            value={formData.images}
+                                                            onChange={e => setFormData({ ...formData, images: e.target.value })}
+                                                            placeholder="Add image URLs separated by commas..."
+                                                            className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all resize-none"
+                                                        />
+                                                        <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                            {isUploading ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">{isUploading ? 'Uploading...' : 'Upload Images'}</span>
+                                                            <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+                                                        </label>
+                                                    </div>
                                                     <div className="flex flex-wrap gap-4 mt-4">
                                                         {formData.images.split(',').map((url, i) => url.trim() && (
-                                                            <div key={i} className="w-20 h-20 rounded-2xl border border-gray-100 overflow-hidden shrink-0">
+                                                            <div key={i} className="w-20 h-20 rounded-2xl border border-gray-100 overflow-hidden shrink-0 relative group">
                                                                 <img src={url.trim()} className="w-full h-full object-cover" alt={`Preview ${i + 1}`} />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const newUrls = formData.images.split(',').map(u => u.trim()).filter(Boolean);
+                                                                        newUrls.splice(i, 1);
+                                                                        setFormData({ ...formData, images: newUrls.join(', ') });
+                                                                    }}
+                                                                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:scale-110"
+                                                                >
+                                                                    <X size={12} />
+                                                                </button>
                                                             </div>
                                                         ))}
                                                     </div>

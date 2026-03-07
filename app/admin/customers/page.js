@@ -30,6 +30,11 @@ export default function CustomersManager() {
 
     React.useEffect(() => {
         fetchCustomers();
+        const searchParams = new URLSearchParams(window.location.search);
+        const search = searchParams.get('search');
+        if (search) {
+            setSearchTerm(search);
+        }
     }, []);
 
     const handleDelete = async (id) => {
@@ -83,16 +88,20 @@ export default function CustomersManager() {
                                 <tr className="bg-gray-50/50">
                                     <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Customer Profile</th>
                                     <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Contact Info</th>
+                                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Financial Volume</th>
                                     <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Joined Date</th>
                                     <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Account Role</th>
                                     <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Global Status</th>
+                                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Total Orders</th>
+                                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Total Spent</th>
+                                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Cart/Wishlist</th>
                                     <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {filteredCustomers.length === 0 ? (
                                     <tr>
-                                        <td colSpan="6" className="px-8 py-20 text-center text-gray-400 font-medium">No customers found</td>
+                                        <td colSpan="9" className="px-8 py-20 text-center text-gray-400 font-medium">No customers found</td>
                                     </tr>
                                 ) : (
                                     filteredCustomers.map((user) => (
@@ -117,6 +126,16 @@ export default function CustomersManager() {
                                                     )}
                                                 </div>
                                             </td>
+                                            <td className="px-8 py-6 whitespace-nowrap">
+                                                <div className="space-y-1">
+                                                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+                                                        Total Revenue: <span className="text-emerald-500 font-black text-xs">₹{user.totalSpent?.toLocaleString('en-IN') || 0}</span>
+                                                    </div>
+                                                    <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">
+                                                        Orders: {user.totalOrders || 0} | Items added: {user.productsOrdered || 0}
+                                                    </div>
+                                                </div>
+                                            </td>
                                             <td className="px-8 py-6 whitespace-nowrap text-xs font-bold text-gray-500">
                                                 {new Date(user.createdAt).toLocaleDateString()}
                                             </td>
@@ -129,6 +148,18 @@ export default function CustomersManager() {
                                                 <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-600">
                                                     Active
                                                 </span>
+                                            </td>
+                                            <td className="px-8 py-6 whitespace-nowrap text-sm font-bold text-gray-950">
+                                                {user.totalOrders || 0}
+                                            </td>
+                                            <td className="px-8 py-6 whitespace-nowrap text-sm font-black text-emerald-500">
+                                                ₹{(user.totalSpent || 0).toLocaleString('en-IN')}
+                                            </td>
+                                            <td className="px-8 py-6 whitespace-nowrap">
+                                                <div className="flex gap-3 text-xs font-bold text-gray-400">
+                                                    <span title="Cart Items">🛒 {user.cartCount || 0}</span>
+                                                    <span title="Wishlist Items">❤️ {user.wishlistCount || 0}</span>
+                                                </div>
                                             </td>
                                             <td className="px-8 py-6 whitespace-nowrap text-right">
                                                 <button onClick={() => handleDelete(user._id)} className="p-2 text-gray-300 hover:text-red-500 transition-all hover:bg-red-50 rounded-lg">

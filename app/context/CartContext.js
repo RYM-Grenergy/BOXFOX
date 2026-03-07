@@ -20,11 +20,19 @@ export function CartProvider({ children }) {
         const basePrice = typeof product.price === 'number' ? product.price : parseFloat(String(product.price).replace(/[^0-9.]/g, '')) || 0;
         const minPrice = typeof product.minPrice === 'number' ? product.minPrice : parseFloat(String(product.minPrice).replace(/[^0-9.]/g, '')) || basePrice;
         const maxPrice = typeof product.maxPrice === 'number' ? product.maxPrice : parseFloat(String(product.maxPrice).replace(/[^0-9.]/g, '')) || basePrice;
-        const moq = product.minOrderQuantity || 100;
 
-        // Pricing logic: linearly scale from maxPrice at MOQ to minPrice at MOQ + 5000
-        const price = maxPrice - (maxPrice - minPrice) * Math.min(1, (quantity - moq) / 5000);
-        return price;
+        // Pricing logic: Practical Tiered Step Pricing
+        const diff = maxPrice - minPrice;
+        let price = maxPrice;
+
+        if (quantity >= 5000) price = minPrice;
+        else if (quantity >= 1000) price = maxPrice - (diff * 0.4651);
+        else if (quantity >= 500) price = maxPrice - (diff * 0.4205);
+        else if (quantity >= 100) price = maxPrice - (diff * 0.3364);
+        else if (quantity >= 50) price = maxPrice - (diff * 0.1682);
+        else price = maxPrice;
+
+        return parseFloat(price.toFixed(2));
     };
 
     const addToCart = (product, quantity) => {
