@@ -195,6 +195,20 @@ export default function ProductsManager() {
         setIsModalOpen(true);
     };
 
+    const formatDimensions = (dim) => {
+        if (!dim || (!dim.length && !dim.width && !dim.height)) return null;
+        const { length: l, width: w, height: h, unit = 'inch' } = dim;
+        const toInch = (v) => unit === 'inch' ? v : unit === 'cm' ? v / 2.54 : v / 25.4;
+        const toCm   = (v) => unit === 'cm'   ? v : unit === 'inch' ? v * 2.54 : v / 10;
+        const toMm   = (v) => unit === 'mm'   ? v : unit === 'inch' ? v * 25.4 : v * 10;
+        const fmt = (v) => parseFloat(v.toFixed(1));
+        return {
+            inch: `${fmt(toInch(l))} × ${fmt(toInch(w))} × ${fmt(toInch(h))} in`,
+            cm:   `${fmt(toCm(l))} × ${fmt(toCm(w))} × ${fmt(toCm(h))} cm`,
+            mm:   `${fmt(toMm(l))} × ${fmt(toMm(w))} × ${fmt(toMm(h))} mm`,
+        };
+    };
+
     const flatProducts = searchQuery.trim()
         ? products.filter(p =>
             (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -264,6 +278,7 @@ export default function ProductsManager() {
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Product</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Category</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Price Range</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Size</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Status</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Actions</th>
                                 </tr>
@@ -302,6 +317,19 @@ export default function ProductsManager() {
                                             </div>
                                         </td>
                                         <td className="px-8 py-5 text-sm font-black text-gray-950">{product.price}</td>
+                                        <td className="px-8 py-5">
+                                            {(() => {
+                                                const d = formatDimensions(product.dimensions);
+                                                if (!d) return <span className="text-[10px] text-gray-300 font-bold">—</span>;
+                                                return (
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span className="text-[10px] font-bold text-gray-700 whitespace-nowrap">{d.inch}</span>
+                                                        <span className="text-[10px] font-bold text-gray-400 whitespace-nowrap">{d.cm}</span>
+                                                        <span className="text-[10px] font-bold text-gray-300 whitespace-nowrap">{d.mm}</span>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </td>
                                         <td className="px-8 py-5">
                                             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${product.outOfStock ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'
                                                 }`}>
