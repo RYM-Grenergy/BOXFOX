@@ -42,8 +42,8 @@ export default function ProductSection({ searchQuery = "", category = "All" }) {
     return (
       <section className="py-24 px-6 lg:px-12 bg-white">
         <div className="max-w-[1600px] mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(j => (
+          <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(j => (
               <div key={j} className="animate-pulse aspect-square bg-gray-50 rounded-[2rem]" />
             ))}
           </div>
@@ -67,7 +67,7 @@ export default function ProductSection({ searchQuery = "", category = "All" }) {
             <p className="text-sm sm:text-base text-gray-400 font-medium mt-2">Adjust your filters or search terms.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 sm:gap-x-10 gap-y-8 sm:gap-y-12 px-2 sm:px-0">
+          <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 sm:gap-x-8 gap-y-8 sm:gap-y-12 px-2 sm:px-0">
             {allProducts.map((product, idx) => (
               <motion.div
                 key={product.id}

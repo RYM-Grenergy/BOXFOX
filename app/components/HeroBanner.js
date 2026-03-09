@@ -135,6 +135,34 @@ export default function HeroBanner() {
 
           </motion.div>
 
+          {/* Mobile Horizontal Scroll Imagery */}
+          <div className="flex lg:hidden -mx-4 px-4 sm:-mx-6 sm:px-6 overflow-x-auto snap-x snap-mandatory no-scrollbar gap-4 sm:gap-6 pb-6 w-[calc(100%+2rem)] sm:w-[calc(100%+3rem)]">
+            {([...column1, ...column2]).map((src, i) => (
+              <div
+                key={i}
+                className="min-w-[260px] sm:min-w-[320px] h-[320px] sm:h-[400px] shrink-0 snap-center relative rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden bg-gray-50 border border-gray-100 shadow-xl"
+              >
+                {i === 0 && (
+                  <motion.div
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 4, repeat: Infinity }}
+                    className="absolute top-4 left-4 z-20 bg-emerald-500 text-white px-4 py-2 rounded-full font-black text-[8px] sm:text-[9px] uppercase tracking-widest shadow-lg flex items-center gap-2"
+                  >
+                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white animate-ping" />
+                    Live_AI
+                  </motion.div>
+                )}
+                <Image
+                  src={src}
+                  alt="Packaging"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 80vw, 50vw"
+                />
+              </div>
+            ))}
+          </div>
+
           {/* Right Column: Infinite Scroll Imagery */}
           <div className="relative h-[600px] lg:h-[850px] w-full hidden lg:block overflow-hidden rounded-[3rem] lg:rounded-[5rem] shadow-[0_60px_120px_rgba(0,0,0,0.15)] border border-gray-100">
             {/* Fade Overlays */}

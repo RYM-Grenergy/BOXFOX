@@ -19,9 +19,11 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
     hasVariants,
     badge,
     pacdoraId,
+    images,
   } = product;
 
   const productId = _id || id;
+  const hoverImage = images && images.length > 1 ? images[1] : null;
 
   if (imageOnly) {
     return (
@@ -36,11 +38,22 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           width={400}
           height={500}
           unoptimized={img?.includes('boxfox.in') || !img}
-          className="w-full h-full object-contain p-8 transition-transform duration-1000 group-hover:scale-105"
+          className={`w-full h-full object-contain p-8 transition-all duration-700 group-hover:scale-105 ${hoverImage ? 'group-hover:opacity-0' : ''}`}
           placeholder="blur"
           blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
           priority={priority}
         />
+        {hoverImage && (
+          <Image
+            src={hoverImage}
+            alt={`${name} hover`}
+            width={400}
+            height={500}
+            unoptimized={hoverImage.includes('boxfox.in')}
+            className="w-full h-full object-contain p-8 transition-all duration-700 group-hover:scale-105 absolute inset-0 opacity-0 group-hover:opacity-100"
+            priority={priority}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="absolute inset-x-0 bottom-0 p-6 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex items-end justify-between">
           <div className="max-w-[70%]">
@@ -63,9 +76,20 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           width={500}
           height={500}
           unoptimized={img?.includes('boxfox.in') || !img}
-          className="w-full h-full object-contain p-1 sm:p-4 transition-transform duration-1000 group-hover:scale-105"
+          className={`w-full h-full object-contain p-1 sm:p-4 transition-all duration-700 group-hover:scale-105 ${hoverImage ? 'group-hover:opacity-0' : ''}`}
           priority={priority}
         />
+        {hoverImage && (
+          <Image
+            src={hoverImage}
+            alt={`${name} hover`}
+            width={500}
+            height={500}
+            unoptimized={hoverImage.includes('boxfox.in')}
+            className="w-full h-full object-contain p-1 sm:p-4 transition-all duration-700 group-hover:scale-105 absolute inset-0 opacity-0 group-hover:opacity-100"
+            priority={priority}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
         <div className="absolute top-2 left-2 sm:top-6 sm:left-6 flex flex-col gap-1 sm:gap-2 pointer-events-none">
@@ -85,60 +109,64 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
             </span>
           )}
         </div>
+
+        <button
+          onClick={async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            try {
+              const res = await fetch('/api/wishlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId: productId })
+              });
+              if (res.status === 401) {
+                window.location.href = '/login';
+                return;
+              }
+              const data = await res.json();
+              if (res.ok) {
+                showToast(data.message || "Added to wishlist");
+              } else {
+                showToast(data.error || "Failed to update wishlist", "error");
+              }
+            } catch (err) {
+              console.error(err);
+              showToast("Connection error", "error");
+            }
+          }}
+          className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 sm:p-2.5 bg-white text-gray-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-all shadow-md z-10"
+          title="Add to Wishlist"
+        >
+          <Heart size={16} className="sm:w-[18px] sm:h-[18px]" />
+        </button>
       </div>
 
-      <div className="flex flex-col flex-grow px-1.5 gap-2">
+      <div className="flex flex-col flex-grow px-1.5 pb-2">
         <h3 className="text-[12px] sm:text-lg font-black text-gray-950 leading-[1.1] tracking-tighter uppercase line-clamp-2 group-hover:text-emerald-500 transition-colors">
           {name}
         </h3>
+        {product.dimensions && (
+          <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+            {product.dimensions.length} x {product.dimensions.width} x {product.dimensions.height} {product.dimensions.unit || 'inch'}
+          </p>
+        )}
 
-        <div className="flex flex-col pt-3 border-t border-gray-100 gap-4">
-          <div className="flex flex-col">
-            <span className="text-xl sm:text-2xl font-black text-gray-950 tracking-tighter">
+        <div className="flex items-center justify-between mt-2 gap-2">
+          <div className="flex flex-col justify-center min-w-0">
+            <span className="text-lg sm:text-xl font-black text-gray-950 tracking-tighter leading-none truncate">
               {typeof price === 'string' ? price : `₹${price?.toLocaleString('en-IN')}`}
             </span>
             {originalPrice && (
-              <span className="text-[10px] sm:text-sm font-bold text-gray-300 line-through">
+              <span className="text-[9px] sm:text-[10px] font-bold text-gray-300 line-through mt-0.5">
                 ₹{originalPrice.toLocaleString('en-IN')}
               </span>
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-50 text-emerald-600 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm border border-emerald-100/50">
-              View Details
-              <ArrowUpRight size={14} className="sm:w-4 sm:h-4" />
-            </div>
-            <button
-              onClick={async (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                try {
-                  const res = await fetch('/api/wishlist', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productId: productId })
-                  });
-                  if (res.status === 401) {
-                    window.location.href = '/login';
-                    return;
-                  }
-                  const data = await res.json();
-                  if (res.ok) {
-                    showToast(data.message || "Added to wishlist");
-                  } else {
-                    showToast(data.error || "Failed to update wishlist", "error");
-                  }
-                } catch (err) {
-                  console.error(err);
-                  showToast("Connection error", "error");
-                }
-              }}
-              className="p-3 bg-gray-50 text-gray-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-all border border-gray-100 shadow-sm shrink-0"
-              title="Add to Wishlist"
-            >
-              <Heart size={16} />
-            </button>
+          <div className="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm border border-emerald-100/50 shrink-0">
+            View Details
+            <ArrowUpRight size={12} className="sm:w-[14px] sm:h-[14px]" />
           </div>
         </div>
       </div>

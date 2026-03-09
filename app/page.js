@@ -4,6 +4,7 @@ import CategorySection from "./components/CategorySection";
 import ProductSection from "./components/ProductSection";
 import FeaturesStrip from "./components/FeaturesStrip";
 import TopSellingStrip from "./components/TopSellingStrip";
+import PackagingGallery from "./components/PackagingGallery";
 import Footer from "./components/Footer";
 
 export default function Home() {
@@ -11,11 +12,11 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <main>
         <HeroBanner />
-        <FeaturesStrip />
+        <PackagingGallery />
         <TopSellingStrip />
         <CategorySection />
+        <FeaturesStrip />
       </main>
     </div>
   );
 }
-

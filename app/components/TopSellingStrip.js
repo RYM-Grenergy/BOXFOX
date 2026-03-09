@@ -9,7 +9,7 @@ export default function TopSellingStrip() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch("/api/products")
+        fetch("/api/products/best-sellers")
             .then((res) => res.json())
             .then((data) => {
                 if (!Array.isArray(data)) {
@@ -17,14 +17,7 @@ export default function TopSellingStrip() {
                     setLoading(false);
                     return;
                 }
-                // Flatten all items from sections and take first 10
-                const allItems = data.reduce((acc, section) => {
-                    if (section && section.items) {
-                        return [...acc, ...section.items];
-                    }
-                    return acc;
-                }, []);
-                setProducts(allItems.slice(0, 10));
+                setProducts(data);
                 setLoading(false);
             })
             .catch((err) => {

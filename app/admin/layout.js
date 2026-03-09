@@ -17,7 +17,8 @@ import {
     ClipboardList,
     MessageSquare,
     Ticket,
-    Shield
+    Shield,
+    TrendingUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -64,6 +65,7 @@ export default function AdminLayout({ children }) {
         { label: 'B2B Leads', icon: <ClipboardList size={20} />, href: '/admin/b2b/inquiries', roles: ['admin'] },
         { label: 'General Queries', icon: <MessageSquare size={20} />, href: '/admin/queries', roles: ['admin', 'staff_fulfillment'] },
         { label: 'Promo Vault', icon: <Ticket size={20} />, href: '/admin/coupons', roles: ['admin'] },
+        { label: 'Best Sellers', icon: <TrendingUp size={20} />, href: '/admin/best-sellers', roles: ['admin', 'staff_fulfillment'] },
         { label: 'Orders', icon: <ShoppingBag size={20} />, href: '/admin/orders', roles: ['admin', 'staff_fulfillment'] },
         { label: 'Customers', icon: <Users size={20} />, href: '/admin/customers', roles: ['admin'] },
         { label: 'Staff Roles', icon: <Shield size={20} />, href: '/admin/staff', roles: ['admin'] },
