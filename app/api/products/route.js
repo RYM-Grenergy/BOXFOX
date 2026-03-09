@@ -21,8 +21,10 @@ export async function GET(req) {
     };
 
     if (searchTerm) {
-      // Use efficient text index for performance with 10k+ items
-      query.$text = { $search: searchTerm };
+      query.$or = [
+        { name: { $regex: searchTerm, $options: 'i' } },
+        { categories: { $elemMatch: { $regex: searchTerm, $options: 'i' } } },
+      ];
     }
 
     if (category && category !== "All") {
@@ -36,18 +38,7 @@ export async function GET(req) {
       pacdoraId: 1, badge: 1, isFeatured: 1, categories: 1
     };
 
-    if (searchTerm && !isAdmin) {
-      projection.score = { $meta: 'textScore' };
-    }
-
-    let cursor = Product.find(query, projection);
-
-    if (searchTerm) {
-      // Sort by relevance score if searching
-      cursor = cursor.sort({ score: { $meta: 'textScore' } });
-    } else {
-      cursor = cursor.sort({ createdAt: -1 });
-    }
+    let cursor = Product.find(query, projection).sort({ createdAt: -1 });
 
     const products = await cursor
       .skip(skip)
