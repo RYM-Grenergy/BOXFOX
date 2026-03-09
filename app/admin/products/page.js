@@ -22,6 +22,7 @@ export default function ProductsManager() {
     const [isSaving, setIsSaving] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const [formData, setFormData] = useState({
         name: '',
@@ -194,7 +195,12 @@ export default function ProductsManager() {
         setIsModalOpen(true);
     };
 
-    const flatProducts = products;
+    const flatProducts = searchQuery.trim()
+        ? products.filter(p =>
+            (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (p.categories && p.categories.some(c => c.toLowerCase().includes(searchQuery.toLowerCase())))
+          )
+        : products;
 
     return (
         <div className="space-y-8">
@@ -225,7 +231,7 @@ export default function ProductsManager() {
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 flex items-center gap-3 bg-white border border-gray-100 rounded-2xl px-4 py-3 shadow-sm focus-within:ring-2 focus-within:ring-emerald-500/10 transition-all">
                     <Search size={18} className="text-gray-400" />
-                    <input type="text" placeholder="Search by name or category..." className="bg-transparent outline-none w-full text-sm font-medium" />
+                    <input type="text" placeholder="Search by name or category..." className="bg-transparent outline-none w-full text-sm font-medium" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                 </div>
                 <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-500 hover:text-gray-950 transition-all">
                     <Filter size={18} />
