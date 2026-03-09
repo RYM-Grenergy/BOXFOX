@@ -48,7 +48,7 @@ export default function ProductsManager() {
 
     const fetchProducts = () => {
         setLoading(true);
-        fetch('/api/products?admin=true')
+        fetch('/api/products?admin=true&all=true')
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
