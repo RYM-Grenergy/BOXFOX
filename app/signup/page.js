@@ -249,7 +249,7 @@ function SignUpContent() {
                                     </p>
                                     <p className="text-[9px] font-bold text-gray-300 uppercase tracking-widest leading-relaxed max-w-sm mx-auto">
                                         By proceeding, you agree to our <br />
-                                        <Link href="#" className="underline">Terms of Service</Link> and <Link href="#" className="underline">Privacy Policy</Link>.
+                                        <Link href="/terms" className="underline">Terms of Service</Link> and <Link href="/privacy" className="underline">Privacy Policy</Link>.
                                     </p>
                                 </div>
                             </div>
