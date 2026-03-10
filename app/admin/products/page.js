@@ -11,7 +11,8 @@ import {
     Image as ImageIcon,
     CheckCircle2,
     UploadCloud,
-    Loader2
+    Loader2,
+    Copy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,6 +24,7 @@ export default function ProductsManager() {
     const [isUploading, setIsUploading] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('All');
 
     const [formData, setFormData] = useState({
         name: '',
@@ -195,26 +197,53 @@ export default function ProductsManager() {
         setIsModalOpen(true);
     };
 
+    const handleDuplicate = (product) => {
+        setFormData({
+            name: product.name + " (Copy)",
+            category: product.category,
+            minPrice: product.minPrice || '',
+            maxPrice: product.maxPrice || '',
+            originalPrice: product.originalPrice || '',
+            discount: product.discount || '',
+            images: Array.isArray(product.images) ? product.images.join(', ') : (product.img || ''),
+            badge: product.badge || '',
+            hasVariants: product.hasVariants,
+            description: product.description || '',
+            short_description: product.short_description || '',
+            brand: product.brand || 'BoxFox',
+            minOrderQuantity: product.minOrderQuantity || 10,
+            tags: Array.isArray(product.tags) ? product.tags.join(', ') : '',
+            specifications: product.specifications || [],
+            length: product.dimensions?.length || 8.5,
+            width: product.dimensions?.width || 6.5,
+            height: product.dimensions?.height || 2,
+            unit: product.dimensions?.unit || 'inch',
+            pacdoraId: product.pacdoraId || ''
+        });
+        setIsModalOpen(true);
+    };
+
     const formatDimensions = (dim) => {
         if (!dim || (!dim.length && !dim.width && !dim.height)) return null;
         const { length: l, width: w, height: h, unit = 'inch' } = dim;
         const toInch = (v) => unit === 'inch' ? v : unit === 'cm' ? v / 2.54 : v / 25.4;
-        const toCm   = (v) => unit === 'cm'   ? v : unit === 'inch' ? v * 2.54 : v / 10;
-        const toMm   = (v) => unit === 'mm'   ? v : unit === 'inch' ? v * 25.4 : v * 10;
+        const toCm = (v) => unit === 'cm' ? v : unit === 'inch' ? v * 2.54 : v / 10;
+        const toMm = (v) => unit === 'mm' ? v : unit === 'inch' ? v * 25.4 : v * 10;
         const fmt = (v) => parseFloat(v.toFixed(1));
         return {
             inch: `${fmt(toInch(l))} × ${fmt(toInch(w))} × ${fmt(toInch(h))} in`,
-            cm:   `${fmt(toCm(l))} × ${fmt(toCm(w))} × ${fmt(toCm(h))} cm`,
-            mm:   `${fmt(toMm(l))} × ${fmt(toMm(w))} × ${fmt(toMm(h))} mm`,
+            cm: `${fmt(toCm(l))} × ${fmt(toCm(w))} × ${fmt(toCm(h))} cm`,
+            mm: `${fmt(toMm(l))} × ${fmt(toMm(w))} × ${fmt(toMm(h))} mm`,
         };
     };
 
-    const flatProducts = searchQuery.trim()
-        ? products.filter(p =>
+    const flatProducts = products.filter(p => {
+        const matchesSearch = searchQuery.trim() === '' ||
             (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            (p.categories && p.categories.some(c => c.toLowerCase().includes(searchQuery.toLowerCase())))
-          )
-        : products;
+            (p.categories && p.categories.some(c => c.toLowerCase().includes(searchQuery.toLowerCase())));
+        const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
 
     return (
         <div className="space-y-8">
@@ -247,10 +276,26 @@ export default function ProductsManager() {
                     <Search size={18} className="text-gray-400" />
                     <input type="text" placeholder="Search by name or category..." className="bg-transparent outline-none w-full text-sm font-medium" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                 </div>
-                <button className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-500 hover:text-gray-950 transition-all">
-                    <Filter size={18} />
-                    Filters
-                </button>
+                <div className="relative">
+                    <select
+                        value={selectedCategory}
+                        onChange={e => setSelectedCategory(e.target.value)}
+                        className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-500 hover:text-gray-950 transition-all appearance-none outline-none pr-10 cursor-pointer"
+                    >
+                        <option value="All">All Categories</option>
+                        <option value="CupCake">CupCake</option>
+                        <option value="Brownie">Brownie</option>
+                        <option value="Hamper Box">Hamper Box</option>
+                        <option value="Macaron">Macaron</option>
+                        <option value="Chocolate Box">Chocolate Box</option>
+                        <option value="Pastry">Pastry</option>
+                        <option value="Gifting">Gifting</option>
+                        <option value="Loaf">Loaf</option>
+                        <option value="Platter">Platter</option>
+                        <option value="Cake Box">Cake Box</option>
+                    </select>
+                    <Filter size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                </div>
             </div>
 
             {/* Products Table */}
@@ -338,8 +383,9 @@ export default function ProductsManager() {
                                         </td>
                                         <td className="px-8 py-5">
                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => handleEdit(product)} className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><Edit size={16} /></button>
-                                                <button onClick={() => handleDelete(product._id || product.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+                                                <button onClick={() => handleEdit(product)} title="Edit" className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><Edit size={16} /></button>
+                                                <button onClick={() => handleDuplicate(product)} title="Duplicate" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Copy size={16} /></button>
+                                                <button onClick={() => handleDelete(product._id || product.id)} title="Delete" className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
                                             </div>
                                         </td>
                                     </tr>
