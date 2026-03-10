@@ -152,7 +152,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           </p>
         )}
 
-        <div className="flex items-center justify-between mt-2 gap-2">
+        <div className="flex items-center justify-between mt-auto pt-2 gap-2">
           <div className="flex flex-col justify-center min-w-0">
             <span className="text-lg sm:text-xl font-black text-gray-950 tracking-tighter leading-none truncate">
               {typeof price === 'string' ? price : `₹${price?.toLocaleString('en-IN')}`}

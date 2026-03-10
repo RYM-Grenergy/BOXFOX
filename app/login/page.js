@@ -84,7 +84,7 @@ function LoginContent() {
                             >
                                 <div className="flex items-center gap-3 mb-8">
                                     <div className="w-8 h-[2px] bg-emerald-500" />
-                                    <span className="text-emerald-600 text-[10px] font-black uppercase tracking-[0.4em]">Secure_Access_Portal</span>
+                                    <span className="text-emerald-600 text-[10px] font-black uppercase tracking-[0.4em]">Customer Login</span>
                                 </div>
                                 <h2 className="text-7xl font-black tracking-tighter uppercase leading-[0.9] text-gray-950 mb-8">
                                     The Future<br />
@@ -103,11 +103,11 @@ function LoginContent() {
                                 className="grid grid-cols-2 gap-12"
                             >
                                 <div className="space-y-2">
-                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Global_Orders</p>
+                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Orders Delivered</p>
                                     <p className="text-4xl font-black italic tracking-tighter text-gray-950">150K+</p>
                                 </div>
                                 <div className="space-y-2">
-                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Client_Satisfaction</p>
+                                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Happy Customers</p>
                                     <p className="text-4xl font-black italic tracking-tighter text-emerald-500">99.9%</p>
                                 </div>
                             </motion.div>
@@ -166,7 +166,7 @@ function LoginContent() {
                                     <form onSubmit={handleSubmit} className="space-y-8">
                                         <div className="space-y-4">
                                             <div className="relative group/input">
-                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-5 mb-2 block group-focus-within/input:text-emerald-500 transition-colors">Email_Address</label>
+                                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-5 mb-2 block group-focus-within/input:text-emerald-500 transition-colors">Email Address</label>
                                                 <div className="relative">
                                                     <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none text-gray-300 group-focus-within/input:text-emerald-500 transition-colors">
                                                         <Mail size={18} />
@@ -215,10 +215,10 @@ function LoginContent() {
                                                         <div className="w-1.5 h-1.5 bg-white rounded-full scale-0 peer-checked:scale-100 transition-transform" />
                                                     </div>
                                                 </div>
-                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-gray-950 transition-colors">Remember_Me</span>
+                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-gray-950 transition-colors">Remember Me</span>
                                             </label>
                                             <Link href="#" className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-emerald-500 transition-colors">
-                                                Forgot_Password?
+                                                Forgot Password?
                                             </Link>
                                         </div>
 
@@ -230,7 +230,7 @@ function LoginContent() {
                                             <div className="absolute inset-0 bg-emerald-500 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-500" />
                                             <span className="relative z-10 flex items-center gap-4">
                                                 {isLoading ? (
-                                                    "Verifying_System..."
+                                                    "Signing In..."
                                                 ) : (
                                                     <>
                                                         Sign In Now
@@ -243,7 +243,7 @@ function LoginContent() {
 
                                     <div className="mt-12 text-center">
                                         <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                                            NEW_TO_BOXFOX?{" "}
+                                            New to Boxfox?{" "}
                                             <Link href={`/signup?redirect=${encodeURIComponent(redirect)}`} className="text-emerald-500 hover:text-emerald-600 ml-2 border-b-2 border-emerald-500/10 hover:border-emerald-500 transition-all">
                                                 Create Account
                                             </Link>

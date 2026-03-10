@@ -93,12 +93,12 @@ export default function CategorySection() {
               transition={{ duration: 0.5, delay: idx * 0.1 }}
               className="group relative w-full rounded-[1.5rem] sm:rounded-[2rem] bg-gray-50/50 border border-gray-100 hover:bg-white hover:border-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-500 flex flex-col overflow-hidden"
             >
-              {/* Image Container - Fixed height for compact look */}
-              <div className="relative h-48 sm:h-56 lg:h-64 overflow-hidden bg-white/50 p-4 sm:p-6 flex items-center justify-center">
+              {/* Image Container - Fixed uniform height and edge-to-edge */}
+              <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-100 flex items-center justify-center">
                 <img
                   src={cat.img}
                   alt={cat.name}
-                  className="max-w-full max-h-full object-contain transition-transform duration-1000 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                 />
                 <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
                   <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md bg-emerald-500/80 backdrop-blur-md px-2 sm:px-3 py-1 rounded-full">

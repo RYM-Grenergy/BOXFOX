@@ -109,7 +109,7 @@ function SignUpContent() {
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ duration: 0.8 }}
                             >
-                                <span className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-600 block mb-6">Partner_Program</span>
+                                <span className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-600 block mb-6">Partner Program</span>
                                 <h1 className="text-6xl font-black tracking-tighter uppercase leading-[0.9] text-gray-950 mb-8">
                                     Elevate<br />
                                     Your<br />
@@ -126,7 +126,7 @@ function SignUpContent() {
                                         <ShieldCheck size={22} />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-gray-950 transition-colors">Secure_Access</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-gray-950 transition-colors">Secure Access</p>
                                         <p className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Protected Account Data</p>
                                     </div>
                                 </div>
@@ -135,7 +135,7 @@ function SignUpContent() {
                                         <Sparkles size={22} />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-gray-950 transition-colors">Premium_Tools</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-gray-950 transition-colors">Premium Tools</p>
                                         <p className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Exclusive Design Templates</p>
                                     </div>
                                 </div>
@@ -173,7 +173,7 @@ function SignUpContent() {
 
                                 <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-5">Full_Name</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-5">Full Name</label>
                                         <div className="relative group/input">
                                             <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none text-gray-300 group-focus-within/input:text-emerald-500 transition-colors">
                                                 <UserIcon size={18} />
@@ -183,7 +183,7 @@ function SignUpContent() {
                                     </div>
 
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-5">Business_Name</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-5">Business Name</label>
                                         <div className="relative group/input">
                                             <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none text-gray-300 group-focus-within/input:text-emerald-500 transition-colors">
                                                 <Building2 size={18} />
@@ -193,7 +193,7 @@ function SignUpContent() {
                                     </div>
 
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-5">Email_Address</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-5">Email Address</label>
                                         <div className="relative group/input">
                                             <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none text-gray-300 group-focus-within/input:text-emerald-500 transition-colors">
                                                 <Mail size={18} />
@@ -203,7 +203,7 @@ function SignUpContent() {
                                     </div>
 
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-5">Phone_Number</label>
+                                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-5">Phone Number</label>
                                         <div className="relative group/input">
                                             <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none text-gray-300 group-focus-within/input:text-emerald-500 transition-colors">
                                                 <Phone size={18} />
@@ -233,7 +233,7 @@ function SignUpContent() {
                                         >
                                             <div className="absolute inset-0 bg-emerald-500 translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500" />
                                             <span className="relative z-10 flex items-center justify-center gap-4">
-                                                {isLoading ? "Creating_Account..." : "Create Account"}
+                                                {isLoading ? "Creating Account..." : "Create Account"}
                                                 {!isLoading && <ArrowRight size={18} className="group-hover/btn:translate-x-2 transition-transform duration-500" />}
                                             </span>
                                         </button>
@@ -242,7 +242,7 @@ function SignUpContent() {
 
                                 <div className="mt-12 text-center flex flex-col gap-8">
                                     <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                                        ALREADY_RECOGNIZED?{" "}
+                                        Already have an account?{" "}
                                         <Link href={`/login?redirect=${encodeURIComponent(redirect)}`} className="text-emerald-500 hover:text-emerald-600 ml-2 border-b-2 border-emerald-500/10 hover:border-emerald-500 transition-all">
                                             Sign In Here
                                         </Link>

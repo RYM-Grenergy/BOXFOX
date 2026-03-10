@@ -8,22 +8,22 @@ import Image from "next/image";
 const banners = [
   {
     id: 1,
-    image: "/banners/boxfox_luxury_hampers_1773101249400.png",
+    image: "/banners/hero_luxury_boxes.png",
     alt: "Boxfox Luxury Hampers Packaging",
   },
   {
     id: 2,
-    image: "/banners/boxfox_wedding_sweets_1773101265202.png",
+    image: "/banners/hero_wedding_sweets.png",
     alt: "Boxfox Traditional Sweets & Wedding Boxes",
   },
   {
     id: 3,
-    image: "/banners/boxfox_rigid_gifts_1773101281477.png",
+    image: "/banners/hero_rigid_gifts.png",
     alt: "Boxfox Premium Rigid Gift Boxes",
   },
   {
     id: 4,
-    image: "/banners/boxfox_premium_trays_1773101298034.png",
+    image: "/banners/hero_premium_trays.png",
     alt: "The Boxfox Collection Hampers with Trays",
   }
 ];
@@ -69,9 +69,9 @@ export default function HeroBanner() {
   }, [isHovered, paginate]);
 
   return (
-    <section className="relative w-full bg-slate-50 pt-[90px] sm:pt-[110px] lg:pt-[140px] px-4 sm:px-6 lg:px-10 pb-8 sm:pb-12 flex justify-center">
+    <section className="relative w-full bg-slate-50 pt-[90px] sm:pt-[110px] lg:pt-[140px] pb-8 sm:pb-12 flex justify-center">
       <div
-        className="relative w-full max-w-[1500px] h-[300px] sm:h-[450px] md:h-[550px] lg:h-[650px] bg-white rounded-[1.5rem] sm:rounded-[3rem] overflow-hidden group shadow-2xl"
+        className="relative w-full aspect-[4/3] sm:aspect-video max-h-[85vh] bg-slate-50 overflow-hidden group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -106,9 +106,10 @@ export default function HeroBanner() {
                 src={banners[currentIndex].image}
                 alt={banners[currentIndex].alt}
                 fill
-                className="object-cover"
+                className="object-cover object-top"
                 priority={currentIndex === 0}
-                sizes="(max-width: 1536px) 100vw, 1500px"
+                sizes="100vw"
+                quality={100}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10 pointer-events-none" />
             </motion.div>

@@ -75,6 +75,7 @@ export default function ProductSection({ searchQuery = "", category = "All" }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.05, duration: 0.8 }}
+                className="h-full"
               >
                 <ProductCard product={product} />
               </motion.div>
