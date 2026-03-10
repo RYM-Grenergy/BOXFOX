@@ -6,41 +6,40 @@ const categories = [
   {
     id: 1,
     index: "01",
-    name: "Shipping Boxes",
-    desc: "Strong boxes built to protect your products during transit.",
-    img: "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
-    icon: <Box className="w-6 h-6" />,
-    stats: "DURABLE"
+    name: "Gifting",
+    desc: "Elegant and luxurious packaging designed to make every gift truly stand out.",
+    img: "/categories/cat_gifting_1773101853192.png",
+    icon: <PenTool className="w-6 h-6" />,
+    stats: "PREMIUM"
   },
   {
     id: 2,
     index: "02",
-    name: "Bakery Boxes",
-    desc: "Safe packaging for cakes, pastries, and sweets.",
-    img: "https://boxfox.in/wp-content/uploads/2022/11/03-4.jpg",
+    name: "Cake Box",
+    desc: "Sturdy, oil-safe packaging built to keep your bakery creations fresh and intact.",
+    img: "/categories/cat_cake_box_1773101868627.png",
     icon: <Zap className="w-6 h-6" />,
     stats: "OIL-SAFE"
   },
   {
     id: 3,
     index: "03",
-    name: "Pizza Boxes",
-    desc: "Keep your pizza hot and fresh until delivery.",
-    img: "https://boxfox.in/wp-content/uploads/2022/11/open-pizza-box.png",
+    name: "Hamper Box",
+    desc: "Beautifully structured, spacious hampers perfect for curating large gift sets.",
+    img: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=600&auto=format&fit=crop",
     icon: <Layers className="w-6 h-6" />,
-    stats: "THERMAL"
+    stats: "DURABLE"
   },
   {
     id: 4,
     index: "04",
-    name: "Luxury Gifts",
-    desc: "Elegant gold foil finishes for a premium feel.",
-    img: "https://boxfox.in/wp-content/uploads/2022/11/55-copy.png",
-    icon: <PenTool className="w-6 h-6" />,
-    stats: "FOIL"
+    name: "CupCake",
+    desc: "Secure display boxes engineered with inserts to protect delicate frostings.",
+    img: "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?q=80&w=600&auto=format&fit=crop",
+    icon: <Box className="w-6 h-6" />,
+    stats: "DISPLAY"
   },
 ];
-
 export default function CategorySection() {
   return (
     <section id="categories" className="pt-16 pb-8 md:pt-24 md:pb-12 lg:pt-32 lg:pb-16 px-4 sm:px-6 md:px-12 bg-white text-gray-950 overflow-hidden selection:bg-emerald-500 selection:text-white">
