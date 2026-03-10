@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import { rateLimit, getIP } from '@/lib/rateLimit';
+
+const limiter = rateLimit({ interval: 30 * 60 * 1000 }); // 30 minutes
 
 export async function POST(req) {
     try {
@@ -24,6 +27,18 @@ export async function POST(req) {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_for_development_purposes');
                 userId = decoded.id;
             } catch (err) { }
+        }
+
+        try {
+            const ip = getIP(req);
+            const rateLimitKey = userId ? `user_${userId}` : `ip_${ip}`;
+            await limiter.check(20, rateLimitKey); // 20 requests per 30 minutes
+        } catch {
+            return NextResponse.json({
+                error: "LIMIT_REACHED",
+                limitReached: true,
+                message: "Too many AI generation requests. Please wait 30 minutes."
+            }, { status: 429 });
         }
 
         if (!userId) {

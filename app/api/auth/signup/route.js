@@ -3,9 +3,19 @@ import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import { rateLimit, getIP } from '@/lib/rateLimit';
+
+const limiter = rateLimit({ interval: 60 * 1000 }); // 60 seconds
 
 export async function POST(req) {
     try {
+        try {
+            const ip = getIP(req);
+            await limiter.check(5, ip); // 5 requests per minute
+        } catch {
+            return NextResponse.json({ error: 'Too Many Requests. Please try again in a minute.' }, { status: 429 });
+        }
+
         await dbConnect();
 
         const { name, email, password, phone, businessName } = await req.json();
