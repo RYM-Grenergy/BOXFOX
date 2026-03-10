@@ -27,16 +27,7 @@ export default function PackagingGallery() {
                         key={i}
                         className="w-[160px] sm:w-[200px] md:w-[240px] h-[200px] sm:h-[240px] md:h-[300px] shrink-0 relative rounded-[1rem] sm:rounded-[1.5rem] overflow-hidden bg-gray-50 border border-gray-100 shadow-md group"
                     >
-                        {(i === 0 || i === images.length) && (
-                            <motion.div
-                                animate={{ y: [0, -4, 0] }}
-                                transition={{ duration: 4, repeat: Infinity }}
-                                className="absolute top-2 sm:top-4 left-2 sm:left-4 z-20 bg-emerald-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-black text-[6px] sm:text-[8px] uppercase tracking-widest shadow-lg flex items-center gap-1.5 sm:gap-2"
-                            >
-                                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white animate-ping" />
-                                LIVE_AI_GENERATION_ONLINE
-                            </motion.div>
-                        )}
+
                         <Image
                             src={src}
                             alt="Packaging"
