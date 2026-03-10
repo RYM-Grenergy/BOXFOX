@@ -131,7 +131,7 @@ export default function HeroBanner() {
                   src={banners[currentIndex].image}
                   alt={banners[currentIndex].alt}
                   fill
-                  className="object-contain object-top"
+                  className="object-cover object-center"
                   priority={currentIndex === 0}
                   sizes="100vw"
                   quality={100}
@@ -148,7 +148,7 @@ export default function HeroBanner() {
                   muted
                   playsInline
                   onEnded={() => paginate(1)}
-                  className="w-full h-full object-contain object-center pointer-events-none"
+                  className="w-full h-full object-cover object-center pointer-events-none"
                 />
               )}
 
