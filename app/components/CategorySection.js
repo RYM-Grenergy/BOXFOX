@@ -106,6 +106,66 @@ const categories = [
     icon: <Package className="w-6 h-6" />,
     stats: "VERSATILE",
     needsBranding: true
+  },
+  {
+    id: 12,
+    index: "12",
+    name: "Burger Box",
+    desc: "Sturdy, grease-resistant boxes crafted to keep your premium burgers hot and intact.",
+    img: "/categories/cat_cake.png",
+    icon: <Box className="w-6 h-6" />,
+    stats: "DURABLE",
+    needsBranding: true
+  },
+  {
+    id: 13,
+    index: "13",
+    name: "Food Box",
+    desc: "Versatile, secure containers for meals on the go, maintaining freshness perfectly.",
+    img: "/categories/cat_bento.png",
+    icon: <Package className="w-6 h-6" />,
+    stats: "FRESH",
+    needsBranding: true
+  },
+  {
+    id: 14,
+    index: "14",
+    name: "Pizza Box",
+    desc: "Thick, heat-retaining corrugated boxes designed specifically for hot, delicious pizzas.",
+    img: "/categories/cat_cake.png",
+    icon: <Square className="w-6 h-6" />,
+    stats: "HEAT-SAFE",
+    needsBranding: true
+  },
+  {
+    id: 15,
+    index: "15",
+    name: "Wok Box",
+    desc: "Leak-proof boxes featuring easy-fold tops, ideal for noodles and hot wok dishes.",
+    img: "/categories/cat_cupcake.png",
+    icon: <Box className="w-6 h-6" />,
+    stats: "LEAK-PROOF",
+    needsBranding: true
+  },
+  {
+    id: 16,
+    index: "16",
+    name: "Wrap Box",
+    desc: "Conveniently shaped, easy-to-hold packaging specifically tailored for wraps and rolls.",
+    img: "/categories/cat_loaf_branded.png",
+    icon: <Package className="w-6 h-6" />,
+    stats: "CONVENIENT",
+    needsBranding: true
+  },
+  {
+    id: 17,
+    index: "17",
+    name: "Popcorn",
+    desc: "Fun, functional, and sturdy popcorn tubs, perfect for events or cinema nights.",
+    img: "/categories/cat_brownie.png",
+    icon: <Circle className="w-6 h-6" />,
+    stats: "CLASSIC",
+    needsBranding: true
   }
 ];
 export default function CategorySection() {

@@ -293,6 +293,12 @@ export default function ProductsManager() {
                         <option value="Loaf">Loaf</option>
                         <option value="Platter">Platter</option>
                         <option value="Cake Box">Cake Box</option>
+                        <option value="Burger Box">Burger Box</option>
+                        <option value="Food Box">Food Box</option>
+                        <option value="Pizza Box">Pizza Box</option>
+                        <option value="Wok Box">Wok Box</option>
+                        <option value="Wrap Box">Wrap Box</option>
+                        <option value="Popcorn">Popcorn</option>
                     </select>
                     <Filter size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 </div>
@@ -472,6 +478,12 @@ export default function ProductsManager() {
                                                         <option value="Loaf">Loaf</option>
                                                         <option value="Platter">Platter</option>
                                                         <option value="Cake Box">Cake Box</option>
+                                                        <option value="Burger Box">Burger Box</option>
+                                                        <option value="Food Box">Food Box</option>
+                                                        <option value="Pizza Box">Pizza Box</option>
+                                                        <option value="Wok Box">Wok Box</option>
+                                                        <option value="Wrap Box">Wrap Box</option>
+                                                        <option value="Popcorn">Popcorn</option>
                                                     </select>
                                                 </div>
                                                 <div className="space-y-2">
