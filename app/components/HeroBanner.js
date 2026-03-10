@@ -4,27 +4,27 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
-// Replace these URLs with your actual Canva banner images
+// UPDATE THESE WITH YOUR NEW BANNER IMAGES
 const banners = [
   {
     id: 1,
-    image: "/banners/hero_luxury_boxes.png",
-    alt: "Boxfox Luxury Hampers Packaging",
+    image: "/banner/ChatGPT Image Mar 10, 2026, 11_10_18 AM.png",
+    alt: "Boxfox Premium Packaging - Style 1",
   },
   {
     id: 2,
-    image: "/banners/hero_wedding_sweets.png",
-    alt: "Boxfox Traditional Sweets & Wedding Boxes",
+    image: "/banner/ChatGPT Image Mar 10, 2026, 10_47_25 AM.png",
+    alt: "Boxfox Premium Packaging - Style 2",
   },
   {
     id: 3,
-    image: "/banners/hero_rigid_gifts.png",
-    alt: "Boxfox Premium Rigid Gift Boxes",
+    image: "/banner/ChatGPT Image Mar 10, 2026, 10_28_18 AM.png",
+    alt: "Boxfox Premium Packaging - Style 3",
   },
   {
     id: 4,
-    image: "/banners/hero_premium_trays.png",
-    alt: "The Boxfox Collection Hampers with Trays",
+    image: "/banner/ChatGPT Image Mar 10, 2026, 10_24_14 AM.png",
+    alt: "Boxfox Premium Packaging - Style 4",
   }
 ];
 
