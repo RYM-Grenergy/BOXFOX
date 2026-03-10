@@ -68,10 +68,10 @@ export default function TopSellingStrip() {
                 </div>
 
                 {/* Grid for Products */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 pb-8 sm:pb-12">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6 pb-8 sm:pb-12">
                     {products.map((product, idx) => (
                         <div key={product.id} className="w-full">
-                            <ProductCard product={product} priority={idx < 4} />
+                            <ProductCard product={product} priority={idx < 5} />
                         </div>
                     ))}
                 </div>
