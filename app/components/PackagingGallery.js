@@ -4,14 +4,14 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 
 const images = [
-    "https://plus.unsplash.com/premium_photo-1683133263716-731795d25343?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1623668514914-ab262971bc88?q=80&w=800&auto=format&fit=crop",
-    "https://plus.unsplash.com/premium_photo-1681776287623-c697518f5e5b?q=80&w=800&auto=format&fit=crop",
-    "https://plus.unsplash.com/premium_photo-1731768965526-4b5f1a0a18fc?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1579299676230-4ae32e2ce4c1?q=80&w=800&auto=format&fit=crop",
-    "https://plus.unsplash.com/premium_photo-1731865337145-c784987cc41a?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1544816155-12df9643f363?q=80&w=800&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1673257042285-157546f25933?q=80&w=800&auto=format&fit=crop",
+    "/categories/cat_macaron.png",
+    "/categories/cat_pastry.png",
+    "/categories/cat_chocolate_box.png",
+    "/categories/cat_brownie.png",
+    "/categories/cat_bento.png",
+    "/categories/cat_gifting.png",
+    "/categories/cat_cupcake.png",
+    "/categories/cat_cake.png",
 ];
 
 export default function PackagingGallery() {

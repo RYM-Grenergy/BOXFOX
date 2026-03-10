@@ -1,6 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
-import { ArrowUpRight, Box, Layers, Zap, PenTool, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, Box, Layers, Zap, PenTool, ShieldCheck, Heart, LayoutGrid, Package, Star, Circle, Square, ShoppingBag, Gift } from "lucide-react";
 
 const categories = [
   {
@@ -8,37 +8,105 @@ const categories = [
     index: "01",
     name: "Gifting",
     desc: "Elegant and luxurious packaging designed to make every gift truly stand out.",
-    img: "/categories/cat_gifting_1773101853192.png",
-    icon: <PenTool className="w-6 h-6" />,
+    img: "/categories/cat_gifting.png",
+    icon: <Gift className="w-6 h-6" />,
     stats: "PREMIUM"
   },
   {
     id: 2,
     index: "02",
-    name: "Cake Box",
-    desc: "Sturdy, oil-safe packaging built to keep your bakery creations fresh and intact.",
-    img: "/categories/cat_cake_box_1773101868627.png",
-    icon: <Zap className="w-6 h-6" />,
-    stats: "OIL-SAFE"
+    name: "CupCake",
+    desc: "Secure display boxes engineered with inserts to protect delicate frostings.",
+    img: "/categories/cat_cupcake.png",
+    icon: <Box className="w-6 h-6" />,
+    stats: "DISPLAY"
   },
   {
     id: 3,
     index: "03",
-    name: "Hamper Box",
-    desc: "Beautifully structured, spacious hampers perfect for curating large gift sets.",
-    img: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=600&auto=format&fit=crop",
-    icon: <Layers className="w-6 h-6" />,
-    stats: "DURABLE"
+    name: "Cake Box",
+    desc: "Sturdy, oil-safe packaging built to keep your bakery creations fresh and intact.",
+    img: "/categories/cat_cake.png",
+    icon: <Zap className="w-6 h-6" />,
+    stats: "OIL-SAFE"
   },
   {
     id: 4,
     index: "04",
-    name: "CupCake",
-    desc: "Secure display boxes engineered with inserts to protect delicate frostings.",
-    img: "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?q=80&w=600&auto=format&fit=crop",
-    icon: <Box className="w-6 h-6" />,
-    stats: "DISPLAY"
+    name: "Hamper Box",
+    desc: "Beautifully structured, spacious hampers perfect for curating large gift sets.",
+    img: "/categories/cat_hamper.png",
+    icon: <Layers className="w-6 h-6" />,
+    stats: "DURABLE"
   },
+  {
+    id: 5,
+    index: "05",
+    name: "Platter",
+    desc: "Durable clear platters for beautifully organizing and presenting your assortments.",
+    img: "/categories/cat_platter_branded.png",
+    icon: <LayoutGrid className="w-6 h-6" />,
+    stats: "PRESENTATION"
+  },
+  {
+    id: 6,
+    index: "06",
+    name: "Loaf",
+    desc: "Long, perfectly sized boxes keeping your freshly baked loaf cakes entirely secure.",
+    img: "/categories/cat_loaf_branded.png",
+    icon: <ShoppingBag className="w-6 h-6" />,
+    stats: "CLASSIC"
+  },
+  {
+    id: 7,
+    index: "07",
+    name: "Pastry",
+    desc: "Exquisite pastry boxes preserving both the texture and visual appeal of delicate treats.",
+    img: "/categories/cat_pastry.png",
+    icon: <Star className="w-6 h-6" />,
+    stats: "DELICATE",
+    needsBranding: true
+  },
+  {
+    id: 8,
+    index: "08",
+    name: "Chocolate Box",
+    desc: "Luxurious, rigid structural designs specifically crafted for premium chocolates.",
+    img: "/categories/cat_chocolate_box.png",
+    icon: <Heart className="w-6 h-6" />,
+    stats: "ARTISANAL",
+    needsBranding: true
+  },
+  {
+    id: 9,
+    index: "09",
+    name: "Macaron",
+    desc: "Protective sleeve boxes allowing colorful macarons to take center stage.",
+    img: "/categories/cat_macaron.png",
+    icon: <Circle className="w-6 h-6" />,
+    stats: "STYLISH",
+    needsBranding: true
+  },
+  {
+    id: 10,
+    index: "10",
+    name: "Brownie",
+    desc: "Compact and sturdy boxes tailored perfectly for dense, rich brownie portions.",
+    img: "/categories/cat_brownie.png",
+    icon: <Square className="w-6 h-6" />,
+    stats: "COMPACT",
+    needsBranding: true
+  },
+  {
+    id: 11,
+    index: "11",
+    name: "CupCake + Bento",
+    desc: "The ultimate combo box, intelligently divided for cakes and matching cupcakes.",
+    img: "/categories/cat_bento.png",
+    icon: <Package className="w-6 h-6" />,
+    stats: "VERSATILE",
+    needsBranding: true
+  }
 ];
 export default function CategorySection() {
   return (
@@ -82,7 +150,7 @@ export default function CategorySection() {
         </div>
 
         {/* The Index Grid/List */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6 lg:gap-8">
           {categories.map((cat, idx) => (
             <motion.a
               key={cat.id}
@@ -100,6 +168,14 @@ export default function CategorySection() {
                   alt={cat.name}
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                 />
+
+                {cat.needsBranding && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none mix-blend-overlay opacity-80 group-hover:opacity-100 transition-opacity duration-700">
+                    <span className="font-serif text-xl sm:text-2xl md:text-3xl font-black tracking-[0.2em] uppercase origin-center rotate-[-15deg] text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-600 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] px-4">
+                      BOXFOX
+                    </span>
+                  </div>
+                )}
                 <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
                   <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-white drop-shadow-md bg-emerald-500/80 backdrop-blur-md px-2 sm:px-3 py-1 rounded-full">
                     {cat.stats}
