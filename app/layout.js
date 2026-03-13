@@ -12,6 +12,7 @@ import { ToastProvider } from "./context/ToastContext";
 import CustomCursor from "./components/CustomCursor";
 import SiteLoader from "./components/SiteLoader";
 import ClientLayout from "./components/ClientLayout";
+import WhatsAppButton from "./components/WhatsAppButton";
 
 export default function RootLayout({ children }) {
   return (
@@ -38,6 +39,7 @@ export default function RootLayout({ children }) {
               <ClientLayout>
                 {children}
               </ClientLayout>
+              <WhatsAppButton />
             </CartProvider>
           </AuthProvider>
         </ToastProvider>

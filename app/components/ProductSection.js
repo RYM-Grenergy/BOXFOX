@@ -48,7 +48,7 @@ export default function ProductSection({ searchQuery = "", category = "All", pri
 
   if (loading) {
     return (
-      <section className="py-24 px-6 lg:px-12 bg-white">
+      <section className="py-12 px-6 lg:px-12 bg-white">
         <div className="max-w-[1600px] mx-auto">
           <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(j => (

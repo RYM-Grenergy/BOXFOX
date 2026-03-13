@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,40 +29,67 @@ const CATEGORY_ORDER = [
     "Popcorn",
 ];
 
+const PRICE_RANGES = [
+    { value: "all",      label: "All Prices" },
+    { value: "0-100",    label: "Under ₹100" },
+    { value: "100-300",  label: "₹100 – ₹300" },
+    { value: "300-500",  label: "₹300 – ₹500" },
+    { value: "500-1000", label: "₹500 – ₹1,000" },
+    { value: "1000+",    label: "Above ₹1,000" },
+];
+
+const SORT_OPTIONS = [
+    { value: "default",    label: "Default" },
+    { value: "price-asc",  label: "Price: Low to High" },
+    { value: "price-desc", label: "Price: High to Low" },
+    { value: "name-asc",   label: "Name: A – Z" },
+    { value: "name-desc",  label: "Name: Z – A" },
+];
+
 function ShopPageInner() {
+    const router = useRouter();
     const searchParams = useSearchParams();
+    
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
-    const [category, setCategory] = useState(() => searchParams.get('category') || "All");
+    
+    // Initialize state from URL params
+    const [category, setCategoryState] = useState(() => searchParams.get('category') || "All");
+    const [priceRange, setPriceRangeState] = useState(() => searchParams.get('price') || "all");
+    const [sortBy, setSortByState] = useState(() => searchParams.get('sort') || "default");
+
     const [categories, setCategories] = useState(CATEGORY_ORDER);
     const [totalProducts, setTotalProducts] = useState(0);
     const [showFilter, setShowFilter] = useState(false); // false | 'cat' | 'filters'
-    const [priceRange, setPriceRange] = useState("all");
-    const [sortBy, setSortBy] = useState("default");
 
-    const PRICE_RANGES = [
-        { value: "all",      label: "All Prices" },
-        { value: "0-100",    label: "Under ₹100" },
-        { value: "100-300",  label: "₹100 – ₹300" },
-        { value: "300-500",  label: "₹300 – ₹500" },
-        { value: "500-1000", label: "₹500 – ₹1,000" },
-        { value: "1000+",    label: "Above ₹1,000" },
-    ];
+    // Unified URL update helper
+    const updateURL = (newParams) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(newParams).forEach(([key, value]) => {
+            if (value === null || value === "All" || value === "all" || value === "default") {
+                params.delete(key);
+            } else {
+                params.set(key, value);
+            }
+        });
+        router.push(`/shop?${params.toString()}`, { scroll: false });
+    };
 
-    const SORT_OPTIONS = [
-        { value: "default",    label: "Default" },
-        { value: "price-asc",  label: "Price: Low to High" },
-        { value: "price-desc", label: "Price: High to Low" },
-        { value: "name-asc",   label: "Name: A – Z" },
-        { value: "name-desc",  label: "Name: Z – A" },
-    ];
+    const setCategory = (val) => { setCategoryState(val); updateURL({ category: val }); };
+    const setPriceRange = (val) => { setPriceRangeState(val); updateURL({ price: val }); };
+    const setSortBy = (val) => { setSortByState(val); updateURL({ sort: val }); };
 
     const activeFiltersCount = (priceRange !== "all" ? 1 : 0) + (sortBy !== "default" ? 1 : 0);
 
-    // Sync category from URL when it changes (e.g. navigating from CategorySection)
+    // Sync state from URL when it changes (e.g. Back button)
     useEffect(() => {
-        const urlCategory = searchParams.get('category');
-        if (urlCategory) setCategory(urlCategory);
+        const urlCat = searchParams.get('category') || "All";
+        const urlPrice = searchParams.get('price') || "all";
+        const urlSort = searchParams.get('sort') || "default";
+
+        if (urlCat !== category) setCategoryState(urlCat);
+        if (urlPrice !== priceRange) setPriceRangeState(urlPrice);
+        if (urlSort !== sortBy) setSortByState(urlSort);
     }, [searchParams]);
 
     // Optimized Search: Debounce search to reduce DB hits for 10k+ scalability
@@ -94,8 +121,8 @@ function ShopPageInner() {
 
     return (
         <div className="min-h-screen bg-white">
-            <main className="pt-24 sm:pt-40 pb-12 sm:pb-16">
-                <header className="px-4 sm:px-6 lg:px-12 mb-2 sm:mb-6 max-w-[1600px] mx-auto border-b border-gray-100 pb-4 sm:pb-8">
+            <main className="pt-10 sm:pt-14 pb-12 sm:pb-16">
+                <header className="px-4 sm:px-6 lg:px-12 mb-0.5 sm:mb-2 max-w-[1600px] mx-auto border-b border-gray-100 pb-2 sm:pb-3">
                     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 sm:gap-12">
                         <div className="max-w-2xl text-center lg:text-left">
                             <motion.h1
@@ -105,7 +132,7 @@ function ShopPageInner() {
                             >
                                 The<br /><span className="text-emerald-500">Shop.</span>
                             </motion.h1>
-                            <p className="text-[10px] sm:text-xl text-gray-400 font-medium mt-2 sm:mt-4 leading-relaxed px-4 sm:px-0 max-w-xl">
+                            <p className="text-[10px] sm:text-xl text-gray-400 font-medium mt-1 sm:mt-2 leading-relaxed px-4 sm:px-0 max-w-xl">
                                 Engineered for Freshness. Access <span className="text-emerald-600 font-black">{totalProducts}+</span> precision-crafted packaging solutions optimized for food safety and brand dominance.
                             </p>
                         </div>
@@ -131,7 +158,7 @@ function ShopPageInner() {
                     </div>
 
                     {/* Desktop Filter Bar */}
-                    <div className="hidden lg:block mt-8">
+                    <div className="hidden lg:block mt-6">
                         {/* Category Row */}
                         <div className="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none">
                             {categories.map((cat) => (
@@ -150,7 +177,7 @@ function ShopPageInner() {
                         </div>
 
                         {/* Price + Sort + Clear row */}
-                        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
+                        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
                             {/* Price Range dropdown */}
                             <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-150 rounded-2xl px-4 py-2.5 hover:border-gray-300 transition-colors">
                                 <SlidersHorizontal size={13} className="text-gray-400 shrink-0" />

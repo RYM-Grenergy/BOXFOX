@@ -29,7 +29,7 @@ export default function TopSellingStrip() {
     if (loading || products.length === 0) return null;
 
     return (
-        <section className="py-10 sm:py-16 bg-gray-50/50 relative overflow-hidden text-center sm:text-left">
+        <section className="py-8 sm:py-12 bg-gray-50/50 relative overflow-hidden text-center sm:text-left">
             <div className="max-w-[1700px] mx-auto px-2 sm:px-6 lg:px-12 relative z-10">
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 sm:mb-10 gap-4">
                     <div className="space-y-1">

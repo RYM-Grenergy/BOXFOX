@@ -187,7 +187,7 @@ export default function HeroBanner() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, duration: 0.5 }}
-              className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-white/80 mb-3"
+              className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-[#D4AF37] mb-3"
             >
               Premium Custom Packaging
             </motion.p>
@@ -200,7 +200,7 @@ export default function HeroBanner() {
               className="text-3xl sm:text-4xl lg:text-5xl xl:text-[3.5rem] font-black text-white leading-[1.08] tracking-tight mb-5 drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
             >
               Design. Print.<br />
-              <span className="text-emerald-400">Deliver.</span>
+              <span className="bg-gradient-to-r from-[#D4AF37] via-[#F9F295] via-[#E6B830] via-[#F9F295] to-[#B8860B] bg-clip-text text-transparent">Deliver.</span>
             </motion.h1>
 
             {/* Sub text */}
@@ -222,14 +222,14 @@ export default function HeroBanner() {
             >
               <a
                 href="/customize"
-                className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-full shadow-[0_8px_30px_rgba(16,185,129,0.4)] hover:shadow-[0_8px_40px_rgba(16,185,129,0.55)] transition-all duration-300 hover:scale-[1.03] active:scale-95"
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#B8860B] hover:brightness-110 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-full shadow-[0_8px_30px_rgba(184,134,11,0.4)] hover:shadow-[0_8px_40px_rgba(184,134,11,0.55)] transition-all duration-300 hover:scale-[1.03] active:scale-95"
               >
                 Start Designing
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </a>
               <a
                 href="/shop"
-                className="inline-flex items-center gap-2 px-6 py-3.5 bg-white/15 hover:bg-white/25 border border-white/40 hover:border-white/70 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-full backdrop-blur-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+                className="inline-flex items-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/20 border border-white/30 hover:border-[#D4AF37]/70 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-full backdrop-blur-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
               >
                 Browse Collection
               </a>
