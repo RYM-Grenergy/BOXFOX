@@ -93,109 +93,183 @@ export default function HeroBanner() {
   }, [currentIndex]);
 
   return (
-    <section className="relative w-full bg-slate-50 pt-[90px] sm:pt-[110px] lg:pt-[140px] pb-8 sm:pb-12 flex justify-center">
+    <section
+      className="relative w-full bg-[#f4f4f2] overflow-hidden"
+      style={{ paddingTop: "56px", minHeight: "calc(100vh - 56px)" }}
+    >
+      {/* ── Slider fills the full hero area ── */}
       <div
-        className="relative w-full aspect-[4/3] sm:aspect-video max-h-[85vh] bg-[#f2f2f2] overflow-hidden group shadow-sm"
+        className="relative w-full h-full group"
+        style={{ minHeight: "calc(100vh - 56px)" }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="relative w-full h-full">
-          <AnimatePresence initial={false} custom={direction}>
-            <motion.div
-              key={currentIndex}
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{
-                x: { type: "tween", ease: [0.25, 1, 0.5, 1], duration: 0.8 },
-                opacity: { duration: 0.8, ease: "easeInOut" }
-              }}
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={1}
-              onDragEnd={(e, { offset, velocity }) => {
-                const swipe = swipePower(offset.x, velocity.x);
-
-                if (swipe < -swipeConfidenceThreshold) {
-                  paginate(1);
-                } else if (swipe > swipeConfidenceThreshold) {
-                  paginate(-1);
-                }
-              }}
-              className="absolute inset-0 cursor-grab active:cursor-grabbing"
-            >
-              {banners[currentIndex].type === "image" ? (
-                <>
-                  <div
-                    className="absolute inset-0 w-full h-full bg-cover bg-center blur-xl scale-110 opacity-80"
-                    style={{ backgroundImage: `url('${banners[currentIndex].image}')` }}
-                  />
-                  <Image
-                    src={banners[currentIndex].image}
-                    alt={banners[currentIndex].alt}
-                    fill
-                    className="object-contain object-center relative z-10"
-                    priority={currentIndex === 0}
-                    sizes="100vw"
-                    quality={100}
-                  />
-                </>
-              ) : (
+        {/* Slides */}
+        <AnimatePresence initial={false} custom={direction}>
+          <motion.div
+            key={currentIndex}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "tween", ease: [0.25, 1, 0.5, 1], duration: 0.8 },
+              opacity: { duration: 0.6, ease: "easeInOut" }
+            }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={1}
+            onDragEnd={(e, { offset, velocity }) => {
+              const swipe = swipePower(offset.x, velocity.x);
+              if (swipe < -swipeConfidenceThreshold) paginate(1);
+              else if (swipe > swipeConfidenceThreshold) paginate(-1);
+            }}
+            className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"
+            style={{ minHeight: "calc(100vh - 56px)" }}
+          >
+            {banners[currentIndex].type === "image" ? (
+              <>
+                {/* Blurred background fill */}
+                <div
+                  className="absolute inset-0 w-full h-full bg-cover bg-center"
+                  style={{
+                    backgroundImage: `url('${banners[currentIndex].image}')`,
+                    filter: "blur(28px) saturate(1.2)",
+                    transform: "scale(1.12)",
+                    opacity: 0.55,
+                  }}
+                />
+                {/* Sharp foreground — fully contained, never cropped */}
+                <Image
+                  src={banners[currentIndex].image}
+                  alt={banners[currentIndex].alt}
+                  fill
+                  className="relative z-10"
+                  style={{ objectFit: "contain", objectPosition: "center" }}
+                  priority={currentIndex === 0}
+                  sizes="100vw"
+                  quality={95}
+                />
+              </>
+            ) : (
+              <>
+                <div
+                  className="absolute inset-0 bg-black/20"
+                />
                 <video
                   ref={(el) => {
                     if (el) {
                       videoRef.current = el;
-                      el.play().catch(e => console.log("Autoplay prevented by browser:", e));
+                      el.play().catch(() => {});
                     }
                   }}
                   src={banners[currentIndex].src}
                   muted
                   playsInline
                   onEnded={() => paginate(1)}
-                  className="w-full h-full object-contain object-center pointer-events-none"
+                  className="absolute inset-0 w-full h-full pointer-events-none"
+                  style={{ objectFit: "contain", objectPosition: "center" }}
                 />
-              )}
+              </>
+            )}
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/10 pointer-events-none" />
+            {/* Bottom vignette */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none z-20" />
+          </motion.div>
+        </AnimatePresence>
+
+        {/* ── CTA Overlay (bottom-left) ── */}
+        <div className="absolute bottom-0 left-0 right-0 z-30 px-6 sm:px-10 lg:px-16 pb-12 sm:pb-16">
+          <div className="max-w-xl">
+            {/* Eyebrow */}
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15, duration: 0.5 }}
+              className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-white/80 mb-3"
+            >
+              Premium Custom Packaging
+            </motion.p>
+
+            {/* Headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.55 }}
+              className="text-3xl sm:text-4xl lg:text-5xl xl:text-[3.5rem] font-black text-white leading-[1.08] tracking-tight mb-5 drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
+            >
+              Design. Print.<br />
+              <span className="text-emerald-400">Deliver.</span>
+            </motion.h1>
+
+            {/* Sub text */}
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.5 }}
+              className="text-sm sm:text-base text-white/75 font-medium mb-7 max-w-xs sm:max-w-sm leading-relaxed"
+            >
+              India&apos;s most trusted packaging partner — duplex, rigid & corrugated boxes with AI-powered custom prints.
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45, duration: 0.5 }}
+              className="flex flex-wrap items-center gap-3"
+            >
+              <a
+                href="/customize"
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-full shadow-[0_8px_30px_rgba(16,185,129,0.4)] hover:shadow-[0_8px_40px_rgba(16,185,129,0.55)] transition-all duration-300 hover:scale-[1.03] active:scale-95"
+              >
+                Start Designing
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+              <a
+                href="/shop"
+                className="inline-flex items-center gap-2 px-6 py-3.5 bg-white/15 hover:bg-white/25 border border-white/40 hover:border-white/70 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-full backdrop-blur-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+              >
+                Browse Collection
+              </a>
             </motion.div>
-          </AnimatePresence>
-
-          {/* Navigation Arrows */}
-          <button
-            onClick={(e) => { e.stopPropagation(); paginate(-1); }}
-            className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-10 p-2 sm:p-3 md:p-4 rounded-full bg-white/80 hover:bg-white text-gray-900 shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all backdrop-blur-md opacity-0 scale-90 sm:opacity-100 lg:opacity-0 group-hover:opacity-100 group-hover:scale-100 hover:scale-110"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" />
-          </button>
-
-          <button
-            onClick={(e) => { e.stopPropagation(); paginate(1); }}
-            className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-10 p-2 sm:p-3 md:p-4 rounded-full bg-white/80 hover:bg-white text-gray-900 shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all backdrop-blur-md opacity-0 scale-90 sm:opacity-100 lg:opacity-0 group-hover:opacity-100 group-hover:scale-100 hover:scale-110"
-            aria-label="Next slide"
-          >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" />
-          </button>
-
-          {/* Pagination Indicators */}
-          <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 sm:gap-3 bg-white/20 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full backdrop-blur-md shadow-lg border border-white/30">
-            {banners.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setDirection(idx > currentIndex ? 1 : -1);
-                  setCurrentIndex(idx);
-                }}
-                className={`transition-all duration-300 rounded-full shadow-sm ${idx === currentIndex
-                  ? "w-8 sm:w-10 h-2 sm:h-2.5 bg-white"
-                  : "w-2 h-2 sm:w-2.5 sm:h-2.5 bg-white/60 hover:bg-white/90"
-                  }`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            ))}
           </div>
+        </div>
+
+        {/* ── Prev / Next arrows ── */}
+        <button
+          onClick={(e) => { e.stopPropagation(); paginate(-1); }}
+          className="absolute left-4 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-white/80 hover:bg-white text-gray-900 shadow-lg transition-all duration-200 backdrop-blur-sm opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-90"
+          aria-label="Previous slide"
+        >
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); paginate(1); }}
+          className="absolute right-4 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-white/80 hover:bg-white text-gray-900 shadow-lg transition-all duration-200 backdrop-blur-sm opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-90"
+          aria-label="Next slide"
+        >
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+
+        {/* ── Slide indicators ── */}
+        <div className="absolute bottom-5 right-6 sm:right-10 lg:right-16 z-30 flex items-center gap-2">
+          {banners.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                setDirection(idx > currentIndex ? 1 : -1);
+                setCurrentIndex(idx);
+              }}
+              className={`transition-all duration-300 rounded-full ${
+                idx === currentIndex
+                  ? "w-6 sm:w-8 h-[3px] bg-white"
+                  : "w-[3px] h-[3px] bg-white/50 hover:bg-white/80"
+              }`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
         </div>
       </div>
     </section>

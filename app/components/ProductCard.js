@@ -38,7 +38,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           width={400}
           height={500}
           unoptimized={img?.includes('boxfox.in') || !img}
-          className={`w-full h-full object-contain p-8 transition-all duration-700 group-hover:scale-105 ${hoverImage ? 'group-hover:opacity-0' : ''}`}
+          className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-105 ${hoverImage ? 'group-hover:opacity-0' : ''}`}
           placeholder="blur"
           blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
           priority={priority}
@@ -50,7 +50,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
             width={400}
             height={500}
             unoptimized={hoverImage.includes('boxfox.in')}
-            className="w-full h-full object-contain p-8 transition-all duration-700 group-hover:scale-105 absolute inset-0 opacity-0 group-hover:opacity-100"
+            className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 absolute inset-0 opacity-0 group-hover:opacity-100"
             priority={priority}
           />
         )}
@@ -69,14 +69,14 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
 
   return (
     <Link href={`/products/${id}`} className="group flex flex-col h-full relative">
-      <div className="relative mb-4 sm:mb-5 aspect-square overflow-hidden rounded-[1.2rem] sm:rounded-[2rem] bg-gray-50 border border-gray-950/[0.08] shadow-sm transition-all group-hover:shadow-2xl group-hover:shadow-emerald-500/10 group-hover:border-gray-950/20">
+      <div className="relative mb-4 sm:mb-5 aspect-[4/5] overflow-hidden rounded-[1.2rem] sm:rounded-[2rem] bg-gray-50 border border-gray-950/[0.08] shadow-sm transition-all group-hover:shadow-2xl group-hover:shadow-emerald-500/10 group-hover:border-gray-950/20">
         <Image
           src={img || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg"}
           alt={name}
           width={500}
           height={500}
           unoptimized={img?.includes('boxfox.in') || !img}
-          className={`w-full h-full object-contain p-1 sm:p-4 transition-all duration-700 group-hover:scale-105 ${hoverImage ? 'group-hover:opacity-0' : ''}`}
+          className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-105 ${hoverImage ? 'group-hover:opacity-0' : ''}`}
           priority={priority}
         />
         {hoverImage && (
@@ -86,7 +86,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
             width={500}
             height={500}
             unoptimized={hoverImage.includes('boxfox.in')}
-            className="w-full h-full object-contain p-1 sm:p-4 transition-all duration-700 group-hover:scale-105 absolute inset-0 opacity-0 group-hover:opacity-100"
+            className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 absolute inset-0 opacity-0 group-hover:opacity-100"
             priority={priority}
           />
         )}
@@ -152,9 +152,9 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           </p>
         )}
 
-        <div className="flex items-center justify-between mt-auto pt-2 gap-2">
+        <div className="flex items-center justify-between mt-auto pt-2 gap-1.5 sm:gap-2">
           <div className="flex flex-col justify-center min-w-0">
-            <span className="text-lg sm:text-xl font-black text-gray-950 tracking-tighter leading-none truncate">
+            <span className="text-sm sm:text-xl font-black text-gray-950 tracking-tighter leading-none">
               {typeof price === 'string' ? price : `₹${price?.toLocaleString('en-IN')}`}
             </span>
             {originalPrice && (
@@ -164,9 +164,10 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
             )}
           </div>
 
-          <div className="flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-emerald-50 text-emerald-600 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm border border-emerald-100/50 shrink-0">
-            View Details
-            <ArrowUpRight size={12} className="sm:w-[14px] sm:h-[14px]" />
+          <div className="flex items-center justify-center gap-1 px-2 sm:px-4 py-1.5 sm:py-2 bg-emerald-50 text-emerald-600 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm border border-emerald-100/50 shrink-0">
+            <span className="hidden xs:inline">View Details</span>
+            <span className="xs:hidden">Details</span>
+            <ArrowUpRight size={11} className="sm:w-[14px] sm:h-[14px]" />
           </div>
         </div>
       </div>

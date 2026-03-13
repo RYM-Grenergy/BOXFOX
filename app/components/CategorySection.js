@@ -214,7 +214,7 @@ export default function CategorySection() {
           {categories.map((cat, idx) => (
             <motion.a
               key={cat.id}
-              href="/shop"
+              href={`/shop?category=${encodeURIComponent(cat.name)}`}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

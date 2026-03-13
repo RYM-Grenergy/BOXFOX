@@ -1,18 +1,69 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Search, Filter, ChevronDown } from "lucide-react";
+import { ShoppingBag, Search, Filter, ChevronDown, SlidersHorizontal, ArrowUpDown, X } from "lucide-react";
 import ProductSection from "../components/ProductSection";
 
-export default function ShopPage() {
+// Canonical category order — matches home page CategorySection exactly
+const CATEGORY_ORDER = [
+    "All",
+    "Gifting",
+    "CupCake",
+    "Cake Box",
+    "Hamper Box",
+    "Platter",
+    "Loaf",
+    "Pastry",
+    "Chocolate Box",
+    "Macaron",
+    "Brownie",
+    "CupCake + Bento",
+    "Burger Box",
+    "Food Box",
+    "Pizza Box",
+    "Wok Box",
+    "Wrap Box",
+    "Popcorn",
+];
+
+function ShopPageInner() {
+    const searchParams = useSearchParams();
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
-    const [category, setCategory] = useState("All");
-    const [categories, setCategories] = useState(["All"]);
+    const [category, setCategory] = useState(() => searchParams.get('category') || "All");
+    const [categories, setCategories] = useState(CATEGORY_ORDER);
     const [totalProducts, setTotalProducts] = useState(0);
-    const [showFilter, setShowFilter] = useState(false);
+    const [showFilter, setShowFilter] = useState(false); // false | 'cat' | 'filters'
+    const [priceRange, setPriceRange] = useState("all");
+    const [sortBy, setSortBy] = useState("default");
+
+    const PRICE_RANGES = [
+        { value: "all",      label: "All Prices" },
+        { value: "0-100",    label: "Under ₹100" },
+        { value: "100-300",  label: "₹100 – ₹300" },
+        { value: "300-500",  label: "₹300 – ₹500" },
+        { value: "500-1000", label: "₹500 – ₹1,000" },
+        { value: "1000+",    label: "Above ₹1,000" },
+    ];
+
+    const SORT_OPTIONS = [
+        { value: "default",    label: "Default" },
+        { value: "price-asc",  label: "Price: Low to High" },
+        { value: "price-desc", label: "Price: High to Low" },
+        { value: "name-asc",   label: "Name: A – Z" },
+        { value: "name-desc",  label: "Name: Z – A" },
+    ];
+
+    const activeFiltersCount = (priceRange !== "all" ? 1 : 0) + (sortBy !== "default" ? 1 : 0);
+
+    // Sync category from URL when it changes (e.g. navigating from CategorySection)
+    useEffect(() => {
+        const urlCategory = searchParams.get('category');
+        if (urlCategory) setCategory(urlCategory);
+    }, [searchParams]);
 
     // Optimized Search: Debounce search to reduce DB hits for 10k+ scalability
     useEffect(() => {
@@ -27,10 +78,7 @@ export default function ShopPage() {
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
-                    const cats = ["All", ...data.map(s => s.category)];
-                    setCategories(cats);
-
-                    // Calculate total count
+                    // Calculate total product count only — category order is canonical (matches home page)
                     const total = data.reduce((acc, section) => acc + (section.items?.length || 0), 0);
                     setTotalProducts(total);
                 } else if (data.error) {
@@ -82,65 +130,201 @@ export default function ShopPage() {
                         </div>
                     </div>
 
-                    {/* Desktop Category View */}
-                    <div className="hidden lg:flex flex-col mt-10 gap-6">
-                        <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-600">Select Packaging Category</h2>
-                        <div className="flex flex-wrap gap-3">
+                    {/* Desktop Filter Bar */}
+                    <div className="hidden lg:block mt-8">
+                        {/* Category Row */}
+                        <div className="flex items-center gap-2 overflow-x-auto pb-3 scrollbar-none">
                             {categories.map((cat) => (
                                 <button
                                     key={cat}
                                     onClick={() => setCategory(cat)}
-                                    className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all relative overflow-hidden group/btn ${category === cat
-                                        ? 'bg-emerald-800 text-white shadow-[0_10px_25px_rgba(6,78,59,0.3)] scale-105'
-                                        : 'bg-gray-50 text-gray-400 hover:bg-emerald-50 hover:text-emerald-800'
-                                        } border-2 border-transparent`}
+                                    className={`whitespace-nowrap px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.18em] transition-all duration-200 flex-shrink-0 ${
+                                        category === cat
+                                            ? 'bg-gray-950 text-white shadow-lg'
+                                            : 'text-gray-400 hover:text-gray-700 hover:bg-gray-50 border border-gray-150'
+                                    }`}
                                 >
-                                    <span className="relative z-10">{cat}</span>
+                                    {cat}
                                 </button>
                             ))}
+                        </div>
+
+                        {/* Price + Sort + Clear row */}
+                        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
+                            {/* Price Range dropdown */}
+                            <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-150 rounded-2xl px-4 py-2.5 hover:border-gray-300 transition-colors">
+                                <SlidersHorizontal size={13} className="text-gray-400 shrink-0" />
+                                <select
+                                    value={priceRange}
+                                    onChange={(e) => setPriceRange(e.target.value)}
+                                    className="bg-transparent text-[10px] font-black uppercase tracking-widest text-gray-700 outline-none cursor-pointer pr-1"
+                                >
+                                    {PRICE_RANGES.map((pr) => (
+                                        <option key={pr.value} value={pr.value}>{pr.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Sort By dropdown */}
+                            <div className="flex items-center gap-2.5 bg-gray-50 border border-gray-150 rounded-2xl px-4 py-2.5 hover:border-gray-300 transition-colors">
+                                <ArrowUpDown size={13} className="text-gray-400 shrink-0" />
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value)}
+                                    className="bg-transparent text-[10px] font-black uppercase tracking-widest text-gray-700 outline-none cursor-pointer pr-1"
+                                >
+                                    {SORT_OPTIONS.map((so) => (
+                                        <option key={so.value} value={so.value}>{so.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Active filter tags */}
+                            {priceRange !== "all" && (
+                                <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full px-3 py-2">
+                                    <span className="text-[9px] font-black uppercase tracking-widest">{PRICE_RANGES.find(p => p.value === priceRange)?.label}</span>
+                                    <button onClick={() => setPriceRange("all")} className="hover:text-emerald-900 transition-colors">
+                                        <X size={10} />
+                                    </button>
+                                </div>
+                            )}
+                            {sortBy !== "default" && (
+                                <div className="flex items-center gap-1.5 bg-gray-100 border border-gray-200 text-gray-700 rounded-full px-3 py-2">
+                                    <span className="text-[9px] font-black uppercase tracking-widest">{SORT_OPTIONS.find(s => s.value === sortBy)?.label}</span>
+                                    <button onClick={() => setSortBy("default")} className="hover:text-gray-900 transition-colors">
+                                        <X size={10} />
+                                    </button>
+                                </div>
+                            )}
+
+                            {activeFiltersCount > 0 && (
+                                <button
+                                    onClick={() => { setPriceRange("all"); setSortBy("default"); }}
+                                    className="ml-auto text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1.5"
+                                >
+                                    <X size={10} /> Clear all
+                                </button>
+                            )}
                         </div>
                     </div>
 
                     {/* Mobile Filter UI */}
-                    <div className="lg:hidden mt-6 relative z-50">
-                        <button
-                            onClick={() => setShowFilter(!showFilter)}
-                            className="w-full flex items-center justify-between px-6 py-4 bg-gray-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all"
-                        >
-                            <span className="flex items-center gap-3">
-                                <Filter size={16} className="text-emerald-500" />
-                                {category === "All" ? "Filter Categories" : `Category: ${category}`}
-                            </span>
-                            <motion.div
-                                animate={{ rotate: showFilter ? 180 : 0 }}
+                    <div className="lg:hidden mt-5 relative z-50">
+                        <div className="flex gap-2">
+                            {/* Category pill trigger */}
+                            <button
+                                onClick={() => setShowFilter(showFilter === 'cat' ? false : 'cat')}
+                                className={`flex-1 flex items-center justify-between px-5 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border ${
+                                    showFilter === 'cat' ? 'bg-gray-950 text-white border-gray-950' : 'bg-white text-gray-700 border-gray-200'
+                                }`}
                             >
-                                <ChevronDown size={14} className="opacity-50" />
-                            </motion.div>
-                        </button>
+                                <span className="flex items-center gap-2">
+                                    <Filter size={13} className={showFilter === 'cat' ? 'text-emerald-400' : 'text-gray-400'} />
+                                    {category === "All" ? "Category" : category}
+                                </span>
+                                <ChevronDown size={13} className={`transition-transform ${showFilter === 'cat' ? 'rotate-180 opacity-60' : 'opacity-40'}`} />
+                            </button>
+
+                            {/* Price + Sort trigger */}
+                            <button
+                                onClick={() => setShowFilter(showFilter === 'filters' ? false : 'filters')}
+                                className={`flex items-center gap-2 px-5 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border relative ${
+                                    showFilter === 'filters' ? 'bg-gray-950 text-white border-gray-950' : 'bg-white text-gray-700 border-gray-200'
+                                }`}
+                            >
+                                <SlidersHorizontal size={13} className={showFilter === 'filters' ? 'text-emerald-400' : 'text-gray-400'} />
+                                Filters
+                                {activeFiltersCount > 0 && (
+                                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">{activeFiltersCount}</span>
+                                )}
+                            </button>
+                        </div>
 
                         <AnimatePresence>
-                            {showFilter && (
+                            {showFilter === 'cat' && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
+                                    initial={{ opacity: 0, y: -8 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-[2rem] shadow-2xl overflow-hidden p-2 grid grid-cols-2 gap-2"
+                                    exit={{ opacity: 0, y: -8 }}
+                                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-3xl shadow-2xl shadow-gray-200/80 overflow-y-auto max-h-[70vh] p-3 z-50"
                                 >
-                                    {categories.map((cat) => (
-                                        <button
-                                            key={cat}
-                                            onClick={() => {
-                                                setCategory(cat);
-                                                setShowFilter(false);
-                                            }}
-                                            className={`px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${category === cat
-                                                ? 'bg-emerald-500 text-white shadow-lg'
-                                                : 'bg-gray-50 text-gray-500 active:bg-emerald-50 active:text-emerald-600'
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                        {categories.map((cat) => (
+                                            <button
+                                                key={cat}
+                                                onClick={() => { setCategory(cat); setShowFilter(false); }}
+                                                className={`px-3 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all text-center ${
+                                                    category === cat
+                                                        ? 'bg-gray-950 text-white'
+                                                        : 'bg-gray-50 text-gray-500 active:bg-gray-100'
                                                 }`}
+                                            >
+                                                {cat}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {showFilter === 'filters' && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -8 }}
+                                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-3xl shadow-2xl shadow-gray-200/80 p-4 space-y-4 z-50"
+                                >
+                                    {/* Price Range */}
+                                    <div>
+                                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400 mb-2 flex items-center gap-1.5">
+                                            <SlidersHorizontal size={9} className="text-emerald-500" /> Price Range
+                                        </p>
+                                        <div className="grid grid-cols-3 gap-1.5">
+                                            {PRICE_RANGES.map((pr) => (
+                                                <button
+                                                    key={pr.value}
+                                                    onClick={() => setPriceRange(pr.value)}
+                                                    className={`px-2 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all text-center ${
+                                                        priceRange === pr.value
+                                                            ? 'bg-emerald-500 text-white'
+                                                            : 'bg-gray-50 text-gray-500'
+                                                    }`}
+                                                >
+                                                    {pr.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Sort By */}
+                                    <div>
+                                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400 mb-2 flex items-center gap-1.5">
+                                            <ArrowUpDown size={9} className="text-emerald-500" /> Sort By
+                                        </p>
+                                        <div className="grid grid-cols-2 gap-1.5">
+                                            {SORT_OPTIONS.map((so) => (
+                                                <button
+                                                    key={so.value}
+                                                    onClick={() => setSortBy(so.value)}
+                                                    className={`px-3 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all text-center ${
+                                                        sortBy === so.value
+                                                            ? 'bg-gray-950 text-white'
+                                                            : 'bg-gray-50 text-gray-500'
+                                                    }`}
+                                                >
+                                                    {so.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {activeFiltersCount > 0 && (
+                                        <button
+                                            onClick={() => { setPriceRange("all"); setSortBy("default"); setShowFilter(false); }}
+                                            className="w-full py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest text-red-400 bg-red-50 flex items-center justify-center gap-1.5"
                                         >
-                                            {cat}
+                                            <X size={9} /> Clear Filters
                                         </button>
-                                    ))}
+                                    )}
                                 </motion.div>
                             )}
                         </AnimatePresence>
@@ -148,9 +332,17 @@ export default function ShopPage() {
                 </header>
 
                 <div className="px-4 sm:px-6 lg:px-12 max-w-[1600px] mx-auto">
-                    <ProductSection searchQuery={debouncedSearch} category={category} />
+                    <ProductSection searchQuery={debouncedSearch} category={category} priceRange={priceRange} sortBy={sortBy} />
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function ShopPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-white" />}>
+            <ShopPageInner />
+        </Suspense>
     );
 }

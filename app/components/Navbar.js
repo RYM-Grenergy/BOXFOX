@@ -64,7 +64,7 @@ export default function Navbar() {
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "Shop", href: "/shop" },
-    { label: "Customize", href: "/customize", isSpecial: true },
+    { label: " AI Customize", href: "/customize", isSpecial: true },
     { label: "B2B", href: "/b2b" },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },
@@ -72,162 +72,132 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="fixed top-0 sm:top-6 left-0 right-0 z-[100] px-0 sm:px-4 w-full">
-        <div className={`mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isScrolled
-          ? "w-[96%] lg:w-[98%] xl:max-w-[1350px] bg-white/95 backdrop-blur-3xl border-b sm:border border-white/60 shadow-xl rounded-none sm:rounded-full py-3 px-4 lg:px-6 xl:px-10"
-          : "w-full max-w-[1600px] bg-white sm:bg-transparent border-b border-gray-100 sm:border-none py-4 sm:py-6 px-4 sm:px-12"
-          }`}>
-          <div className="flex items-center justify-between gap-4">
-            {/* Left Nav (Desktop) */}
-            <div className="hidden lg:flex items-center justify-end flex-1 gap-2 xl:gap-6">
-              {navLinks.slice(0, 3).map((link) => (
+      {/* ─── Navbar ──────────────────────────────────────────────────────── */}
+      <nav className="fixed top-0 left-0 right-0 z-[100] w-full">
+
+        {/* Floating pill wrapper */}
+        <div className={`mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isScrolled
+            ? "w-[92%] xl:max-w-[1280px] bg-white/96 backdrop-blur-2xl border border-gray-200/60 shadow-[0_8px_40px_rgba(0,0,0,0.10)] rounded-full py-2 px-5 lg:px-8 mt-3"
+            : "w-full bg-white border-b border-gray-100 py-0 px-4 sm:px-8 lg:px-14"
+        }`}>
+          <div className="flex items-center justify-between h-14">
+
+            {/* ── Logo — always left ── */}
+            <Link href="/" className="shrink-0 flex items-center">
+              <img
+                src="/BOXFOX-1.png"
+                alt="BOXFOX Logo"
+                className={`transition-all duration-500 object-contain ${isScrolled ? "h-5" : "h-6"}`}
+              />
+            </Link>
+
+            {/* ── Nav Links — centered (desktop only) ── */}
+            <div className="hidden lg:flex items-center gap-0.5 xl:gap-1 absolute left-1/2 -translate-x-1/2">
+              {navLinks.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`relative px-3 xl:px-4 py-2.5 text-[11px] xl:text-[13px] font-black uppercase tracking-[0.2em] transition-all duration-300 group active:scale-95 rounded-xl ${pathname === link.href
-                    ? "text-emerald-600"
-                    : link.isSpecial
-                      ? "text-emerald-500 font-black h-fit"
-                      : "text-gray-500 hover:text-emerald-600"
-                    }`}
+                  className={`relative px-3 xl:px-4 py-1.5 text-[10.5px] xl:text-[11.5px] font-black uppercase tracking-[0.18em] transition-all duration-300 group active:scale-95 rounded-lg ${
+                    pathname === link.href
+                      ? "text-emerald-600"
+                      : link.isSpecial
+                      ? "text-emerald-500"
+                      : "text-gray-400 hover:text-gray-900"
+                  }`}
                 >
-                  <div className="flex flex-col items-center">
-                    <span className="relative z-10 transition-colors duration-300 group-hover:text-emerald-600">{link.label}</span>
-                  </div>
-
-                  {/* Hover Glow Background */}
-                  <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/10 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] rounded-xl transition-all duration-300 -z-0" />
-
-                  {/* Active/Current Page Glow */}
+                  <span className="relative z-10">{link.label}</span>
+                  <div className="absolute inset-0 bg-transparent group-hover:bg-gray-900/[0.04] rounded-lg transition-all duration-200" />
                   {pathname === link.href && (
                     <motion.div
-                      layoutId="nav-glow"
-                      className="absolute inset-0 bg-emerald-500/10 shadow-[0_0_25px_rgba(16,185,129,0.2)] rounded-xl -z-0"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      layoutId="nav-active"
+                      className="absolute inset-0 bg-emerald-500/10 rounded-lg z-0"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
                     />
                   )}
                 </Link>
               ))}
             </div>
 
-            {/* Logo (Centered) */}
-            <Link href="/" className="shrink-0 lg:mx-10">
-              <img
-                src="/BOXFOX-1.png"
-                alt="BOXFOX Logo"
-                className={`transition-all duration-500 ${isScrolled ? "h-5 sm:h-6" : "h-6 sm:h-9"}`}
-              />
-            </Link>
-
-            {/* Right Side: Nav Links (Desktop) + Actions */}
-            <div className="flex-1 flex items-center justify-between lg:justify-start gap-1 sm:gap-2">
-              <div className="hidden lg:flex items-center gap-2 xl:gap-6 mr-3 xl:mr-4">
-                {navLinks.slice(3).map((link) => (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    className={`relative px-3 xl:px-4 py-2.5 text-[11px] xl:text-[13px] font-black uppercase tracking-[0.2em] transition-all duration-300 group active:scale-95 rounded-xl ${pathname === link.href
-                      ? "text-emerald-600"
-                      : link.isSpecial
-                        ? "text-emerald-500 font-black h-fit"
-                        : "text-gray-500 hover:text-emerald-600"
-                      }`}
-                  >
-                    <div className="flex flex-col items-center">
-                      <span className="relative z-10 transition-colors duration-300 group-hover:text-emerald-600">{link.label}</span>
-                    </div>
-
-                    {/* Hover Glow Background */}
-                    <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/10 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] rounded-xl transition-all duration-300 -z-0" />
-
-                    {/* Active/Current Page Glow */}
-                    {pathname === link.href && (
-                      <motion.div
-                        layoutId="nav-glow"
-                        className="absolute inset-0 bg-emerald-500/10 shadow-[0_0_25px_rgba(16,185,129,0.2)] rounded-xl -z-0"
-                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                      />
-                    )}
-                  </Link>
-                ))}
-              </div>
-
-              {/* Actions Section */}
-              <div className="flex items-center gap-2 sm:gap-3 ml-auto lg:ml-0 shrink-0">
+            {/* ── Right Actions ── */}
+            <div className="flex items-center gap-1 sm:gap-1.5">
+                {/* Search */}
                 <button
                   onClick={() => setSearchOpen(!searchOpen)}
                   aria-label="Search"
-                  className="flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full hover:bg-gray-50 hover:shadow-lg active:scale-90 active:shadow-inner transition-all text-gray-900 duration-300"
+                  className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-600 hover:text-gray-900 duration-200"
                 >
-                  <Search size={16} className="sm:w-[18px] sm:h-[18px]" />
+                  <Search size={15} />
                 </button>
 
-                <div className="relative group hidden sm:flex items-center justify-center">
+                {/* Login / Account */}
+                <div className="relative group hidden sm:flex items-center">
                   <Link
                     href={user ? "/account" : `/login?redirect=${encodeURIComponent(pathname)}`}
-                    className={`flex items-center justify-center gap-2.5 px-5 h-10 sm:h-11 rounded-full transition-all duration-500 ${user
-                      ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100"
-                      : "bg-gray-950 text-white hover:bg-emerald-600 shadow-xl shadow-gray-200"
-                      }`}
+                    className={`flex items-center gap-2 px-3.5 h-8 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                      user
+                        ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/60"
+                        : "bg-gray-950 text-white hover:bg-emerald-600 shadow-lg shadow-gray-200/80"
+                    }`}
                   >
-                    <User size={16} />
-                    <span className="text-[10px] font-black uppercase tracking-widest hidden lg:inline">
-                      {user ? "Account" : "Login"}
-                    </span>
+                    <User size={13} />
+                    <span className="hidden lg:inline">{user ? "Account" : "Login"}</span>
                   </Link>
 
                   {user && (
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200]">
-                      <Link href="/account" className="block px-6 py-2 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 transition-colors">
+                    <div className="absolute right-0 top-full mt-2.5 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200]">
+                      <Link href="/account" className="block px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 hover:bg-gray-50 transition-colors rounded-xl mx-1">
                         My Dashboard
                       </Link>
-                      <Link href="/account?tab=wishlist" className="block px-6 py-2 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 transition-colors">
+                      <Link href="/account?tab=wishlist" className="block px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 hover:bg-gray-50 transition-colors rounded-xl mx-1">
                         My Wishlist
                       </Link>
-                      <div className="h-px bg-gray-50 mx-6 my-1" />
+                      <div className="h-px bg-gray-100 mx-4 my-1" />
                       <button
                         onClick={logout}
-                        className="w-full text-left px-6 py-2 text-[10px] font-black uppercase tracking-widest text-red-500 hover:bg-red-50 transition-colors"
+                        className="w-full text-left px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors rounded-xl mx-0"
                       >
-                        Logout_Session
+                        Sign Out
                       </button>
                     </div>
                   )}
                 </div>
 
+                {/* Cart */}
                 <button
                   onClick={() => setIsCartOpen(true)}
                   aria-label="Open Shopping Cart"
-                  className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full hover:bg-gray-50 hover:shadow-lg active:scale-90 active:shadow-inner transition-all text-gray-900 duration-300"
+                  className="relative flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-600 hover:text-gray-900 duration-200"
                 >
-                  <ShoppingCart size={18} className="sm:w-[20px] sm:h-[20px]" />
+                  <ShoppingCart size={16} />
                   {cart.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-emerald-500 text-white text-[7px] sm:text-[9px] font-black rounded-full h-4 sm:h-4.5 w-4 sm:w-4.5 flex items-center justify-center ring-2 ring-white shadow-lg">
+                    <span className="absolute -top-0.5 -right-0.5 bg-emerald-500 text-white text-[8px] font-black rounded-full h-4 w-4 flex items-center justify-center ring-2 ring-white">
                       {cart.length}
                     </span>
                   )}
                 </button>
 
+                {/* Mobile Hamburger */}
                 <button
                   onClick={() => setMenuOpen(!menuOpen)}
                   aria-label={menuOpen ? "Close Menu" : "Open Menu"}
-                  className="lg:hidden flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full hover:bg-gray-50 hover:shadow-lg active:scale-90 active:shadow-inner transition-all text-gray-900 duration-300"
+                  className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-700 duration-200 ml-1"
                 >
-                  {menuOpen ? <X size={20} /> : <Menu size={20} />}
+                  {menuOpen ? <X size={18} /> : <Menu size={18} />}
                 </button>
               </div>
-            </div>
           </div>
         </div>
 
-        {/* Global Search Bar Overlay */}
+        {/* ── Global Search Overlay ── */}
         <AnimatePresence>
           {searchOpen && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-20 sm:top-24 left-1/2 -translate-x-1/2 w-full max-w-xl px-4 z-[300]"
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-full max-w-lg px-4 z-[300]"
             >
               <div className="relative">
                 <div className="bg-white border border-gray-100 rounded-3xl sm:rounded-[2rem] p-3 sm:p-4 shadow-2xl flex items-center gap-3 sm:gap-4">
