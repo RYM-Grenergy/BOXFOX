@@ -80,7 +80,7 @@ export default function HeroBanner() {
 
     const timer = setInterval(() => {
       paginate(1);
-    }, 2800); // 2.0 second rest + 0.8s transition
+    }, 2000); // 2 second interval for both mobile and desktop
     return () => clearInterval(timer);
   }, [isHovered, currentIndex, paginate]);
 
@@ -94,13 +94,11 @@ export default function HeroBanner() {
 
   return (
     <section
-      className="relative w-full bg-[#f4f4f2] overflow-hidden"
-      style={{ paddingTop: "56px", minHeight: "calc(100vh - 56px)" }}
+      className="relative w-full bg-[#f4f4f2] overflow-hidden pt-14 min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-56px)]"
     >
       {/* ── Slider fills the full hero area ── */}
       <div
-        className="relative w-full h-full group"
-        style={{ minHeight: "calc(100vh - 56px)" }}
+        className="relative w-full h-full group min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-56px)]"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -125,8 +123,7 @@ export default function HeroBanner() {
               if (swipe < -swipeConfidenceThreshold) paginate(1);
               else if (swipe > swipeConfidenceThreshold) paginate(-1);
             }}
-            className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"
-            style={{ minHeight: "calc(100vh - 56px)" }}
+            className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-56px)]"
           >
             {banners[currentIndex].type === "image" ? (
               <>
@@ -180,7 +177,7 @@ export default function HeroBanner() {
         </AnimatePresence>
 
         {/* ── CTA Overlay (bottom-left) ── */}
-        <div className="absolute bottom-0 left-0 right-0 z-30 px-6 sm:px-10 lg:px-16 pb-12 sm:pb-16">
+        <div className="hidden sm:block absolute bottom-0 left-0 right-0 z-30 px-6 sm:px-10 lg:px-16 pb-12 sm:pb-16">
           <div className="max-w-xl">
             {/* Eyebrow */}
             <motion.p
