@@ -3,6 +3,7 @@ const nextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   images: {
+    qualities: [70, 75, 80, 85, 90, 95, 100],
     remotePatterns: [
       {
         protocol: 'https',
@@ -46,10 +47,6 @@ const nextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
           },
         ],
       },

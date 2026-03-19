@@ -158,7 +158,7 @@ export default function HeroBanner() {
                   style={{ objectFit: "contain", objectPosition: "center" }}
                   priority={currentIndex === 0}
                   sizes="100vw"
-                  quality={95}
+                  quality={75}
                 />
               </>
             ) : (

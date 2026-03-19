@@ -7,7 +7,7 @@ import { useAuth } from "@/app/context/AuthContext";
 export default function AIChatBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hi! I'm BoxFox AI. I can help you find products, check order status, or help with custom designs. How can I help you today?" }
+    { role: "assistant", content: "Good day! I'm Foxie 🦊, your structural packaging concierge. I'm here to ensure your brand's boxes are absolutely perfect. How can I assist you today?" }
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -90,8 +90,8 @@ export default function AIChatBot() {
                   <Bot size={22} />
                 </div>
                 <div>
-                    <h3 className="text-white text-xs font-black uppercase tracking-widest leading-none">BoxFox AI Assistant</h3>
-                    <p className="text-white/50 text-[9px] uppercase tracking-widest mt-1 font-bold">Online & Active</p>
+                    <h3 className="text-white text-xs font-black uppercase tracking-tight leading-none">Foxie · Concierge</h3>
+                    <p className="text-emerald-400 text-[8px] uppercase tracking-widest mt-1 font-black">Structural Packaging Expert</p>
                 </div>
               </div>
               <button onClick={() => setIsOpen(false)} className="text-white/50 hover:text-white transition-colors">
@@ -107,8 +107,14 @@ export default function AIChatBot() {
                     msg.role === "user" 
                       ? "bg-emerald-600 text-white rounded-tr-none" 
                       : "bg-white text-gray-800 shadow-sm border border-gray-100 rounded-tl-none"
-                  }`}>
-                    {msg.content}
+                  } whitespace-pre-wrap`}>
+                    <div 
+                      dangerouslySetInnerHTML={{ 
+                        __html: msg.content
+                          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-black text-gray-900">$1</strong>')
+                          .replace(/• /g, '<span class="mr-2 text-emerald-500">•</span>')
+                      }} 
+                    />
                   </div>
                 </div>
               ))}

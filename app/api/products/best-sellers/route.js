@@ -11,18 +11,20 @@ export async function GET() {
         const settings = await StoreSettings.findOne({ key: 'best_sellers' });
 
         let products = [];
-        if (settings && settings.value && settings.value.length > 0) {
+        if (settings && Array.isArray(settings.value) && settings.value.length > 0) {
             // Find products matching these IDs using their _id
-            const bestSellerIds = settings.value.map(item => item._id);
+            const bestSellerIds = settings.value.map(item => item._id).filter(Boolean);
             const foundProducts = await Product.find({ _id: { $in: bestSellerIds } }).lean();
 
             // Map and sort them according to the saved order
             products = bestSellerIds
                 .map(id => foundProducts.find(p => p._id.toString() === id.toString()))
-                .filter(Boolean); // Remove any nulls if product was deleted
-        } else {
-            // Fallback: fetch random 10 products
-            products = await Product.find({ parent_id: 0 }).limit(10).lean();
+                .filter(Boolean); 
+        } 
+        
+        // If no best sellers or search failed, get fallback
+        if (products.length === 0) {
+            products = await Product.find({ type: { $in: ["simple", "variable"] }, parent_id: 0 }).limit(10).lean();
         }
 
         // Format similarly to what the frontend expects
