@@ -101,6 +101,7 @@ export async function GET(req) {
         : (p.price ? (String(p.price).startsWith('₹') ? p.price : `₹${p.price}`) : "Price on Request");
 
       sectionsMap[primaryCat].items.push({
+        _id: p._id,
         id: p.wpId,
         name: p.name,
         price: formattedPrice,

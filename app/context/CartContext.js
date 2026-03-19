@@ -19,6 +19,11 @@ export function CartProvider({ children }) {
     }, [cart]);
 
     const calculateUnitPrice = (product, quantity) => {
+        // If this is a custom design box, we respect the price calculated in the Lab
+        if (product.customDesign) {
+            return typeof product.price === 'number' ? product.price : parseFloat(String(product.price).replace(/[^0-9.]/g, '')) || 0;
+        }
+
         const basePrice = typeof product.price === 'number' ? product.price : parseFloat(String(product.price).replace(/[^0-9.]/g, '')) || 0;
         const minPrice = typeof product.minPrice === 'number' ? product.minPrice : parseFloat(String(product.minPrice).replace(/[^0-9.]/g, '')) || basePrice;
         const maxPrice = typeof product.maxPrice === 'number' ? product.maxPrice : parseFloat(String(product.maxPrice).replace(/[^0-9.]/g, '')) || basePrice;
@@ -67,12 +72,13 @@ export function CartProvider({ children }) {
     };
 
     const updateQuantity = (id, quantity) => {
+        const validQuantity = Math.max(10, Math.floor(quantity));
         setCart(prev => prev.map(item => {
             if (item.id === id) {
                 return {
                     ...item,
-                    quantity,
-                    price: calculateUnitPrice(item, quantity)
+                    quantity: validQuantity,
+                    price: calculateUnitPrice(item, validQuantity)
                 };
             }
             return item;

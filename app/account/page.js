@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { LogOut, User as UserIcon, Settings, Package, MapPin, Phone, Mail, Lock, Heart, Trash2, ChevronRight, RotateCw, Layers, Ruler, Type, Palette, Eye, RefreshCw, Box, Share2, Link2, Copy, Check, Pencil } from "lucide-react";
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { useSearchParams } from "next/navigation";
 import { BoxFacePreview, MiniBox3D } from "@/app/components/BoxPreview3D";
 
@@ -210,7 +209,7 @@ function AccountManagementContent() {
                                         <div className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 overflow-hidden flex items-center justify-center shrink-0">
-                                                    {item.image ? <img src={item.image} className="w-full h-full object-cover" alt="" /> : <Box size={18} className="text-gray-300" />}
+                                                    <img src={item.customDesign?.textures?.front || item.customDesign?.textures?.top || Object.values(item.customDesign?.textures || {}).find(v => v) || item.image || item.img} className="w-full h-full object-cover" alt="" />
                                                 </div>
                                                 <div>
                                                     <h4 className="text-sm font-black text-gray-950 uppercase">{item.name}</h4>
@@ -796,9 +795,18 @@ function AccountManagementContent() {
                                                     className="p-6 rounded-[2rem] border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-2xl hover:shadow-gray-100 hover:scale-[1.01] transition-all cursor-pointer group"
                                                 >
                                                     <div className="flex flex-wrap items-center justify-between gap-4">
-                                                        <div>
-                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Shipping ID</p>
-                                                            <h4 className="text-sm font-black text-gray-950 uppercase group-hover:text-emerald-500 transition-colors">#{order.orderId}</h4>
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 p-1.5 shrink-0 flex items-center justify-center">
+                                                                <img 
+                                                                    src={order.items?.[0]?.customDesign?.textures?.front || order.items?.[0]?.image || order.items?.[0]?.img || '/BOXFOX-1.png'} 
+                                                                    className="w-full h-full object-contain" 
+                                                                    alt="" 
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Shipping ID</p>
+                                                                <h4 className="text-sm font-black text-gray-950 uppercase group-hover:text-emerald-500 transition-colors">#{order.orderId}</h4>
+                                                            </div>
                                                         </div>
                                                         <div className="text-right">
                                                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Dispatched</p>
@@ -953,7 +961,6 @@ function AccountManagementContent() {
                     </div>
                 </div>
             </main>
-            <Footer />
         </div>
     );
 }

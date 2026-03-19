@@ -15,7 +15,6 @@ import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 
 export default function CheckoutPage() {
     const { cart, cartTotal, clearCart } = useCart();
@@ -276,7 +275,6 @@ export default function CheckoutPage() {
                         </Link>
                     </motion.div>
                 </main>
-                <Footer />
             </div>
         );
     }
@@ -472,7 +470,7 @@ export default function CheckoutPage() {
                                 {cart.map(item => (
                                     <div key={item.id} className="flex gap-8 items-center group">
                                         <div className="w-20 h-20 bg-white rounded-3xl overflow-hidden shrink-0 border border-gray-100 p-2 group-hover:scale-105 transition-transform duration-500">
-                                            <img src={item.img} className="w-full h-full object-contain" alt="" />
+                                            <img src={item.customDesign?.textures?.front || item.customDesign?.textures?.top || Object.values(item.customDesign?.textures || {}).find(t => t) || item.img || item.image} className="w-full h-full object-contain" alt="" />
                                         </div>
                                         <div className="flex-1">
                                             <h4 className="text-[11px] font-black text-gray-950 uppercase line-clamp-2 tracking-tight group-hover:text-emerald-500 transition-colors">{item.name}</h4>
@@ -547,7 +545,6 @@ export default function CheckoutPage() {
                     </div>
                 </div>
             </main>
-            <Footer />
         </div>
     );
 }

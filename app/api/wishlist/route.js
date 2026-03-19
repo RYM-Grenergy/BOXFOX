@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import Product from '@/models/Product';
@@ -51,19 +52,36 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
         }
 
+        let product = null;
+        const productIdStr = String(productId);
+        if (mongoose.Types.ObjectId.isValid(productIdStr)) {
+            product = await Product.findById(productIdStr).select('_id');
+        }
+        if (!product) {
+            const wpIdNum = parseInt(productIdStr);
+            if (!isNaN(wpIdNum)) {
+                product = await Product.findOne({ wpId: wpIdNum }).select('_id');
+            }
+        }
+        if (!product) {
+            return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+        }
+
+        const normalizedProductId = product._id.toString();
+
         const user = await User.findById(userId);
         if (!user) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
         if (!user.wishlist) user.wishlist = [];
-        const index = user.wishlist.indexOf(productId);
+        const index = user.wishlist.findIndex((item) => item?.toString() === normalizedProductId);
         if (index > -1) {
             user.wishlist.splice(index, 1);
             await user.save();
             return NextResponse.json({ message: 'Removed from wishlist', action: 'removed' }, { status: 200 });
         } else {
-            user.wishlist.push(productId);
+            user.wishlist.push(product._id);
             await user.save();
             return NextResponse.json({ message: 'Added to wishlist', action: 'added' }, { status: 200 });
         }

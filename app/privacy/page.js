@@ -1,7 +1,6 @@
 "use client";
 import React from 'react';
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { motion } from "framer-motion";
 import { Shield, Lock, Eye, Cookie, ExternalLink, Info } from "lucide-react";
 
@@ -224,7 +223,6 @@ export default function PrivacyPolicyPage() {
                 </section>
             </main>
 
-            <Footer />
         </div>
     );
 }

@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from 'react';
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { motion } from "framer-motion";
 import { Sparkles, ArrowRight, CheckCircle2, ShieldCheck, Zap, Globe } from "lucide-react";
 
@@ -243,7 +242,6 @@ export default function PartnershipPage() {
                 </section>
             </main>
 
-            <Footer />
         </div>
     );
 }

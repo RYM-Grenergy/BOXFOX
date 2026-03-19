@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 // Banners can now be images or videos
+
 const banners = [
   {
     id: 1,
@@ -18,25 +19,34 @@ const banners = [
     image: "/banner/ChatGPT Image Mar 10, 2026, 10_47_25 AM.png",
     alt: "Boxfox Premium Packaging - Style 2",
   },
+
   {
     id: 3,
+    type: "video",
+    src: "/hero_video_2.mp4",
+    alt: "Boxfox Premium Production Video",
+  },
+
+  {
+    id: 4,
     type: "image",
     image: "/banner/ChatGPT Image Mar 10, 2026, 10_28_18 AM.png",
     alt: "Boxfox Premium Packaging - Style 3",
   },
   {
-    id: 4,
+    id: 5,
     type: "image",
     image: "/banner/ChatGPT Image Mar 10, 2026, 10_24_14 AM.png",
     alt: "Boxfox Premium Packaging - Style 4",
   },
   {
-    id: 5,
+    id: 6,
     type: "video",
     src: "/banner/hero_video.mp4",
     alt: "Boxfox Premium Hero Video",
   }
 ];
+
 
 export default function HeroBanner() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -93,9 +103,11 @@ export default function HeroBanner() {
   }, [currentIndex]);
 
   return (
+
     <section
-      className="relative w-full bg-[#f4f4f2] overflow-hidden pt-14 min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-56px)]"
+      className="relative w-full bg-[#f4f4f2] overflow-hidden min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-56px)]"
     >
+
       {/* ── Slider fills the full hero area ── */}
       <div
         className="relative w-full h-full group min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-56px)]"
@@ -171,8 +183,9 @@ export default function HeroBanner() {
               </>
             )}
 
-            {/* Bottom vignette */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none z-20" />
+
+            {/* Dark wash for text visibility — stronger from bottom-left */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-black/60 via-black/20 to-transparent pointer-events-none z-20" />
           </motion.div>
         </AnimatePresence>
 
@@ -184,7 +197,7 @@ export default function HeroBanner() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, duration: 0.5 }}
-              className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-[#D4AF37] mb-3"
+              className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em] text-[#D4AF37] mb-3 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
             >
               Premium Custom Packaging
             </motion.p>
@@ -194,7 +207,7 @@ export default function HeroBanner() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.55 }}
-              className="text-3xl sm:text-4xl lg:text-5xl xl:text-[3.5rem] font-black text-white leading-[1.08] tracking-tight mb-5 drop-shadow-[0_2px_12px_rgba(0,0,0,0.35)]"
+              className="text-3xl sm:text-4xl lg:text-5xl xl:text-[3.5rem] font-black text-white leading-[1.08] tracking-tight mb-5 drop-shadow-[0_4px_16px_rgba(0,0,0,0.6)]"
             >
               Design. Print.<br />
               <span className="bg-gradient-to-r from-[#D4AF37] via-[#F9F295] via-[#E6B830] via-[#F9F295] to-[#B8860B] bg-clip-text text-transparent">Deliver.</span>
@@ -205,10 +218,12 @@ export default function HeroBanner() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35, duration: 0.5 }}
-              className="text-sm sm:text-base text-white/75 font-medium mb-7 max-w-xs sm:max-w-sm leading-relaxed"
+              className="text-sm sm:text-base text-white font-medium mb-7 max-w-xs sm:max-w-sm leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]"
             >
               India&apos;s most trusted packaging partner — duplex, rigid & corrugated boxes with AI-powered custom prints.
             </motion.p>
+
+
 
             {/* CTA Buttons */}
             <motion.div
@@ -219,18 +234,19 @@ export default function HeroBanner() {
             >
               <a
                 href="/customize"
-                className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#B8860B] hover:brightness-110 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-full shadow-[0_8px_30px_rgba(184,134,11,0.4)] hover:shadow-[0_8px_40px_rgba(184,134,11,0.55)] transition-all duration-300 hover:scale-[1.03] active:scale-95"
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#B8860B] hover:brightness-110 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_40px_rgba(0,0,0,0.55)] transition-all duration-300 hover:scale-[1.03] active:scale-95"
               >
                 Start Designing
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </a>
               <a
                 href="/shop"
-                className="inline-flex items-center gap-2 px-6 py-3.5 bg-white/10 hover:bg-white/20 border border-white/30 hover:border-[#D4AF37]/70 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-full backdrop-blur-md transition-all duration-300 hover:scale-[1.03] active:scale-95"
+                className="inline-flex items-center gap-2 px-6 py-3.5 bg-black/20 hover:bg-black/40 border border-white/40 hover:border-[#D4AF37] text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-full backdrop-blur-md shadow-lg transition-all duration-300 hover:scale-[1.03] active:scale-95"
               >
                 Browse Collection
               </a>
             </motion.div>
+
           </div>
         </div>
 

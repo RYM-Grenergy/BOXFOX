@@ -98,8 +98,18 @@ export default function OrderInfoPage() {
                 {/* Order Items & Design Info */}
                 {order.items?.map((item, i) => (
                     <section key={i} className="bg-white rounded-2xl border border-gray-100 p-5 space-y-4">
-                        <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-gray-50 pb-3">
-                            <Box size={12} className="text-orange-500" /> {item.customDesign ? "Custom Box" : "Product"} — Item {i + 1}
+                        <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3 border-b border-gray-50 pb-3">
+                            <div className="w-10 h-10 rounded-lg border border-gray-100 p-1 flex items-center justify-center bg-gray-50 shrink-0">
+                                <img 
+                                    src={item.customDesign?.textures?.front || item.customDesign?.textures?.top || Object.values(item.customDesign?.textures || {}).find(v => v) || item.image || item.img || '/BOXFOX-1.png'} 
+                                    className="w-full h-full object-contain" 
+                                    alt="" 
+                                />
+                            </div>
+                            <div>
+                                <span className="block text-emerald-600 mb-0.5">{item.customDesign ? "Custom Box" : "Standard Product"}</span>
+                                <span className="text-gray-950 tracking-tighter">Sequence Node {i + 1}</span>
+                            </div>
                         </h2>
 
                         <InfoRow icon={<Package size={13} />} label="Product" value={item.name} />

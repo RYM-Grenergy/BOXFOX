@@ -1,7 +1,6 @@
 "use client";
 import React from 'react';
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { motion } from "framer-motion";
 import { Globe, Send, ShieldCheck, AlertCircle, Clock, Truck, Calculator } from "lucide-react";
 import Link from 'next/link';
@@ -223,7 +222,6 @@ export default function InternationalShippingPage() {
                 </section>
             </main>
 
-            <Footer />
         </div>
     );
 }

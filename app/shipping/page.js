@@ -1,7 +1,6 @@
 "use client";
 import React from 'react';
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { motion } from "framer-motion";
 import { Truck, Clock, CreditCard, ShieldCheck, Mail, AlertCircle, RotateCcw, ArrowRight } from "lucide-react";
 import Link from "next/link";
@@ -180,7 +179,6 @@ export default function ShippingPolicyPage() {
                 </section>
             </main>
 
-            <Footer />
         </div>
     );
 }

@@ -1,7 +1,6 @@
 "use client";
 import React from 'react';
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { motion } from "framer-motion";
 import { Gavel, Scale, ShieldAlert, FileCheck, Clock, Palette, CheckCircle2 } from "lucide-react";
 
@@ -165,7 +164,6 @@ export default function TermsPage() {
                 </section>
             </main>
 
-            <Footer />
         </div>
     );
 }

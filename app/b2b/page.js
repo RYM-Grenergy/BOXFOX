@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Building2, Package, Globe, Users, ArrowRight, CheckCircle2, ChevronRight, Loader2 } from "lucide-react";
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 
 export default function B2BPage() {
     const [configs, setConfigs] = useState(null);
@@ -274,7 +273,6 @@ export default function B2BPage() {
                 </section>
             </main>
 
-            <Footer />
         </div>
     );
 }

@@ -13,20 +13,23 @@ import {
     Heart
 } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
-import Footer from '@/app/components/Footer';
 import { useCart } from '@/app/context/CartContext';
+import { useToast } from '@/app/context/ToastContext';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function ProductPage() {
     const params = useParams();
     const { addToCart } = useCart();
+    const { showToast } = useToast();
 
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeImg, setActiveImg] = useState(0);
     const [quantity, setQuantity] = useState(10);
     const [viewMode, setViewMode] = useState('2D');
+    const [isWishlisted, setIsWishlisted] = useState(false);
+    const [wishlistBusy, setWishlistBusy] = useState(false);
 
     useEffect(() => {
         setLoading(true);
@@ -39,6 +42,32 @@ export default function ProductPage() {
             })
             .catch(() => setLoading(false));
     }, [params.id]);
+
+    useEffect(() => {
+        if (!product?._id && !product?.id) return;
+        let mounted = true;
+
+        fetch('/api/wishlist')
+            .then(async (res) => {
+                if (!res.ok) return { wishlist: [] };
+                return res.json();
+            })
+            .then((data) => {
+                if (!mounted) return;
+                const ids = new Set();
+                (data?.wishlist || []).forEach((item) => {
+                    if (item?._id) ids.add(String(item._id));
+                    if (item?.wpId || item?.id) ids.add(String(item.wpId || item.id));
+                });
+                setIsWishlisted(ids.has(String(product?._id)) || ids.has(String(product?.id)));
+            })
+            .catch(() => {
+            });
+
+        return () => {
+            mounted = false;
+        };
+    }, [product?._id, product?.id]);
 
     if (loading || !product) {
         return (
@@ -148,20 +177,36 @@ export default function ProductPage() {
                                     <h1 className="text-4xl md:text-5xl font-black text-gray-950 tracking-tighter uppercase">{product.name}</h1>
                                     <button
                                         onClick={async () => {
+                                            if (wishlistBusy) return;
+                                            setWishlistBusy(true);
                                             try {
                                                 const res = await fetch('/api/wishlist', {
                                                     method: 'POST',
                                                     headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({ productId: product._id })
+                                                    body: JSON.stringify({ productId: product._id || product.id })
                                                 });
-                                                if (res.status === 401) window.location.href = '/login';
+                                                if (res.status === 401) {
+                                                    window.location.href = '/login';
+                                                    return;
+                                                }
+                                                const data = await res.json();
+                                                if (res.ok) {
+                                                    const nextWishlisted = data?.action === 'added';
+                                                    setIsWishlisted(nextWishlisted);
+                                                    showToast(data?.message || (nextWishlisted ? 'Added to wishlist' : 'Removed from wishlist'));
+                                                } else {
+                                                    showToast(data?.error || 'Failed to update wishlist', 'error');
+                                                }
                                             } catch (err) {
                                                 console.error(err);
+                                                showToast('Connection error', 'error');
+                                            } finally {
+                                                setWishlistBusy(false);
                                             }
                                         }}
-                                        className="p-4 rounded-full bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all border border-gray-100 shadow-sm shrink-0"
+                                        className={`p-4 rounded-full transition-all border border-gray-100 shadow-sm shrink-0 ${isWishlisted ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50'} ${wishlistBusy ? 'opacity-60' : ''}`}
                                     >
-                                        <Heart size={24} />
+                                        <Heart size={24} fill={isWishlisted ? 'currentColor' : 'none'} />
                                     </button>
                                 </div>
                                 <p className="text-sm text-gray-500 leading-relaxed font-medium">{product.description || "The ultimate professional packaging solution for your premium brand. Structural integrity meets aesthetic perfection."}</p>
@@ -250,7 +295,6 @@ export default function ProductPage() {
                 </div>
             </main>
 
-            <Footer />
         </div>
     );
 }

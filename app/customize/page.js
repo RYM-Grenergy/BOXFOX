@@ -38,7 +38,6 @@ import {
   Copy,
 } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
-import Footer from "@/app/components/Footer";
 import AuthModal from "@/app/components/AuthModal";
 import { useCart } from "@/app/context/CartContext";
 import { useToast } from "@/app/context/ToastContext";
@@ -1217,6 +1216,50 @@ function CustomizeLabContent() {
                 ))}
               </div>
 
+              {/* Quantity Selector */}
+              <div className="bg-emerald-50/50 rounded-2xl border border-emerald-100 p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center">
+                      <ShoppingCart size={12} className="text-white" />
+                    </div>
+                    <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Order_Quantity</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="number" 
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 0))}
+                      className="w-20 h-8 bg-white border border-emerald-200 rounded-lg text-center font-black text-xs focus:border-emerald-500 outline-none"
+                    />
+                    <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Units</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={() => setQuantity(Math.max(10, quantity - 50))}
+                    className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
+                  >
+                    <Minus size={14} />
+                  </button>
+                  <input
+                    type="range"
+                    min="10"
+                    max="5000"
+                    step="10"
+                    value={quantity}
+                    onChange={(e) => setQuantity(parseInt(e.target.value))}
+                    className="flex-1 h-1 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                  />
+                  <button 
+                    onClick={() => setQuantity(quantity + 50)}
+                    className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
+
               {/* Real-time Metrics Pill */}
               <div className="flex items-center gap-4 px-6 py-4 bg-white rounded-2xl border border-gray-100 shadow-inner">
                 <div className="flex-1">
@@ -1227,36 +1270,6 @@ function CustomizeLabContent() {
                 <div className="flex-1">
                   <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">Surf_Area</p>
                   <p className="text-sm font-black text-gray-950">{(unit === "mm" ? 2 * (dimensions.l * dimensions.w + dimensions.w * dimensions.h + dimensions.h * dimensions.l) : currentSA).toFixed(unit === "mm" ? 0 : 1)}<span className="text-[10px] ml-1 opacity-40 uppercase">{unit}²</span></p>
-                </div>
-              </div>
-            </div>
-
-            {/* Section 1b: Quantity Selection */}
-            <div className="space-y-6 pt-6 border-t border-gray-200">
-              <div className="flex items-center gap-4">
-                <Box size={18} className="text-emerald-500" />
-                <h3 className="text-xs font-black text-gray-950 uppercase tracking-[0.3em]">Quantity_Selection</h3>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {[10, 20, 30, 100, 200, 300, 500, 1000].map(q => (
-                  <button
-                    key={q}
-                    onClick={() => setQuantity(q)}
-                    className={`flex-[1_1_0%] min-w-[60px] py-3 rounded-xl border-2 font-black text-xs transition-all ${quantity === q ? 'bg-emerald-500 text-white border-emerald-500 shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-emerald-500/40 hover:text-gray-950'}`}
-                  >
-                    {q}
-                  </button>
-                ))}
-                <div className="relative flex-[2_2_0%] min-w-[100px]">
-                  <input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(10, parseInt(e.target.value) || 10))}
-                    className="w-full h-full py-3 px-4 rounded-xl bg-white border-2 border-gray-200 font-black text-xs text-gray-950 placeholder-gray-400 focus:border-emerald-500 outline-none transition-all"
-                    placeholder="Custom..."
-                    min={10}
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase font-bold text-gray-400">MOQ: 10</span>
                 </div>
               </div>
             </div>
@@ -1865,18 +1878,30 @@ function CustomizeLabContent() {
             </div>
           </div>
 
-          {/* Order Control */}
-          <div className="bg-emerald-500 rounded-2xl sm:rounded-[2.5rem] md:rounded-[3.5rem] p-5 sm:p-7 md:p-8 lg:p-10 text-black flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 shadow-[0_20px_60px_rgba(16,185,129,0.25)] relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-br from-white/25 to-transparent pointer-events-none" />
-            <div className="space-y-1 relative z-10">
-              <p className="text-[9px] sm:text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] leading-none opacity-60 text-black">
-                Unit_Price_Pro_Rate
-              </p>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black italic tracking-tighter text-black leading-none">
-                ₹{calculatedUnitPrice}
-              </h2>
+          {/* Order Summary */}
+          <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl sm:rounded-[2.5rem] md:rounded-[3.5rem] border-2 border-emerald-200 shadow-lg overflow-hidden">
+            <div className="bg-gradient-to-b from-emerald-500/5 to-transparent p-4 sm:p-6 md:p-8 border-b border-emerald-100 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                  <Box size={20} className="text-emerald-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base sm:text-lg font-black text-gray-950">Custom Designed Box</h3>
+                  <p className="text-xs text-emerald-600 font-bold uppercase tracking-widest mt-0.5">{dimensions.l}{unit} × {dimensions.w}{unit} × {dimensions.h}{unit}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 bg-white rounded-lg p-3 border border-emerald-100">
+                <div className="text-center"><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Qty</p><p className="text-xl font-black text-emerald-600 mt-1">{quantity}</p></div>
+                <div className="border-l border-r border-gray-100 text-center"><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Price</p><p className="text-xl font-black text-emerald-600 mt-1">₹{calculatedUnitPrice}</p></div>
+                <div className="text-center"><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Total</p><p className="text-xl font-black text-emerald-600 mt-1">₹{(parseFloat(calculatedUnitPrice) * quantity).toLocaleString('en-IN')}</p></div>
+              </div>
             </div>
-            <button
+            <div className="bg-emerald-500 px-4 sm:px-6 md:px-8 py-5 sm:py-6 text-black flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
+              <div className="text-center sm:text-left">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-70">Est. Total Cost</p>
+                <h2 className="text-3xl sm:text-5xl font-black italic tracking-tighter mt-1">₹{(parseFloat(calculatedUnitPrice) * quantity).toLocaleString('en-IN')}</h2>
+              </div>
+              <button
               disabled={isAddingToCart}
               onClick={async () => {
                 if (isAddingToCart) return;
@@ -1905,13 +1930,15 @@ function CustomizeLabContent() {
                   }
 
                   const userName = user?.name || user?.username || "Guest";
-                  const pType = product?.productType || product?.name || "Box";
-                  const customName = `${userName}_customize ${dimensions.l}x${dimensions.w}x${dimensions.h}_${pType}`;
+                  const customName = `${userName}_customize ${dimensions.l}x${dimensions.w}x${dimensions.h}`;
+                  const customImg = uploadedBoxTextures.front || uploadedBoxTextures.top || Object.values(uploadedBoxTextures).find(t => t) || product.img || product.images?.[0];
 
                   const customizedProduct = {
                     ...product,
                     id: `${product.id}-${Date.now()}`,
                     name: customName,
+                    img: customImg,
+                    price: currentPrice,
                     customDesign: {
                       textures: uploadedBoxTextures,
                       colors: boxColors,
@@ -1940,7 +1967,8 @@ function CustomizeLabContent() {
                 />
               )}
               {isAddingToCart ? "Deploying..." : "Add_to_Basket"}
-            </button>
+              </button>
+            </div>
           </div>
           {/* Share Toast Notification */}
           <AnimatePresence>
@@ -2043,9 +2071,8 @@ function CustomizeLabContent() {
             )}
           </AnimatePresence>
         </div>
-      </main >
+      </main>
 
-      <Footer />
       {/* Mobile Experience Warning */}
       <AnimatePresence>
         {showMobileWarning && (

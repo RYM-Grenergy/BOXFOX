@@ -4,7 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import { Box, Ruler, Type, Palette, Layers, ShoppingCart, Copy, Check, ArrowLeft } from "lucide-react";
 import { BoxFacePreview, MiniBox3D } from "@/app/components/BoxPreview3D";
 import Navbar from "@/app/components/Navbar";
-import Footer from "@/app/components/Footer";
 
 const FACES = ["front", "back", "top", "bottom", "left", "right"];
 
@@ -58,7 +57,6 @@ export default function SharedDesignPage() {
                         </button>
                     </div>
                 </div>
-                <Footer />
             </div>
         );
     }
@@ -162,7 +160,6 @@ export default function SharedDesignPage() {
                     </div>
                 </div>
             </main>
-            <Footer />
         </div>
     );
 }

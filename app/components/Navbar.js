@@ -253,7 +253,7 @@ export default function Navbar() {
                                 <img src={item.img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={item.name} />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-[11px] font-black text-gray-950 uppercase tracking-tight truncate">{item.name}</h4>
+                                <h4 className="text-[11px] font-black text-gray-950 uppercase tracking-tight truncate">{(item.name || '').replace(/\s+[A-Z][A-Z\s]*BOX\s*$/i, '').replace(/_[A-Z][A-Z\s]*BOX\s*$/i, '') || item.name}</h4>
                                 <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">{item.price}</p>
                               </div>
                               <ArrowRight size={14} className="text-gray-200 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
@@ -438,14 +438,14 @@ export default function Navbar() {
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center bg-gray-50 rounded-lg p-1">
                             <button
-                              onClick={() => updateQuantity(item.id, Math.max(100, item.quantity - 100))}
+                              onClick={() => updateQuantity(item.id, Math.max(10, item.quantity - 10))}
                               className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-950"
                             >
                               <Minus size={12} />
                             </button>
                             <span className="w-8 text-[10px] font-black text-center">{item.quantity}</span>
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 100)}
+                              onClick={() => updateQuantity(item.id, item.quantity + 10)}
                               className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-950"
                             >
                               <Plus size={12} />

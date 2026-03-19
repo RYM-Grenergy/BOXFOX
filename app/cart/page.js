@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
 import Link from 'next/link';
 
 export default function CartPage() {
@@ -54,7 +53,6 @@ export default function CartPage() {
                         </Link>
                     </motion.div>
                 </main>
-                <Footer />
             </div>
         );
     }
@@ -96,7 +94,12 @@ export default function CartPage() {
                                 >
                                     <div className="flex flex-col md:flex-row gap-8 items-center">
                                         <div className="w-32 h-32 bg-gray-50 rounded-2xl overflow-hidden shrink-0 border border-gray-100 p-4">
-                                            <img src={item.img} className="w-full h-full object-contain" alt={item.name} />
+                                            {/* Show customized image if available */}
+                                            <img 
+                                                src={item.customDesign?.textures?.front || item.customDesign?.textures?.top || Object.values(item.customDesign?.textures || {}).find(t => t) || item.img || item.image} 
+                                                className="w-full h-full object-contain" 
+                                                alt={item.name} 
+                                            />
                                         </div>
 
                                         <div className="flex-1 space-y-2">
@@ -104,14 +107,14 @@ export default function CartPage() {
                                                 <span className="px-2 py-0.5 bg-gray-950 text-white text-[8px] font-black uppercase tracking-widest rounded">SKU Verified</span>
                                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{item.category || 'General'}</p>
                                             </div>
-                                            <h3 className="text-2xl font-black text-gray-950 tracking-tighter uppercase group-hover:text-emerald-500 transition-colors">{item.name}</h3>
+                                            <h3 className="text-2xl font-black text-gray-950 tracking-tighter uppercase group-hover:text-emerald-500 transition-colors">{(item.name || '').replace(/\s+[A-Z][A-Z\s]*BOX\s*$/i, '').replace(/_[A-Z][A-Z\s]*BOX\s*$/i, '') || item.name}</h3>
                                             <p className="text-xs font-bold text-gray-400 italic">Customization pending team approval</p>
                                         </div>
 
                                         <div className="flex items-center gap-8 px-8 border-x border-gray-100 h-16">
                                             <div className="flex items-center bg-gray-50 rounded-xl p-1">
                                                 <button
-                                                    onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 100))}
+                                                    onClick={() => updateQuantity(item.id, Math.max(10, item.quantity - 10))}
                                                     className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-950"
                                                 >
                                                     <Minus size={14} />
@@ -119,11 +122,12 @@ export default function CartPage() {
                                                 <input
                                                     type="number"
                                                     value={item.quantity}
-                                                    onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 0)}
+                                                    onChange={(e) => updateQuantity(item.id, Math.max(10, parseInt(e.target.value) || 10))}
                                                     className="w-16 bg-transparent text-center font-black text-xs outline-none"
+                                                    min={10}
                                                 />
                                                 <button
-                                                    onClick={() => updateQuantity(item.id, item.quantity + 100)}
+                                                    onClick={() => updateQuantity(item.id, item.quantity + 10)}
                                                     className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-950"
                                                 >
                                                     <Plus size={14} />
@@ -171,7 +175,7 @@ export default function CartPage() {
                                 <div className="pt-6 border-t border-white/10 flex justify-between items-end">
                                     <div>
                                         <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-1">Total Payable</p>
-                                        <h2 className="text-5xl font-black tracking-tighter">₹{cartTotal.toLocaleString('en-IN')}</h2>
+                                        <h2 className="text-5xl font-black tracking-tighter text-white">₹{cartTotal.toLocaleString('en-IN')}</h2>
                                     </div>
                                 </div>
                             </div>
@@ -236,7 +240,6 @@ export default function CartPage() {
                 </section>
             </main>
 
-            <Footer />
         </div>
     );
 }

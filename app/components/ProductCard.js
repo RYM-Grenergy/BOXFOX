@@ -1,12 +1,54 @@
+"use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart, Heart, ArrowUpRight, Plus } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
 import { useToast } from "@/app/context/ToastContext";
 
+let wishlistIdsCache = null;
+let wishlistIdsPromise = null;
+
+function normalizeId(value) {
+  if (value === null || value === undefined) return null;
+  return String(value);
+}
+
+function buildWishlistIdSet(wishlistItems = []) {
+  const idSet = new Set();
+  for (const item of wishlistItems) {
+    const mongoId = normalizeId(item?._id);
+    const wpId = normalizeId(item?.wpId ?? item?.id);
+    if (mongoId) idSet.add(mongoId);
+    if (wpId) idSet.add(wpId);
+  }
+  return idSet;
+}
+
+async function getWishlistIdSet() {
+  if (wishlistIdsCache) return wishlistIdsCache;
+  if (!wishlistIdsPromise) {
+    wishlistIdsPromise = fetch('/api/wishlist')
+      .then(async (res) => {
+        if (!res.ok) return new Set();
+        const data = await res.json();
+        const idSet = buildWishlistIdSet(data?.wishlist || []);
+        wishlistIdsCache = idSet;
+        return idSet;
+      })
+      .catch(() => new Set())
+      .finally(() => {
+        wishlistIdsPromise = null;
+      });
+  }
+  return wishlistIdsPromise;
+}
+
 export default function ProductCard({ product, imageOnly = false, priority = false }) {
   const { addToCart } = useCart();
   const { showToast } = useToast();
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistBusy, setWishlistBusy] = useState(false);
   const {
     _id,
     id,
@@ -23,12 +65,36 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
   } = product;
 
   const productId = _id || id;
+  const routeId = _id || id;
+  const productMongoId = normalizeId(_id);
+  const productWpId = normalizeId(id);
   const hoverImage = images && images.length > 1 ? images[1] : null;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncWishlistStatus = async () => {
+      const idSet = await getWishlistIdSet();
+      if (!isMounted) return;
+      setIsWishlisted(
+        Boolean(
+          (productMongoId && idSet.has(productMongoId)) ||
+          (productWpId && idSet.has(productWpId))
+        )
+      );
+    };
+
+    syncWishlistStatus();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [productMongoId, productWpId]);
 
   if (imageOnly) {
     return (
       <Link
-        href={`/products/${id}`}
+        href={`/products/${routeId}`}
         className="group relative block aspect-[4/5] overflow-hidden rounded-[2rem] bg-gray-50 bg-white shadow-sm transition-all hover:shadow-2xl hover:-translate-y-2"
         aria-label={name}
       >
@@ -68,7 +134,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
   }
 
   return (
-    <Link href={`/products/${id}`} className="group flex flex-col h-full relative">
+    <Link href={`/products/${routeId}`} className="group flex flex-col h-full relative">
       <div className="relative mb-4 sm:mb-5 aspect-[4/5] overflow-hidden rounded-[1.2rem] sm:rounded-[2rem] bg-gray-50 border border-gray-950/[0.08] shadow-sm transition-all group-hover:shadow-2xl group-hover:shadow-emerald-500/10 group-hover:border-gray-950/20">
         <Image
           src={img || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg"}
@@ -114,6 +180,8 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           onClick={async (e) => {
             e.preventDefault();
             e.stopPropagation();
+            if (wishlistBusy) return;
+            setWishlistBusy(true);
             try {
               const res = await fetch('/api/wishlist', {
                 method: 'POST',
@@ -126,19 +194,34 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
               }
               const data = await res.json();
               if (res.ok) {
-                showToast(data.message || "Added to wishlist");
+                const nextWishlisted = data?.action === 'added';
+                setIsWishlisted(nextWishlisted);
+
+                const idSet = wishlistIdsCache || new Set();
+                if (nextWishlisted) {
+                  if (productMongoId) idSet.add(productMongoId);
+                  if (productWpId) idSet.add(productWpId);
+                } else {
+                  if (productMongoId) idSet.delete(productMongoId);
+                  if (productWpId) idSet.delete(productWpId);
+                }
+                wishlistIdsCache = idSet;
+
+                showToast(data.message || (nextWishlisted ? "Added to wishlist" : "Removed from wishlist"));
               } else {
                 showToast(data.error || "Failed to update wishlist", "error");
               }
             } catch (err) {
               console.error(err);
               showToast("Connection error", "error");
+            } finally {
+              setWishlistBusy(false);
             }
           }}
-          className="absolute top-2 right-2 sm:top-4 sm:right-4 p-2 sm:p-2.5 bg-white text-gray-400 rounded-full hover:bg-red-50 hover:text-red-500 transition-all shadow-md z-10"
-          title="Add to Wishlist"
+          className={`absolute top-2 right-2 sm:top-4 sm:right-4 p-2 sm:p-2.5 rounded-full transition-all shadow-md z-10 ${isWishlisted ? 'bg-red-50 text-red-500' : 'bg-white text-gray-400 hover:bg-red-50 hover:text-red-500'} ${wishlistBusy ? 'opacity-60' : ''}`}
+          title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
         >
-          <Heart size={16} className="sm:w-[18px] sm:h-[18px]" />
+          <Heart size={16} fill={isWishlisted ? 'currentColor' : 'none'} className="sm:w-[18px] sm:h-[18px]" />
         </button>
       </div>
 

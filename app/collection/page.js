@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import ProductSection from "../components/ProductSection";
 import { motion } from "framer-motion";
 
@@ -30,7 +29,6 @@ export default function CollectionPage() {
 
                 <ProductSection />
             </main>
-            <Footer />
         </div>
     );
 }

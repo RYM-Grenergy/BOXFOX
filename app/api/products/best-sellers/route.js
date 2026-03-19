@@ -32,6 +32,7 @@ export async function GET() {
                 : (p.price ? (String(p.price).startsWith('₹') ? p.price : `₹${p.price}`) : "Price on Request");
 
             return {
+                _id: p._id,
                 id: p.wpId,
                 name: p.name,
                 price: formattedPrice,

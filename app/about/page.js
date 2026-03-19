@@ -1,7 +1,6 @@
 "use client";
 import React from 'react';
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { motion } from "framer-motion";
 import Link from 'next/link';
 import { ShieldCheck, Truck, Recycle, Award, CheckCircle2, Sparkles, Target, Users, TrendingUp, History, User } from "lucide-react";
@@ -305,7 +304,6 @@ export default function AboutPage() {
                 </section>
             </main>
 
-            <Footer />
         </div>
     );
 }

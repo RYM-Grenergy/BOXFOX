@@ -30,7 +30,6 @@ import {
     Check
 } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
-import Footer from '@/app/components/Footer';
 import { useCart } from '@/app/context/CartContext';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -530,7 +529,6 @@ export default function CustomizePage() {
                 </div>
             </main >
 
-            <Footer />
             <style jsx global>{`
                 .animate-spin-slow { animation: spin 10s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

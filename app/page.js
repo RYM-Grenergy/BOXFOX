@@ -5,7 +5,6 @@ import ProductSection from "./components/ProductSection";
 import FeaturesStrip from "./components/FeaturesStrip";
 import TopSellingStrip from "./components/TopSellingStrip";
 import PackagingGallery from "./components/PackagingGallery";
-import Footer from "./components/Footer";
 
 export default function Home() {
   return (

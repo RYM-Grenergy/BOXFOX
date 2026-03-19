@@ -1,7 +1,6 @@
 "use client";
 import React from 'react';
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { motion } from "framer-motion";
 import { Plane, Truck, Calendar, Clock, AlertCircle, Info, MapPin } from "lucide-react";
 import Link from 'next/link';
@@ -175,7 +174,6 @@ export default function DomesticShippingPage() {
                 </section>
             </main>
 
-            <Footer />
         </div>
     );
 }

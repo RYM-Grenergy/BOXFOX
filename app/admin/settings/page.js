@@ -5,6 +5,60 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = React.useState('General');
+    const [announcementEnabled, setAnnouncementEnabled] = React.useState(true);
+    const [announcementText, setAnnouncementText] = React.useState('Free Delivery Across India on Orders Above ₹2000');
+    const [announcementLoading, setAnnouncementLoading] = React.useState(true);
+    const [announcementSaving, setAnnouncementSaving] = React.useState(false);
+    const [announcementMessage, setAnnouncementMessage] = React.useState('');
+
+    React.useEffect(() => {
+        const loadAnnouncement = async () => {
+            setAnnouncementLoading(true);
+            setAnnouncementMessage('');
+            try {
+                const res = await fetch('/api/admin/announcement');
+                const data = await res.json();
+                if (res.ok && data?.data) {
+                    setAnnouncementEnabled(Boolean(data.data.enabled));
+                    setAnnouncementText(data.data.text || '');
+                }
+            } catch {
+                setAnnouncementMessage('Failed to load announcement settings.');
+            } finally {
+                setAnnouncementLoading(false);
+            }
+        };
+
+        loadAnnouncement();
+    }, []);
+
+    const saveAnnouncement = async () => {
+        setAnnouncementSaving(true);
+        setAnnouncementMessage('');
+        try {
+            const res = await fetch('/api/admin/announcement', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    enabled: announcementEnabled,
+                    text: announcementText
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setAnnouncementMessage(data?.error || 'Failed to save announcement settings.');
+                return;
+            }
+
+            setAnnouncementEnabled(Boolean(data.data?.enabled));
+            setAnnouncementText(data.data?.text || '');
+            setAnnouncementMessage('Announcement settings saved successfully.');
+        } catch {
+            setAnnouncementMessage('Failed to save announcement settings.');
+        } finally {
+            setAnnouncementSaving(false);
+        }
+    };
 
     const tabs = [
         { icon: <Globe size={18} />, label: 'General' },
@@ -49,6 +103,60 @@ export default function SettingsPage() {
                                     Save Changes
                                 </button>
                             </div>
+                        </div>
+
+                        <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm space-y-8">
+                            <div>
+                                <h2 className="text-xl font-black text-gray-950 mb-2">Announcement Bar</h2>
+                                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest leading-none">Message shown below navbar on storefront</p>
+                            </div>
+
+                            {announcementLoading ? (
+                                <p className="text-xs font-bold text-gray-400">Loading announcement settings...</p>
+                            ) : (
+                                <>
+                                    <div className="flex items-center justify-between p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                                        <div>
+                                            <p className="font-black text-gray-950">Enable Announcement Bar</p>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase mt-1">Toggle visibility on customer-facing pages</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setAnnouncementEnabled((prev) => !prev)}
+                                            className={`w-14 h-8 rounded-full p-1 transition-all ${announcementEnabled ? 'bg-emerald-500' : 'bg-gray-300'}`}
+                                            aria-label="Toggle announcement bar"
+                                        >
+                                            <div className={`w-6 h-6 bg-white rounded-full shadow-sm transition-all ${announcementEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Announcement Text</label>
+                                        <input
+                                            value={announcementText}
+                                            onChange={(e) => setAnnouncementText(e.target.value)}
+                                            maxLength={180}
+                                            className="w-full bg-gray-50 border border-transparent rounded-2xl px-6 py-4 font-bold text-gray-950 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all"
+                                            placeholder="Enter announcement text"
+                                        />
+                                        <p className="text-[10px] font-bold text-gray-400 text-right">{announcementText.length}/180</p>
+                                    </div>
+
+                                    <div className="pt-2 flex items-center justify-between gap-4">
+                                        <p className={`text-xs font-bold ${announcementMessage.includes('success') ? 'text-emerald-500' : 'text-gray-400'}`}>
+                                            {announcementMessage || 'Use concise text for best visibility.'}
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={saveAnnouncement}
+                                            disabled={announcementSaving}
+                                            className="px-10 py-4 bg-emerald-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-emerald-500/20 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                                        >
+                                            {announcementSaving ? 'Saving...' : 'Save Announcement'}
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm space-y-8">
@@ -142,7 +250,7 @@ export default function SettingsPage() {
                                         className={`w-14 h-8 rounded-full p-1 cursor-pointer transition-all ${item.active ? 'bg-emerald-500' : 'bg-gray-300'}`}
                                         onClick={() => { }}
                                     >
-                                        <div className={`w-6 h-6 bg-white rounded-full shadow-sm transition-all ${item.active ? 'translate-x-[24px]' : 'translate-x-0'}`}></div>
+                                        <div className={`w-6 h-6 bg-white rounded-full shadow-sm transition-all ${item.active ? 'translate-x-6' : 'translate-x-0'}`}></div>
                                     </div>
                                 </div>
                             ))}
