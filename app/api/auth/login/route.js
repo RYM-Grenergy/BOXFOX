@@ -32,9 +32,12 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Please provide both email and password' }, { status: 400 });
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ 
+            email: { $regex: new RegExp(`^${email.trim()}$`, 'i') } 
+        });
 
         if (!user) {
+            console.log(`❌ Login failed: User not found with email [${email}]`);
             return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
         }
 

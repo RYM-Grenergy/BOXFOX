@@ -80,6 +80,7 @@ function CustomizeLabContent() {
   const [isSharing, setIsSharing] = useState(false);
   const [shareToast, setShareToast] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
+  const [logoPrompt, setLogoPrompt] = useState("");
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isPromptEnhanced, setIsPromptEnhanced] = useState(false);
   const [customText, setCustomText] = useState("");
@@ -139,8 +140,27 @@ function CustomizeLabContent() {
   });
   const [selectedFace, setSelectedFace] = useState(null);
   const [activeColor, setActiveColor] = useState("#059669");
-  const [customMode, setCustomMode] = useState("texture"); // 'texture' or 'color'
+  const [customMode, setCustomMode] = useState("texture"); // 'texture', 'color', or 'logo'
   const [boxMode, setBoxMode] = useState("mailers"); // B2B Box types
+
+  // Logo States
+  const [isGeneratingLogo, setIsGeneratingLogo] = useState(false);
+  const [boxLogos, setBoxLogos] = useState({
+    front: null,
+    back: null,
+    top: null,
+    bottom: null,
+    left: null,
+    right: null,
+  });
+  const [logoSettings, setLogoSettings] = useState({
+    front: { scale: 30, x: 50, y: 50, rotate: 0 },
+    back: { scale: 30, x: 50, y: 50, rotate: 0 },
+    top: { scale: 30, x: 50, y: 50, rotate: 0 },
+    bottom: { scale: 30, x: 50, y: 50, rotate: 0 },
+    left: { scale: 30, x: 50, y: 50, rotate: 0 },
+    right: { scale: 30, x: 50, y: 50, rotate: 0 },
+  });
 
   // Rotation State
   const [rotate, setRotate] = useState({ x: -20, y: 45 });
@@ -487,6 +507,34 @@ function CustomizeLabContent() {
     });
   };
 
+  const generateAILogo = async (logoPrompt) => {
+    if (!logoPrompt.trim()) return;
+    setIsGeneratingLogo(true);
+    try {
+        const res = await fetch('/api/generate-logo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                prompt: logoPrompt,
+                style: selectedChips.join(', '),
+                color: activeColor
+            })
+        });
+        const data = await res.json();
+        if (data.url) {
+            setBoxLogos(prev => ({ ...prev, [selectedFace || 'top']: data.url }));
+            showToast("AI Logo Generated and Applied!");
+        } else {
+            showToast(data.error || "Logo generation failed", "error");
+        }
+    } catch (err) {
+        console.error(err);
+        showToast("An error occurred during AI logo generation", "error");
+    } finally {
+        setIsGeneratingLogo(false);
+    }
+  };
+
   // Chip categories for smart prompt builder
   const chipCategories = {
     style: [
@@ -664,6 +712,25 @@ function CustomizeLabContent() {
   );
 
   if ((loading || authLoading || !product) && !isGenerating) return <LoadingScreen />;
+
+  const renderFaceLogo = (face) => {
+    if (!boxLogos[face]) return null;
+    const settings = logoSettings[face] || { scale: 30, x: 50, y: 50, rotate: 0 };
+    return (
+      <div
+        className="absolute pointer-events-none drop-shadow-xl"
+        style={{
+          left: `${settings.x}%`,
+          top: `${settings.y}%`,
+          width: `${settings.scale}%`,
+          transform: `translate(-50%, -50%) rotate(${settings.rotate}deg) translateZ(1px)`,
+          zIndex: 20
+        }}
+      >
+        <img src={boxLogos[face]} alt={`${face} logo`} className="w-full h-auto object-contain" />
+      </div>
+    );
+  };
 
   const faceStyle = (face) => {
     const settings = textureSettings[face] || { scale: 100, x: 50, y: 50 };
@@ -904,7 +971,8 @@ function CustomizeLabContent() {
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (boxTextures.front) setSelectedFace(selectedFace === "front" ? null : "front");
+                    if (customMode === "logo") setSelectedFace(selectedFace === "front" ? null : "front");
+                    else if (boxTextures.front) setSelectedFace(selectedFace === "front" ? null : "front");
                     else toggleFaceMapping("front");
                   }}
                   onMouseDown={(e) => handleFaceSpatialDown(e, "front")}
@@ -918,6 +986,7 @@ function CustomizeLabContent() {
                       Front_Panel
                     </div>
                   )}
+                  {renderFaceLogo("front")}
                 </div>
                 <div
                   style={{
@@ -928,7 +997,8 @@ function CustomizeLabContent() {
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (boxTextures.back) setSelectedFace(selectedFace === "back" ? null : "back");
+                    if (customMode === "logo") setSelectedFace(selectedFace === "back" ? null : "back");
+                    else if (boxTextures.back) setSelectedFace(selectedFace === "back" ? null : "back");
                     else toggleFaceMapping("back");
                   }}
                   onMouseDown={(e) => handleFaceSpatialDown(e, "back")}
@@ -942,6 +1012,7 @@ function CustomizeLabContent() {
                       Rear
                     </div>
                   )}
+                  {renderFaceLogo("back")}
                 </div>
                 <div
                   style={{
@@ -953,7 +1024,8 @@ function CustomizeLabContent() {
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (boxTextures.right) setSelectedFace(selectedFace === "right" ? null : "right");
+                    if (customMode === "logo") setSelectedFace(selectedFace === "right" ? null : "right");
+                    else if (boxTextures.right) setSelectedFace(selectedFace === "right" ? null : "right");
                     else toggleFaceMapping("right");
                   }}
                   onMouseDown={(e) => handleFaceSpatialDown(e, "right")}
@@ -967,6 +1039,7 @@ function CustomizeLabContent() {
                       Right
                     </div>
                   )}
+                  {renderFaceLogo("right")}
                 </div>
                 <div
                   style={{
@@ -978,7 +1051,8 @@ function CustomizeLabContent() {
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (boxTextures.left) setSelectedFace(selectedFace === "left" ? null : "left");
+                    if (customMode === "logo") setSelectedFace(selectedFace === "left" ? null : "left");
+                    else if (boxTextures.left) setSelectedFace(selectedFace === "left" ? null : "left");
                     else toggleFaceMapping("left");
                   }}
                   onMouseDown={(e) => handleFaceSpatialDown(e, "left")}
@@ -992,6 +1066,7 @@ function CustomizeLabContent() {
                       Left
                     </div>
                   )}
+                  {renderFaceLogo("left")}
                 </div>
                 <div
                   style={{
@@ -1003,7 +1078,8 @@ function CustomizeLabContent() {
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (boxTextures.top) setSelectedFace(selectedFace === "top" ? null : "top");
+                    if (customMode === "logo") setSelectedFace(selectedFace === "top" ? null : "top");
+                    else if (boxTextures.top) setSelectedFace(selectedFace === "top" ? null : "top");
                     else toggleFaceMapping("top");
                   }}
                   onMouseDown={(e) => handleFaceSpatialDown(e, "top")}
@@ -1013,10 +1089,13 @@ function CustomizeLabContent() {
                   className="absolute border border-gray-200 flex items-center justify-center overflow-hidden bg-white/50 group"
                 >
                   {!boxTextures.top && (
-                    <div className="text-[10px] font-black text-gray-300 uppercase tracking-[0.6em]">
+                    <div className="text-[10px] font-black text-gray-300 uppercase tracking-[0.6em] z-10">
                       Top_Header
                     </div>
                   )}
+
+                  {renderFaceLogo("top")}
+
                   {customText && textOnBox && (
                     <div
                       className={`absolute drop-shadow-2xl flex items-center justify-center pointer-events-none ${textStyleMap[boxTextStyle]}`}
@@ -1027,6 +1106,7 @@ function CustomizeLabContent() {
                         fontSize: `${boxTextSettings.size}px`,
                         color: boxTextColor,
                         width: '100%',
+                        zIndex: 30
                       }}
                     >
                       {customText}
@@ -1043,7 +1123,8 @@ function CustomizeLabContent() {
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (boxTextures.bottom) setSelectedFace(selectedFace === "bottom" ? null : "bottom");
+                    if (customMode === "logo") setSelectedFace(selectedFace === "bottom" ? null : "bottom");
+                    else if (boxTextures.bottom) setSelectedFace(selectedFace === "bottom" ? null : "bottom");
                     else toggleFaceMapping("bottom");
                   }}
                   onMouseDown={(e) => handleFaceSpatialDown(e, "bottom")}
@@ -1057,6 +1138,7 @@ function CustomizeLabContent() {
                       base
                     </div>
                   )}
+                  {renderFaceLogo("bottom")}
                 </div>
               </motion.div>
             </div>
@@ -1277,7 +1359,7 @@ function CustomizeLabContent() {
             {/* Section 2: Asset Library */}
             <div className="space-y-5 sm:space-y-6 md:space-y-8 pt-5 sm:pt-6 border-t border-gray-200">
               <div className="flex items-center">
-                <div className="flex p-1 sm:p-1.5 bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm w-full sm:w-auto">
+                <div className="flex p-1 sm:p-1.5 bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm w-full sm:w-auto overflow-x-auto no-scrollbar">
                   <button
                     onClick={() => setCustomMode("texture")}
                     className={`flex-1 sm:flex-none px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all active:scale-90 ${customMode === "texture"
@@ -1286,6 +1368,15 @@ function CustomizeLabContent() {
                       }`}
                   >
                     Neural_Maps
+                  </button>
+                  <button
+                    onClick={() => setCustomMode("logo")}
+                    className={`flex-1 sm:flex-none px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all active:scale-90 ${customMode === "logo"
+                      ? "bg-gray-950 text-white shadow-md"
+                      : "text-gray-500 hover:text-gray-950"
+                      }`}
+                  >
+                    Logo_Lab
                   </button>
                   <button
                     onClick={() => setCustomMode("color")}
@@ -1352,6 +1443,155 @@ function CustomizeLabContent() {
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : customMode === "logo" ? (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-4 gap-4">
+                        <label className="aspect-square border-2 border-dashed border-gray-300 bg-white rounded-[2rem] flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all group overflow-hidden">
+                            <input
+                                type="file"
+                                className="hidden"
+                                onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                            setBoxLogos(prev => ({ ...prev, [selectedFace || 'top']: reader.result }));
+                                            showToast("Logo Uploaded!");
+                                        };
+                                        reader.readAsDataURL(file);
+                                    }
+                                }}
+                            />
+                            <Upload size={24} className="text-gray-400 group-hover:text-blue-600 transition-all" />
+                        </label>
+                        {Object.entries(boxLogos).filter(([_, src]) => src).map(([face, src], idx) => (
+                            <div 
+                                key={idx} 
+                                className="relative aspect-square rounded-[2rem] border-2 border-blue-200 bg-white p-2 group overflow-hidden"
+                            >
+                                <img src={src} className="w-full h-full object-contain" />
+                                <button
+                                    onClick={() => setBoxLogos(prev => ({ ...prev, [face]: null }))}
+                                    className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center scale-0 group-hover:scale-100 transition-all"
+                                >
+                                    <X size={10} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* AI Logo Forge */}
+                    <div className="bg-blue-50/50 rounded-[2.5rem] p-6 border border-blue-100 space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                <Sparkles size={16} className="text-white" />
+                            </div>
+                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-900">AI_Logo_Forge</h4>
+                        </div>
+                        <div className="relative">
+                            <input 
+                                type="text"
+                                value={logoPrompt}
+                                onChange={(e) => setLogoPrompt(e.target.value)}
+                                placeholder="Describe your brand logo (e.g. Minimalist lotus blossom...)"
+                                className="w-full bg-white border border-blue-200 rounded-2xl px-5 py-4 text-xs font-bold outline-none focus:ring-4 focus:ring-blue-500/10 transition-all"
+                            />
+                            <button 
+                                onClick={() => generateAILogo(logoPrompt)}
+                                disabled={isGeneratingLogo || !logoPrompt.trim()}
+                                className="absolute right-2 top-2 bottom-2 px-4 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-blue-600/20"
+                            >
+                                {isGeneratingLogo ? <RefreshCw size={14} className="animate-spin" /> : <Zap size={14} />}
+                                {isGeneratingLogo ? "Forging" : "Generate"}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Logo Control Panel */}
+                    {(boxLogos[selectedFace || 'top']) && (
+                        <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm space-y-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Transform_Logic</span>
+                                <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-3 py-1 rounded-full uppercase tracking-widest">{selectedFace || 'Top'} Layer</span>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
+                                        <span>Logo Scale</span>
+                                        <span>{logoSettings[selectedFace || 'top'].scale}%</span>
+                                    </div>
+                                    <input 
+                                        type="range"
+                                        min="1"
+                                        max="100"
+                                        value={logoSettings[selectedFace || 'top'].scale}
+                                        onChange={(e) => setLogoSettings(prev => ({
+                                            ...prev,
+                                            [selectedFace || 'top']: { ...prev[selectedFace || 'top'], scale: parseInt(e.target.value) }
+                                        }))}
+                                        className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
+                                            <span>X Offset</span>
+                                            <span>{logoSettings[selectedFace || 'top'].x}%</span>
+                                        </div>
+                                        <input 
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={logoSettings[selectedFace || 'top'].x}
+                                            onChange={(e) => setLogoSettings(prev => ({
+                                                ...prev,
+                                                [selectedFace || 'top']: { ...prev[selectedFace || 'top'], x: parseInt(e.target.value) }
+                                            }))}
+                                            className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
+                                            <span>Y Offset</span>
+                                            <span>{logoSettings[selectedFace || 'top'].y}%</span>
+                                        </div>
+                                        <input 
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={logoSettings[selectedFace || 'top'].y}
+                                            onChange={(e) => setLogoSettings(prev => ({
+                                                ...prev,
+                                                [selectedFace || 'top']: { ...prev[selectedFace || 'top'], y: parseInt(e.target.value) }
+                                            }))}
+                                            className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2 pt-2 border-t border-gray-50">
+                                    <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
+                                        <span>Rotation</span>
+                                        <span>{logoSettings[selectedFace || 'top'].rotate}°</span>
+                                    </div>
+                                    <input 
+                                        type="range"
+                                        min="-180"
+                                        max="180"
+                                        value={logoSettings[selectedFace || 'top'].rotate}
+                                        onChange={(e) => setLogoSettings(prev => ({
+                                            ...prev,
+                                            [selectedFace || 'top']: { ...prev[selectedFace || 'top'], rotate: parseInt(e.target.value) }
+                                        }))}
+                                        className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
               ) : (
                 <div className="grid grid-cols-6 gap-3">

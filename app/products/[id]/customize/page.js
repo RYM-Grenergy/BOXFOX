@@ -208,34 +208,43 @@ export default function CustomizePage() {
     });
 
     return (
-        <div className="min-h-screen bg-[#020617] text-white selection:bg-emerald-500 selection:text-black">
+        <div className="min-h-screen bg-[#F0F4F8] text-[#020617] selection:bg-emerald-500 selection:text-white font-['Inter']">
             <Navbar />
             <Script src="https://js.puter.com/v2/" strategy="afterInteractive" />
 
-            <main className="pt-24 pb-8 px-6 lg:px-12 max-w-[1900px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <main className="pt-24 pb-8 px-6 lg:px-12 max-w-[1900px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                 {/* 3D SPATIAL CANVAS (LEFT) */}
-                <div className="lg:col-span-7 space-y-6">
-                    <div className="flex items-center justify-between px-6 py-4 bg-emerald-500/5 border border-emerald-500/10 rounded-3xl backdrop-blur-md shadow-[0_10px_40px_rgba(0,0,0,0.3)]">
-                        <div className="flex items-center gap-4">
-                            <div className="relative">
-                                <span className="absolute inset-0 bg-emerald-500 blur-md opacity-50 animate-pulse" />
-                                <span className="relative block w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
+                <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="lg:col-span-7 space-y-6"
+                >
+                    {/* Floating Pill Header */}
+                    <div className="flex items-center justify-between px-8 py-4 bg-white border border-slate-200 rounded-[2.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-md">
+                        <div className="flex items-center gap-5">
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                                <Box className="text-emerald-500" size={20} />
                             </div>
-                            <h2 className="text-sm font-black uppercase tracking-[0.5em] text-emerald-400 italic">Neural_Smart_Cube_v2.5_XL</h2>
+                            <div>
+                                <h1 className="text-sm font-black uppercase tracking-[0.2em] text-[#020617] font-['Space_Grotesk']">{product?.name || 'CLASSIC MAILER BG'}</h1>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Product_Type: Standard Lab Edition</p>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                            <div className="h-4 w-[1px] bg-white/10" />
-                            <div className="text-[10px] font-black text-white/40 uppercase tracking-widest flex items-center gap-2">
-                                <RefreshCw size={10} className="animate-spin-slow text-emerald-500" />
-                                SYSTEM_SYNC_ACTIVE
-                            </div>
+                        <div className="flex items-center gap-4">
+                            <button className="px-6 py-2.5 bg-slate-50 border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all flex items-center gap-2">
+                                <Check size={14} /> SAVE
+                            </button>
+                            <button className="px-6 py-2.5 bg-slate-50 border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all flex items-center gap-2">
+                                <Layout size={14} /> SHARE
+                            </button>
+                            <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)] animate-pulse" />
                         </div>
                     </div>
 
                     <div
-                        className="relative h-[780px] bg-[#030712] rounded-[5rem] border border-white/10 shadow-[0_60px_150px_rgba(0,0,0,0.8)] overflow-hidden cursor-grab active:cursor-grabbing group"
-                        style={{ background: 'radial-gradient(circle at center, #064e3b 0%, #030712 70%)' }}
+                        className="relative h-[780px] bg-white rounded-[4rem] border border-slate-100 shadow-[0_40px_100px_rgba(0,0,0,0.05)] overflow-hidden cursor-grab active:cursor-grabbing group"
+                        style={{ background: 'radial-gradient(circle at center, #ffffff 0%, #f8fafc 100%)' }}
                         onMouseDown={() => { isDragging.current = true; }}
                         onMouseMove={(e) => {
                             if (isDragging.current) setRotate(r => ({ x: r.x - e.movementY * 0.4, y: r.y + e.movementX * 0.4 }));
@@ -243,6 +252,8 @@ export default function CustomizePage() {
                         onMouseUp={() => { isDragging.current = false; }}
                         onMouseLeave={() => { isDragging.current = false; }}
                     >
+                        {/* Blueprint Grid Overlay */}
+                        <div className="absolute inset-0 pointer-events-none opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
                         {/* 3D Blueprint Engine */}
                         <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: '2500px' }}>
                             <motion.div
@@ -251,283 +262,385 @@ export default function CustomizePage() {
                                 style={{ transformStyle: 'preserve-3d', width: L, height: H, position: 'relative' }}
                             >
                                 {/* FRONT FACE */}
-                                <div className={`absolute border border-white/10 flex items-center justify-center overflow-hidden`}
+                                <div className={`absolute border border-[#064e3b]/20 flex items-center justify-center overflow-hidden`}
                                     style={{ ...faceStyle('front'), width: L, height: H, transform: `translateZ(${W / 2}px)` }}>
-                                    {!boxTextures.front && <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.5em]">FRONT</div>}
+                                    <div className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em] font-['Space_Grotesk']">FRONT_PANEL</div>
                                     {customText && <div className="absolute font-black uppercase tracking-widest text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] text-center px-4" style={{ fontSize: `${H / 5}px`, transform: 'translateZ(1px)' }}>{customText}</div>}
                                 </div>
 
                                 {/* BACK FACE */}
-                                <div className={`absolute border border-white/10 flex items-center justify-center overflow-hidden`}
+                                <div className={`absolute border border-[#064e3b]/20 flex items-center justify-center overflow-hidden`}
                                     style={{ ...faceStyle('back'), width: L, height: H, transform: `rotateY(180deg) translateZ(${W / 2}px)` }}>
-                                    {!boxTextures.back && <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.5em]">BACK</div>}
+                                    <div className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em] font-['Space_Grotesk']">BACK_PANEL</div>
                                 </div>
 
                                 {/* RIGHT FACE */}
-                                <div className={`absolute border border-white/10 flex items-center justify-center overflow-hidden`}
+                                <div className={`absolute border border-[#064e3b]/20 flex items-center justify-center overflow-hidden`}
                                     style={{ ...faceStyle('right'), width: W, height: H, transform: `rotateY(90deg) translateZ(${L / 2}px)`, left: (L - W) / 2 }}>
-                                    {!boxTextures.right && <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.5em] rotate-[-90deg]">RIGHT</div>}
+                                    <div className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em] font-['Space_Grotesk'] rotate-[-90deg]">RIGHT</div>
                                 </div>
 
                                 {/* LEFT FACE */}
-                                <div className={`absolute border border-white/10 flex items-center justify-center overflow-hidden`}
+                                <div className={`absolute border border-[#064e3b]/20 flex items-center justify-center overflow-hidden`}
                                     style={{ ...faceStyle('left'), width: W, height: H, transform: `rotateY(-90deg) translateZ(${L / 2}px)`, left: (L - W) / 2 }}>
-                                    {!boxTextures.left && <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.5em] rotate-[90deg]">LEFT</div>}
+                                    <div className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em] font-['Space_Grotesk'] rotate-[90deg]">LEFT</div>
                                 </div>
 
                                 {/* TOP FACE */}
-                                <div className={`absolute border border-white/10 flex items-center justify-center overflow-hidden`}
+                                <div className={`absolute border border-[#064e3b]/20 flex items-center justify-center overflow-hidden`}
                                     style={{ ...faceStyle('top'), width: L, height: W, transform: `rotateX(90deg) translateZ(${H / 2}px)`, top: (H - W) / 2 }}>
-                                    {!boxTextures.top && <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.5em]">TOP_LID</div>}
+                                    <div className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em] font-['Space_Grotesk']">TOP_PANEL</div>
                                     {customText && <div className="absolute font-black uppercase tracking-[0.3em] text-white italic drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)] text-center px-4" style={{ fontSize: `${L / 10}px`, transform: 'translateZ(1px)' }}>{customText}</div>}
                                 </div>
 
                                 {/* BOTTOM FACE */}
-                                <div className={`absolute border border-white/10 flex items-center justify-center overflow-hidden`}
+                                <div className={`absolute border border-[#064e3b]/20 flex items-center justify-center overflow-hidden`}
                                     style={{ ...faceStyle('bottom'), width: L, height: W, transform: `rotateX(-90deg) translateZ(${H / 2}px)`, top: (H - W) / 2 }}>
-                                    {!boxTextures.bottom && <div className="text-[10px] font-black text-white/20 uppercase tracking-[0.5em]">BOTTOM</div>}
+                                    <div className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em] font-['Space_Grotesk']">BOTTOM</div>
                                 </div>
                             </motion.div>
                         </div>
 
                         {/* HUD Elements */}
-                        <div className="absolute top-10 left-10 pointer-events-none space-y-1">
-                            <div className="text-[11px] font-black uppercase tracking-[0.5em] text-white flex items-center gap-3 italic">
-                                <Layers size={14} className="text-emerald-500" /> Neural_Texture_Wrapper
+                        <div className="absolute top-10 left-10 pointer-events-none space-y-4">
+                            <div className="px-5 py-2.5 bg-white border border-slate-200 rounded-full flex items-center gap-3 shadow-xl backdrop-blur-md">
+                                <Maximize2 size={12} className="text-emerald-500" />
+                                <span className="text-[9px] font-black tracking-widest text-[#020617] uppercase font-['Space_Grotesk']">SCALE_CONTEXT_1:1</span>
                             </div>
                         </div>
 
-                        <div className="absolute bottom-12 left-10 right-10 flex items-center justify-between pointer-events-none">
-                            <div className="flex gap-10">
-                                <div className="text-center">
-                                    <p className="text-[8px] font-black text-emerald-500/40 uppercase mb-1 tracking-widest">Dimension_L</p>
-                                    <p className="text-2xl font-black italic">{dimensions.l}"</p>
+                        <div className="absolute bottom-12 left-10 right-10 flex items-end justify-between pointer-events-none">
+                            <div className="space-y-6">
+                                <div className="flex gap-12">
+                                    <div className="space-y-1">
+                                        <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest font-['Space_Grotesk']">L_DIM</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <p className="text-4xl font-black italic tracking-tighter text-[#020617] font-['Space_Grotesk']">{dimensions.l.toFixed(1)}</p>
+                                            <span className="text-xs font-bold text-slate-400">in</span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest font-['Space_Grotesk']">W_DIM</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <p className="text-4xl font-black italic tracking-tighter text-[#020617] font-['Space_Grotesk']">{dimensions.w.toFixed(1)}</p>
+                                            <span className="text-xs font-bold text-slate-400">in</span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest font-['Space_Grotesk']">H_DIM</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <p className="text-4xl font-black italic tracking-tighter text-[#020617] font-['Space_Grotesk']">{dimensions.h.toFixed(1)}</p>
+                                            <span className="text-xs font-bold text-slate-400">in</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="text-center">
-                                    <p className="text-[8px] font-black text-emerald-500/40 uppercase mb-1 tracking-widest">Dimension_W</p>
-                                    <p className="text-2xl font-black italic">{dimensions.w}"</p>
-                                </div>
-                                <div className="text-center">
-                                    <p className="text-[8px] font-black text-emerald-500/40 uppercase mb-1 tracking-widest">Dimension_H</p>
-                                    <p className="text-2xl font-black italic">{dimensions.h}"</p>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-[0.2em] font-['Space_Grotesk']">REAL-TIME RENDERING ACTIVE</span>
                                 </div>
                             </div>
-                            <div className="px-6 py-2.5 bg-black/60 border border-emerald-500/30 rounded-2xl flex items-center gap-3 backdrop-blur-xl">
-                                <RotateCw size={14} className="text-emerald-500 animate-spin-slow" />
-                                <span className="text-[10px] font-black tracking-widest text-emerald-400 uppercase italic">Interactive_Lab</span>
+
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="w-24 h-24 rounded-full bg-white border border-slate-100 flex flex-col items-center justify-center gap-2 shadow-2xl backdrop-blur-md">
+                                    <RefreshCw size={14} className="text-[#020617] opacity-60 animate-spin-slow" />
+                                    <span className="text-[7px] font-black text-[#020617]/40 uppercase tracking-widest text-center leading-tight font-['Space_Grotesk']">DRAG_TO_INSPECT</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* CONTROL PANEL (RIGHT) */}
-                <div className="lg:col-span-5 space-y-8 h-fit lg:sticky lg:top-24">
-                    <div className="bg-white/5 rounded-[3rem] p-10 border border-white/5 shadow-3xl space-y-8 backdrop-blur-md">
-                        {/* Section 1: Dimensions */}
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-4">
-                                <Ruler size={18} className="text-emerald-500" />
-                                <h3 className="text-xs font-black uppercase tracking-[0.3em] italic">01_Spatial_Geometry</h3>
+                <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="lg:col-span-5 space-y-6 h-fit lg:sticky lg:top-24 font-['Space_Grotesk']"
+                >
+                    <div className="bg-white rounded-[3.5rem] p-10 border border-slate-100 shadow-[0_20px_60px_rgba(0,0,0,0.03)] space-y-10">
+                        {/* Section 1: GEOMETRY_CORE */}
+                        <div className="space-y-8">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                                        <Scissors size={18} className="text-emerald-500" />
+                                    </div>
+                                    <h3 className="text-xs font-black uppercase tracking-[0.3em] font-['Space_Grotesk']">GEOMETRY_CORE</h3>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="px-3 py-1 bg-[#020617] text-white rounded-md text-[7px] font-black uppercase tracking-widest">IMPERIAL_ACTIVE</div>
+                                    <div className="px-3 py-1 bg-emerald-500 text-white rounded-md text-[7px] font-black uppercase tracking-widest flex items-center gap-2">
+                                        <CheckCircle2 size={10} /> IN
+                                    </div>
+                                    <div className="px-3 py-1 bg-slate-100 text-slate-400 rounded-md text-[7px] font-black uppercase tracking-widest">MM</div>
+                                </div>
                             </div>
+
                             <div className="grid grid-cols-3 gap-6">
-                                {['l', 'w', 'h'].map(d => (
-                                    <div key={d} className="space-y-2">
-                                        <p className="text-[9px] font-black text-white/20 uppercase tracking-widest px-1">{d.toUpperCase()}</p>
-                                        <input
-                                            type="number"
-                                            value={dimensions[d]}
-                                            onChange={(e) => setDimensions({ ...dimensions, [d]: parseFloat(e.target.value) || 1 })}
-                                            className="w-full h-16 bg-[#030712] border border-white/10 rounded-2xl px-6 text-xl font-black focus:border-emerald-500 outline-none transition-all shadow-inner text-center"
-                                        />
+                                {[['l', 'LENGTH'], ['w', 'WIDTH'], ['h', 'HEIGHT']].map(([key, label]) => (
+                                    <div key={key} className="space-y-6 text-center">
+                                        <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 shadow-inner group hover:border-emerald-200 transition-all">
+                                            <input
+                                                type="number"
+                                                value={dimensions[key]}
+                                                onChange={(e) => setDimensions({ ...dimensions, [key]: parseFloat(e.target.value) || 1 })}
+                                                className="w-full bg-transparent text-4xl font-black text-[#020617] outline-none text-center font-['Space_Grotesk']"
+                                            />
+                                        </div>
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em]">{label}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Section 2: Quantity Selection */}
-                        <div className="space-y-6 pt-4 border-t border-white/5">
-                            <div className="flex items-center gap-4">
-                                <Box size={18} className="text-emerald-500" />
-                                <h3 className="text-xs font-black uppercase tracking-[0.3em] italic">02_Quantity_Selection</h3>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {[10, 20, 30, 100, 200, 300, 500, 1000].map(q => (
-                                    <button
-                                        key={q}
-                                        onClick={() => setQuantity(q)}
-                                        className={`flex-[1_1_0%] min-w-[60px] py-3 rounded-xl border font-black text-xs transition-all ${quantity === q ? 'bg-emerald-500 text-black border-emerald-500 shadow-lg' : 'bg-[#030712] text-white/40 border-white/10 hover:border-emerald-500/40 hover:text-white'}`}
-                                    >
-                                        {q}
-                                    </button>
-                                ))}
-                                <div className="relative flex-[2_2_0%] min-w-[100px]">
+                        {/* Section 2: ORDER_QUANTITY */}
+                        <div className="space-y-8 p-8 bg-emerald-50/30 border border-emerald-50 rounded-[2.5rem]">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
+                                        <ShoppingCart size={14} className="text-white" />
+                                    </div>
+                                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-800">ORDER_QUANTITY</h3>
+                                </div>
+                                <div className="flex items-center gap-3 bg-white border border-emerald-100 px-4 py-2 rounded-full shadow-sm">
                                     <input
                                         type="number"
                                         value={quantity}
                                         onChange={(e) => setQuantity(Math.max(10, parseInt(e.target.value) || 10))}
-                                        className="w-full h-full py-3 px-4 rounded-xl bg-[#030712] border border-white/10 font-black text-xs text-white placeholder-white/20 focus:border-emerald-500 outline-none transition-all"
-                                        placeholder="Custom..."
-                                        min={10}
+                                        className="w-12 bg-transparent text-sm font-black text-[#020617] outline-none text-center"
                                     />
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase font-bold text-white/20">MOQ: 10</span>
+                                    <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">UNITS</span>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-6">
+                                <button onClick={() => setQuantity(Math.max(10, quantity - 10))} className="w-10 h-10 rounded-full border border-emerald-200 bg-white flex items-center justify-center text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
+                                    <Minus size={14} />
+                                </button>
+                                <div className="flex-1 relative flex items-center h-10">
+                                    <input 
+                                        type="range"
+                                        min="10"
+                                        max="5000"
+                                        step="10"
+                                        value={quantity}
+                                        onChange={(e) => setQuantity(parseInt(e.target.value))}
+                                        className="w-full h-1.5 bg-emerald-100 rounded-full appearance-none cursor-pointer accent-emerald-500"
+                                    />
+                                </div>
+                                <button onClick={() => setQuantity(quantity + 10)} className="w-10 h-10 rounded-full border border-emerald-200 bg-white flex items-center justify-center text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-sm">
+                                    <Plus size={14} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Stats Readout */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-6 bg-slate-50 border border-slate-100 rounded-3xl">
+                                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">VOL_CUBIC_IN</p>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-xl font-black text-[#020617]">{(dimensions.l * dimensions.w * dimensions.h).toFixed(1)}</span>
+                                    <span className="text-[10px] font-bold text-slate-300 italic">IN³</span>
+                                </div>
+                            </div>
+                            <div className="p-6 bg-slate-50 border border-slate-100 rounded-3xl">
+                                <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">SURF_AREA</p>
+                                <div className="flex items-baseline gap-1 border-l border-slate-200 pl-4">
+                                    <span className="text-xl font-black text-[#020617]">{currentSA.toFixed(1)}</span>
+                                    <span className="text-[10px] font-bold text-slate-300 italic">IN²</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Section 3: Asset Library & Color Lab */}
-                        <div className="space-y-6 pt-4 border-t border-white/5">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="flex p-1 bg-white/5 rounded-xl border border-white/10">
-                                        <button
-                                            onClick={() => setCustomMode('texture')}
-                                            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${customMode === 'texture' ? 'bg-emerald-500 text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
-                                        >
-                                            Neural_Maps
-                                        </button>
-                                        <button
-                                            onClick={() => setCustomMode('color')}
-                                            className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${customMode === 'color' ? 'bg-emerald-500 text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
-                                        >
-                                            Solid_Lab
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col items-end">
-                                    <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest leading-none">Mapping_Active</span>
-                                    <span className="text-[10px] font-black text-white/20 uppercase">{customMode === 'texture' ? `${assetPool.length}/3 Assets` : activeColor}</span>
-                                </div>
+                        {/* Section 3: Tabs */}
+                        <div className="space-y-10">
+                            <div className="flex p-1.5 bg-slate-100 rounded-2xl border border-slate-200">
+                                <button
+                                    onClick={() => setCustomMode('texture')}
+                                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${customMode === 'texture' ? 'bg-[#020617] text-white shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    NEURAL_MAPS
+                                </button>
+                                <button
+                                    onClick={() => setCustomMode('color')}
+                                    className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${customMode === 'color' ? 'bg-white text-[#020617] border border-slate-200 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    SOLID_LAB
+                                </button>
                             </div>
 
                             {customMode === 'texture' ? (
-                                <div className="grid grid-cols-4 gap-4">
-                                    <label className="aspect-square border-2 border-dashed border-emerald-500/20 bg-emerald-500/5 rounded-3xl flex items-center justify-center cursor-pointer hover:border-emerald-500/40 transition-all group relative overflow-hidden">
-                                        <input type="file" className="hidden" onChange={handleFileUpload} />
-                                        <Plus size={24} className="text-emerald-500/40 group-hover:text-emerald-500 transition-all" />
-                                    </label>
-                                    {assetPool.map((asset, idx) => (
-                                        <div
-                                            key={idx}
-                                            onClick={() => setActiveAssetIndex(idx)}
-                                            className={`relative aspect-square rounded-3xl overflow-hidden cursor-pointer border-2 transition-all ${activeAssetIndex === idx ? 'border-emerald-500 scale-95 shadow-[0_0_20px_rgba(16,185,129,0.3)]' : 'border-white/5 opacity-40 hover:opacity-100'}`}
-                                        >
-                                            <img src={asset} className="w-full h-full object-cover" />
-                                            {activeAssetIndex === idx && (
-                                                <div className="absolute inset-0 bg-emerald-500/10 flex items-center justify-center">
-                                                    <div className="bg-emerald-500 rounded-full p-1"><Check size={12} className="text-black" /></div>
-                                                </div>
-                                            )}
+                                <div className="space-y-10">
+                                    {/* AI_TEXTURE_FORGE */}
+                                    <div className="space-y-8">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <Sparkles size={16} className="text-emerald-500" />
+                                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] font-['Space_Grotesk'] text-[#020617]">AI_TEXTURE_FORGE</h3>
+                                            </div>
+                                            <div className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-md text-[7px] font-black border border-emerald-100">NEURAL_V2.5</div>
                                         </div>
-                                    ))}
+
+                                        <div className="bg-slate-50 border border-slate-100 rounded-[2rem] p-1 overflow-hidden">
+                                            <div className="flex bg-white rounded-[1.8rem] border border-slate-100 shadow-sm p-0.5">
+                                                {['STYLE', 'INDUSTRY', 'HISTORY'].map(tab => (
+                                                    <button key={tab} className={`flex-1 py-3 rounded-[1.5rem] text-[9px] font-black uppercase tracking-widest transition-all ${tab === 'STYLE' ? 'bg-[#020617] text-white' : 'text-slate-400 hover:text-slate-600'}`}>
+                                                        {tab}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <div className="p-6 flex flex-wrap gap-2.5">
+                                                {[
+                                                    'Luxury Premium', 'Eco & Sustainable', 'Bold & Playful', 'Minimal & Clean',
+                                                    'Festive & Celebratory', 'Professional Corporate', 'Rustic Artisan', 'Modern High-End',
+                                                    'Vintage Classic', 'Ultra Sleek'
+                                                ].map(style => (
+                                                    <button 
+                                                        key={style}
+                                                        onClick={() => setAiPrompt(prev => prev ? `${prev}, ${style}` : style)}
+                                                        className="px-5 py-2.5 bg-white border border-slate-200 rounded-full text-[9px] font-bold text-slate-500 hover:border-emerald-400 hover:text-emerald-600 transition-all shadow-sm"
+                                                    >
+                                                        {style}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between px-2">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                                                        <Search size={10} className="text-white" />
+                                                    </div>
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-600">YOUR IDEA</span>
+                                                </div>
+                                                <span className="text-[7px] font-black px-2 py-0.5 bg-slate-100 text-slate-400 rounded uppercase tracking-widest">OPTIONAL</span>
+                                            </div>
+                                            <textarea
+                                                placeholder="Describe your box design... (e.g. 'minimalist white mailer with gold foil logo and clean typography')"
+                                                value={aiPrompt}
+                                                onChange={(e) => setAiPrompt(e.target.value)}
+                                                className="w-full h-32 bg-slate-50 border border-slate-100 rounded-[2rem] p-8 text-xs font-medium text-slate-600 italic placeholder:text-slate-300 focus:border-emerald-500 outline-none resize-none transition-all"
+                                            />
+                                        </div>
+
+                                        <div className="flex items-center justify-between px-4 py-6 border-t border-slate-100">
+                                            <div className="flex items-center gap-3">
+                                                <Type size={14} className="text-slate-400" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">BRAND TEXT ON BOX</span>
+                                            </div>
+                                            <button className="w-12 h-6 bg-slate-200 rounded-full relative transition-all hover:bg-slate-300">
+                                                <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm" />
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <button
+                                                onClick={async () => {
+                                                    if (!aiPrompt || !window.puter) return;
+                                                    setIsGenerating(true);
+                                                    try {
+                                                        const fullPrompt = `High-resolution ultra-seamless flat material pattern graphic for packaging. Theme: ${aiPrompt}. Luxury texture, perfectly tileable, 8k digital art.`;
+                                                        const img = await window.puter.ai.txt2img(fullPrompt);
+                                                        smartApplyAI(img.src);
+                                                    } catch (err) {
+                                                        console.error("Neural Render Error:", err);
+                                                    } finally { setIsGenerating(false); }
+                                                }}
+                                                disabled={isGenerating || !aiPrompt}
+                                                className="w-full h-20 bg-slate-300 text-white rounded-[2rem] font-black uppercase text-[12px] tracking-[0.4em] flex items-center justify-center gap-4 hover:bg-[#020617] hover:text-white transition-all shadow-xl active:scale-95 disabled:opacity-50"
+                                            >
+                                                {isGenerating ? <RefreshCw className="animate-spin" /> : <><Sparkles size={18} /> IGNITE_FORGE</>}
+                                            </button>
+                                            <p className="text-[8px] font-black text-slate-300 uppercase tracking-widest text-center">3 GENERATIONS LEFT TODAY</p>
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
-                                <div className="flex flex-wrap gap-2.5">
-                                    {['#000000', '#FFFFFF', '#059669', '#1D4ED8', '#B91C1C', '#D97706', '#7C3AED', '#DB2777', '#4B5563', '#111827'].map(color => (
-                                        <button
-                                            key={color}
-                                            onClick={() => setActiveColor(color)}
-                                            style={{ backgroundColor: color }}
-                                            className={`w-10 h-10 rounded-xl border-2 transition-all ${activeColor === color ? 'border-emerald-500 scale-90 ring-4 ring-emerald-500/20' : 'border-white/10 hover:border-white/30'}`}
-                                        />
-                                    ))}
-                                    <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center relative group overflow-hidden">
-                                        <input
-                                            type="color"
-                                            value={activeColor}
-                                            onChange={(e) => setActiveColor(e.target.value)}
-                                            className="absolute inset-0 opacity-0 cursor-pointer scale-150"
-                                        />
-                                        <Plus size={16} className="text-white/20" />
-                                    </div>
-                                </div>
-                            )}
-
-                            {(assetPool.length > 0 || customMode === 'color') && (
-                                <div className="space-y-5 pt-6 bg-white/5 rounded-[3rem] p-8 border border-white/5 backdrop-blur-sm">
-                                    <div className="flex items-center justify-between px-2">
-                                        <div className="flex flex-col">
-                                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Face_Mapping_Protocol</p>
-                                            <p className="text-[8px] font-bold text-white/20 uppercase tracking-tighter">Click side to apply {customMode}</p>
-                                        </div>
-                                        {customMode === 'color' && <div className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: activeColor }} />}
-                                    </div>
-                                    <div className="grid grid-cols-3 gap-3">
-                                        {['front', 'back', 'left', 'right', 'top', 'bottom'].map(face => (
+                                <div className="space-y-8">
+                                    <div className="flex flex-wrap gap-3">
+                                        {['#000000', '#FFFFFF', '#059669', '#1D4ED8', '#B91C1C', '#D97706', '#7C3AED', '#DB2777', '#4B5563', '#111827'].map(color => (
                                             <button
-                                                key={face}
-                                                onClick={() => toggleFaceMapping(face)}
-                                                className={`px-4 py-4 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all border ${(customMode === 'texture' && boxTextures[face] === assetPool[activeAssetIndex] && boxTextures[face]) ||
-                                                    (customMode === 'color' && boxColors[face] === activeColor)
-                                                    ? 'bg-emerald-500 text-black border-emerald-500 shadow-lg'
-                                                    : 'bg-black/40 text-white/40 border-white/5 hover:border-emerald-500/40'
-                                                    }`}
-                                            >
-                                                {face}
-                                            </button>
+                                                key={color}
+                                                onClick={() => setActiveColor(color)}
+                                                style={{ backgroundColor: color }}
+                                                className={`w-12 h-12 rounded-2xl border-2 transition-all ${activeColor === color ? 'border-emerald-500 scale-90 ring-4 ring-emerald-50/50' : 'border-white hover:border-slate-200 shadow-sm'}`}
+                                            />
                                         ))}
+                                        <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center relative group overflow-hidden">
+                                            <input
+                                                type="color"
+                                                value={activeColor}
+                                                onChange={(e) => setActiveColor(e.target.value)}
+                                                className="absolute inset-0 opacity-0 cursor-pointer scale-150"
+                                            />
+                                            <Plus size={16} className="text-slate-400" />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 space-y-6">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">APPLY TO SIDES</p>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {['front', 'back', 'left', 'right', 'top', 'bottom'].map(face => (
+                                                <button
+                                                    key={face}
+                                                    onClick={() => toggleFaceMapping(face)}
+                                                    className={`px-4 py-4 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all border ${
+                                                        boxColors[face] === activeColor
+                                                        ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg'
+                                                        : 'bg-white text-slate-400 border-slate-200 hover:border-emerald-400'
+                                                    }`}
+                                                >
+                                                    {face}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             )}
                         </div>
+                    </div>
 
-                        {/* Section 3: Neural Generation */}
-                        <div className="space-y-6 pt-4 border-t border-white/5 relative">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <Sparkles size={18} className="text-emerald-500" />
-                                    <h3 className="text-xs font-black uppercase tracking-[0.3em] italic">03_Neural_Smart_Render</h3>
+                    {/* Final Summary Card */}
+                    <div className="bg-emerald-50 rounded-[3.5rem] p-4 border border-emerald-100 shadow-[0_30px_80px_rgba(0,0,0,0.05)] overflow-hidden">
+                        <div className="bg-white rounded-[3rem] p-10 space-y-8">
+                            <div className="flex items-center gap-5">
+                                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                                    <Box className="text-emerald-500" size={20} />
                                 </div>
-                                <div className="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-md text-[8px] font-black border border-emerald-500/20">AUTO_WRAP_ACTIVE</div>
+                                <div>
+                                    <h2 className="text-xl font-black text-[#020617] tracking-tight">Custom Designed Box</h2>
+                                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mt-1">{dimensions.l}IN × {dimensions.w}IN × {dimensions.h}IN</p>
+                                </div>
                             </div>
 
-                            <textarea
-                                placeholder="Neural instructions... (e.g. Royal emerald velvet with silver calligraphy...)"
-                                value={aiPrompt}
-                                onChange={(e) => setAiPrompt(e.target.value)}
-                                className="w-full h-28 bg-[#030712] border border-white/10 rounded-2xl p-6 text-sm italic placeholder:text-white/10 focus:border-emerald-500 outline-none resize-none transition-all"
-                            />
-
-                            <button
-                                onClick={async () => {
-                                    if (!aiPrompt || !window.puter) return;
-                                    setIsGenerating(true);
-                                    try {
-                                        // THE "CLEAN PATTERN" ARCHITECT: Stripping text and logos to allow custom text to shine
-                                        const fullPrompt = `High-resolution ultra-seamless flat material pattern graphic for packaging. 
-                                            Theme: ${aiPrompt}. 
-                                            Visuals: Continuous professional luxury texture, edge-to-edge design, no perspective, flat wallpaper style. 
-                                            Styling: ${aiPrompt.toLowerCase().includes('luxury') ? 'intricate gold foil filigree, deep velvet colors, high-contrast embossing' : 'clean minimalist geometric shapes, organic paper grain'}. 
-                                            Technical: Perfectly tileable, sharp focus, 8k digital art, top-down view, centered composition. 
-                                            Negative Prompt: text, logo, words, letters, font, typography, watermark, 3D box, perspective, shadow, box object, floor, background, room.`;
-
-                                        const img = await window.puter.ai.txt2img(fullPrompt);
-                                        smartApplyAI(img.src);
-                                        setViewMode('3D');
-                                    } catch (err) {
-                                        console.error("Neural Render Error:", err);
-                                    } finally { setIsGenerating(false); }
-                                }}
-                                disabled={isGenerating || !aiPrompt}
-                                className="w-full h-20 bg-white text-black rounded-2xl font-black uppercase text-[12px] tracking-[0.4em] flex items-center justify-center gap-4 hover:bg-emerald-500 hover:text-white transition-all shadow-[0_20px_50px_rgba(0,0,0,0.5)] active:scale-95 disabled:opacity-20"
-                            >
-                                {isGenerating ? <RefreshCw className="animate-spin" /> : <><Zap size={18} /> Ignite_Neural_Wrapper</>}
+                            <div className="grid grid-cols-3 gap-1 border-y border-slate-100 py-6">
+                                <div className="text-center space-y-2">
+                                    <p className="text-[7px] font-black text-slate-300 uppercase tracking-[0.2em]">QTY</p>
+                                    <p className="text-2xl font-black text-[#020617]">{quantity}</p>
+                                </div>
+                                <div className="text-center space-y-2 border-x border-slate-100 px-4">
+                                    <p className="text-[7px] font-black text-slate-300 uppercase tracking-[0.2em]">PRICE</p>
+                                    <p className="text-2xl font-black text-[#020617]">₹{calculatedUnitPrice}</p>
+                                </div>
+                                <div className="text-center space-y-2">
+                                    <p className="text-[7px] font-black text-slate-300 uppercase tracking-[0.2em]">TOTAL</p>
+                                    <p className="text-2xl font-black text-[#020617]">₹{(calculatedUnitPrice * quantity).toLocaleString('en-IN')}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-10 flex items-center justify-between">
+                            <div className="space-y-0.5">
+                                <p className="text-[8px] font-black text-emerald-800 uppercase tracking-[0.4em]">EST. TOTAL COST</p>
+                                <h2 className="text-5xl font-black tracking-tighter text-emerald-900 font-['Space_Grotesk']">₹{(calculatedUnitPrice * quantity).toLocaleString('en-IN')}</h2>
+                            </div>
+                            <button onClick={() => addToCart(product, quantity)} className="h-24 px-10 bg-[#020617] text-white rounded-[2.5rem] font-black uppercase text-[11px] tracking-[0.2em] flex items-center gap-5 hover:scale-[1.02] transition-all shadow-2xl active:scale-95 group">
+                                <ShoppingCart size={24} /> 
+                                <span className="border-l border-white/20 pl-5">ADD_TO_BASKET</span>
                             </button>
                         </div>
                     </div>
-
-                    {/* Cart Trigger */}
-                    <div className="bg-emerald-500 rounded-[3rem] p-10 text-black flex items-center justify-between shadow-[0_45px_100px_rgba(16,185,129,0.3)] relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                        <div className="space-y-1">
-                            <p className="text-[10px] font-black uppercase tracking-[0.4em] leading-none opacity-60">Unit_Price_EST</p>
-                            <h2 className="text-5xl font-black italic tracking-tighter">₹{calculatedUnitPrice}</h2>
-                        </div>
-                        <button onClick={() => addToCart(product, quantity)} className="h-20 px-12 bg-black text-white rounded-[2rem] font-black uppercase text-[10px] tracking-[0.3em] flex items-center gap-4 hover:scale-105 transition-all shadow-2xl active:scale-95">
-                            <ShoppingCart size={22} /> Deploy_to_Cart
-                        </button>
-                    </div>
-                </div>
-            </main >
+                </motion.div>
+            </main>
 
             <style jsx global>{`
                 .animate-spin-slow { animation: spin 10s linear infinite; }
