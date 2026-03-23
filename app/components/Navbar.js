@@ -18,6 +18,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
+import AnnouncementBar from "./AnnouncementBar";
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -74,13 +75,13 @@ export default function Navbar() {
     <>
       {/* ─── Navbar ──────────────────────────────────────────────────────── */}
       <nav className="fixed top-0 left-0 right-0 z-[100] w-full">
+        <AnnouncementBar />
 
         {/* Floating pill wrapper */}
-        <div className={`mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          isScrolled
+        <div className={`mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isScrolled
             ? "w-[92%] xl:max-w-[1280px] bg-white/96 backdrop-blur-2xl border border-gray-200/60 shadow-[0_8px_40px_rgba(0,0,0,0.10)] rounded-full py-2 px-5 lg:px-8 mt-3"
             : "w-full bg-white border-b border-gray-100 py-0 px-4 sm:px-8 lg:px-14"
-        }`}>
+          }`}>
           <div className="flex items-center justify-between h-14">
 
             {/* ── Logo — always left ── */}
@@ -98,13 +99,12 @@ export default function Navbar() {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`relative px-3 xl:px-4 py-1.5 text-[10.5px] xl:text-[11.5px] font-black uppercase tracking-[0.18em] transition-all duration-300 group active:scale-95 rounded-lg ${
-                    pathname === link.href
+                  className={`relative px-3 xl:px-4 py-1.5 text-[10.5px] xl:text-[11.5px] font-black uppercase tracking-[0.18em] transition-all duration-300 group active:scale-95 rounded-lg ${pathname === link.href
                       ? "text-emerald-600"
                       : link.isSpecial
-                      ? "text-emerald-500"
-                      : "text-gray-400 hover:text-gray-900"
-                  }`}
+                        ? "text-emerald-500"
+                        : "text-gray-400 hover:text-gray-900"
+                    }`}
                 >
                   <span className="relative z-10">{link.label}</span>
                   <div className="absolute inset-0 bg-transparent group-hover:bg-gray-900/[0.04] rounded-lg transition-all duration-200" />
@@ -121,71 +121,70 @@ export default function Navbar() {
 
             {/* ── Right Actions ── */}
             <div className="flex items-center gap-1 sm:gap-1.5">
-                {/* Search */}
-                <button
-                  onClick={() => setSearchOpen(!searchOpen)}
-                  aria-label="Search"
-                  className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-600 hover:text-gray-900 duration-200"
-                >
-                  <Search size={15} />
-                </button>
+              {/* Search */}
+              <button
+                onClick={() => setSearchOpen(!searchOpen)}
+                aria-label="Search"
+                className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-600 hover:text-gray-900 duration-200"
+              >
+                <Search size={15} />
+              </button>
 
-                {/* Login / Account */}
-                <div className="relative group hidden sm:flex items-center">
-                  <Link
-                    href={user ? "/account" : `/login?redirect=${encodeURIComponent(pathname)}`}
-                    className={`flex items-center gap-2 px-3.5 h-8 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
-                      user
-                        ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/60"
-                        : "bg-gray-950 text-white hover:bg-emerald-600 shadow-lg shadow-gray-200/80"
+              {/* Login / Account */}
+              <div className="relative group hidden sm:flex items-center">
+                <Link
+                  href={user ? "/account" : `/login?redirect=${encodeURIComponent(pathname)}`}
+                  className={`flex items-center gap-2 px-3.5 h-8 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${user
+                      ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/60"
+                      : "bg-gray-950 text-white hover:bg-emerald-600 shadow-lg shadow-gray-200/80"
                     }`}
-                  >
-                    <User size={13} />
-                    <span className="hidden lg:inline">{user ? "Account" : "Login"}</span>
-                  </Link>
-
-                  {user && (
-                    <div className="absolute right-0 top-full mt-2.5 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200]">
-                      <Link href="/account" className="block px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 hover:bg-gray-50 transition-colors rounded-xl mx-1">
-                        My Dashboard
-                      </Link>
-                      <Link href="/account?tab=wishlist" className="block px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 hover:bg-gray-50 transition-colors rounded-xl mx-1">
-                        My Wishlist
-                      </Link>
-                      <div className="h-px bg-gray-100 mx-4 my-1" />
-                      <button
-                        onClick={logout}
-                        className="w-full text-left px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors rounded-xl mx-0"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Cart */}
-                <button
-                  onClick={() => setIsCartOpen(true)}
-                  aria-label="Open Shopping Cart"
-                  className="relative flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-600 hover:text-gray-900 duration-200"
                 >
-                  <ShoppingCart size={16} />
-                  {cart.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-emerald-500 text-white text-[8px] font-black rounded-full h-4 w-4 flex items-center justify-center ring-2 ring-white">
-                      {cart.length}
-                    </span>
-                  )}
-                </button>
+                  <User size={13} />
+                  <span className="hidden lg:inline">{user ? "Account" : "Login"}</span>
+                </Link>
 
-                {/* Mobile Hamburger */}
-                <button
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  aria-label={menuOpen ? "Close Menu" : "Open Menu"}
-                  className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-700 duration-200 ml-1"
-                >
-                  {menuOpen ? <X size={18} /> : <Menu size={18} />}
-                </button>
+                {user && (
+                  <div className="absolute right-0 top-full mt-2.5 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-[200]">
+                    <Link href="/account" className="block px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 hover:bg-gray-50 transition-colors rounded-xl mx-1">
+                      My Dashboard
+                    </Link>
+                    <Link href="/account?tab=wishlist" className="block px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-emerald-600 hover:bg-gray-50 transition-colors rounded-xl mx-1">
+                      My Wishlist
+                    </Link>
+                    <div className="h-px bg-gray-100 mx-4 my-1" />
+                    <button
+                      onClick={logout}
+                      className="w-full text-left px-5 py-2.5 text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors rounded-xl mx-0"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
               </div>
+
+              {/* Cart */}
+              <button
+                onClick={() => setIsCartOpen(true)}
+                aria-label="Open Shopping Cart"
+                className="relative flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-600 hover:text-gray-900 duration-200"
+              >
+                <ShoppingCart size={16} />
+                {cart.length > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 bg-emerald-500 text-white text-[8px] font-black rounded-full h-4 w-4 flex items-center justify-center ring-2 ring-white">
+                    {cart.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Mobile Hamburger */}
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-label={menuOpen ? "Close Menu" : "Open Menu"}
+                className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-700 duration-200 ml-1"
+              >
+                {menuOpen ? <X size={18} /> : <Menu size={18} />}
+              </button>
+            </div>
           </div>
         </div>
 

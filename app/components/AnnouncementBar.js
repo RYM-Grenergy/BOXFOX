@@ -38,7 +38,7 @@ export default function AnnouncementBar() {
 
 
   return (
-    <div className="w-full mt-14 bg-gray-950 text-white border-b border-white/10 overflow-hidden">
+    <div className="w-full bg-gray-950 text-white border-b border-white/10 overflow-hidden">
       <div className="py-2.5 flex whitespace-nowrap animate-marquee">
         <div className="flex shrink-0">
           {[...Array(6)].map((_, i) => (

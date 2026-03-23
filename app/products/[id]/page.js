@@ -231,14 +231,6 @@ export default function ProductPage() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <Link
-                                        href={`/customize?length=${product.dimensions?.length || 12}&width=${product.dimensions?.width || 8}&height=${product.dimensions?.height || 4}&unit=${product.dimensions?.unit || 'inch'}`}
-                                        className="w-full py-6 bg-emerald-500 text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.3em] flex flex-col items-center justify-center gap-1 hover:bg-emerald-400 transition-all shadow-[0_20px_40px_rgba(16,185,129,0.3)] active:scale-95"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Sparkles size={18} /> AI Design & Custom Size
-                                        </div>
-                                    </Link>
 
                                     <div className="pt-2">
                                         <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-2">Select Quantity (Standard Size)</p>

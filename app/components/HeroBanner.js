@@ -105,12 +105,12 @@ export default function HeroBanner() {
   return (
 
     <section
-      className="relative w-full bg-[#f4f4f2] overflow-hidden min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-56px)]"
+      className="relative w-full bg-[#f4f4f2] overflow-hidden min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-90px)]"
     >
 
       {/* ── Slider fills the full hero area ── */}
       <div
-        className="relative w-full h-full group min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-56px)]"
+        className="relative w-full h-full group min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-90px)]"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -135,7 +135,7 @@ export default function HeroBanner() {
               if (swipe < -swipeConfidenceThreshold) paginate(1);
               else if (swipe > swipeConfidenceThreshold) paginate(-1);
             }}
-            className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-56px)]"
+            className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-90px)]"
           >
             {banners[currentIndex].type === "image" ? (
               <>

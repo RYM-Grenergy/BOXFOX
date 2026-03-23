@@ -1481,32 +1481,6 @@ function CustomizeLabContent() {
                         ))}
                     </div>
 
-                    {/* AI Logo Forge */}
-                    <div className="bg-blue-50/50 rounded-[2.5rem] p-6 border border-blue-100 space-y-4">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                                <Sparkles size={16} className="text-white" />
-                            </div>
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-900">AI_Logo_Forge</h4>
-                        </div>
-                        <div className="relative">
-                            <input 
-                                type="text"
-                                value={logoPrompt}
-                                onChange={(e) => setLogoPrompt(e.target.value)}
-                                placeholder="Describe your brand logo (e.g. Minimalist lotus blossom...)"
-                                className="w-full bg-white border border-blue-200 rounded-2xl px-5 py-4 text-xs font-bold outline-none focus:ring-4 focus:ring-blue-500/10 transition-all"
-                            />
-                            <button 
-                                onClick={() => generateAILogo(logoPrompt)}
-                                disabled={isGeneratingLogo || !logoPrompt.trim()}
-                                className="absolute right-2 top-2 bottom-2 px-4 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-blue-600/20"
-                            >
-                                {isGeneratingLogo ? <RefreshCw size={14} className="animate-spin" /> : <Zap size={14} />}
-                                {isGeneratingLogo ? "Forging" : "Generate"}
-                            </button>
-                        </div>
-                    </div>
 
                     {/* Logo Control Panel */}
                     {(boxLogos[selectedFace || 'top']) && (
