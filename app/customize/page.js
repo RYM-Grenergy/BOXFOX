@@ -73,6 +73,24 @@ function CustomizeLabContent() {
   // Customization States
   const [dimensions, setDimensions] = useState({ l: 12, w: 8, h: 4 });
   const [isGenerating, setIsGenerating] = useState(false);
+  // Custom formula states
+  const [selectedProductType, setSelectedProductType] = useState("Mailers");
+  const [selectedGSM, setSelectedGSM] = useState("300 GSM");
+  const [selectedMaterial, setSelectedMaterial] = useState("SBS");
+  
+  const [printingOpt, setPrintingOpt] = useState("No Printing");
+  const [laminationOpt, setLaminationOpt] = useState("No Lamination");
+  
+  const [foilingOpt, setFoilingOpt] = useState("No Foiling");
+  const [uvOpt, setUvOpt] = useState("No UV");
+  const [embossingOpt, setEmbossingOpt] = useState("No Embossing");
+  
+  const [dieOpt, setDieOpt] = useState("No Die");
+  const [cuttingOpt, setCuttingOpt] = useState("Cutting");
+  
+  const [windowOpt, setWindowOpt] = useState("No Window");
+  const [pastingOpt, setPastingOpt] = useState("No Pasting");
+  const [gummingOpt, setGummingOpt] = useState("No Gumming");
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
@@ -85,7 +103,7 @@ function CustomizeLabContent() {
   const [isPromptEnhanced, setIsPromptEnhanced] = useState(false);
   const [customText, setCustomText] = useState("");
   const [unit, setUnit] = useState("in"); // "in" or "mm"
-  const [designName, setDesignName] = useState("");
+  const [designName, setDesignName] = useState("Untitled Design");
   const [activeDesignId, setActiveDesignId] = useState(null);
 
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -511,27 +529,27 @@ function CustomizeLabContent() {
     if (!logoPrompt.trim()) return;
     setIsGeneratingLogo(true);
     try {
-        const res = await fetch('/api/generate-logo', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                prompt: logoPrompt,
-                style: selectedChips.join(', '),
-                color: activeColor
-            })
-        });
-        const data = await res.json();
-        if (data.url) {
-            setBoxLogos(prev => ({ ...prev, [selectedFace || 'top']: data.url }));
-            showToast("AI Logo Generated and Applied!");
-        } else {
-            showToast(data.error || "Logo generation failed", "error");
-        }
+      const res = await fetch('/api/generate-logo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: logoPrompt,
+          style: selectedChips.join(', '),
+          color: activeColor
+        })
+      });
+      const data = await res.json();
+      if (data.url) {
+        setBoxLogos(prev => ({ ...prev, [selectedFace || 'top']: data.url }));
+        showToast("AI Logo Generated and Applied!");
+      } else {
+        showToast(data.error || "Logo generation failed", "error");
+      }
     } catch (err) {
-        console.error(err);
-        showToast("An error occurred during AI logo generation", "error");
+      console.error(err);
+      showToast("An error occurred during AI logo generation", "error");
     } finally {
-        setIsGeneratingLogo(false);
+      setIsGeneratingLogo(false);
     }
   };
 
@@ -673,9 +691,108 @@ function CustomizeLabContent() {
   else if (quantity >= 20) unitPriceVal = maxPrice - (diff * 0.05);
   else unitPriceVal = maxPrice;
 
+  // Enhance base logic with practical formulas from Excel customization
+  let addonPrice = 0;
+  // GSM
+  if(selectedGSM === "300 GSM") addonPrice += 2.5;
+  if(selectedGSM === "350 GSM") addonPrice += 4.5;
+  if(selectedGSM === "400 GSM") addonPrice += 6.5;
+  
+  // Material
+  if(selectedMaterial === "Art Card") addonPrice += 2.0;
+  if(selectedMaterial === "Custom Paper") addonPrice += 5.0;
+  
+  // Group 1: Printing
+  if(printingOpt === "Single Color") addonPrice += 2.0;
+  if(printingOpt === "Multi Color") addonPrice += 5.0;
+  if(printingOpt === "Flexible Print") addonPrice += 7.0;
+  
+  // Group 2: Finishing
+  if(laminationOpt === "Gloss Lamination") addonPrice += 3.0;
+  if(laminationOpt === "Matt Lamination") addonPrice += 3.5;
+  if(laminationOpt === "Thermal Lamination") addonPrice += 5.0;
+  
+  // Group 3: Effects
+  if(foilingOpt === "Silver Foiling") addonPrice += 6.0;
+  if(foilingOpt === "Gold Foiling") addonPrice += 8.0;
+  if(uvOpt === "Spot UV") addonPrice += 6.5;
+  if(uvOpt === "Flat UV") addonPrice += 4.5;
+  if(embossingOpt === "Embossing") addonPrice += 3.0;
+  if(embossingOpt === "Leafing") addonPrice += 5.0;
+  
+  // Group 4: Die & Cut
+  if(dieOpt === "Standard Die") addonPrice += 2.0;
+  if(dieOpt === "Custom Die") addonPrice += 8.0;
+  if(cuttingOpt === "Punching") addonPrice += 1.0;
+  
+  // Group 5: Extra
+  if(windowOpt === "Window") addonPrice += 3.0;
+  if(pastingOpt === "Pasting") addonPrice += 1.5;
+  if(gummingOpt === "Gumming") addonPrice += 2.0;
+  
+  unitPriceVal += addonPrice;
+
   const calculatedUnitPrice = product
     ? (unitPriceVal * (currentSA / 288)).toFixed(2)
     : "0.00";
+
+  // Auto-Sync background worker (Live Auto Share)
+  useEffect(() => {
+    // Only invoke background auto-saves if we have explicitly established an active share link/design ID.
+    if (!shareLink && !activeDesignId) return;
+
+    const autoSyncTimer = setTimeout(async () => {
+      try {
+        const designData = {
+          name: designName || `${user?.name || 'My'} Design - ${dimensions.l}×${dimensions.w}×${dimensions.h}`,
+          customDesign: {
+            textures: boxTextures,
+            colors: boxColors,
+            textureSettings,
+            text: customText,
+            textStyle: boxTextStyle,
+            textColor: boxTextColor,
+            textSettings: boxTextSettings,
+            dimensions,
+            unit,
+            selectedProductType,
+            selectedGSM,
+            selectedMaterial,
+            printingOpt,
+            laminationOpt,
+            foilingOpt,
+            uvOpt,
+            embossingOpt,
+            dieOpt,
+            cuttingOpt,
+            windowOpt,
+            pastingOpt,
+            gummingOpt
+          },
+          productId: product?.id,
+          isPublic: true,
+        };
+
+        await fetch('/api/designs', { 
+            method: 'PATCH', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ ...designData, designId: activeDesignId }) 
+        });
+        
+      } catch (err) {
+        console.warn("Background auto-save failed quietly: ", err);
+      }
+    }, 1200); // 1.2s Debounce
+
+    return () => clearTimeout(autoSyncTimer);
+  }, [
+    dimensions, unit, 
+    selectedProductType, selectedGSM, selectedMaterial, 
+    printingOpt, laminationOpt, foilingOpt, uvOpt, embossingOpt, 
+    dieOpt, cuttingOpt, windowOpt, pastingOpt, gummingOpt, 
+    boxColors, customText, boxTextStyle, boxTextColor, boxTextSettings, textureSettings,
+    shareLink, activeDesignId
+  ]);
 
   // Reusable loading UI matching the premium Brand Loader
   const LoadingScreen = () => (
@@ -762,7 +879,7 @@ function CustomizeLabContent() {
       {/* AI Generate overlay removed for direct lab flow */}
       <main className="pt-20 sm:pt-24 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8 xl:px-12 max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10">
         {/* 3D SPATIAL CANVAS (LEFT) */}
-        <div className="lg:col-span-7 lg:sticky lg:top-24 lg:h-[calc(100vh-120px)] flex flex-col space-y-4 md:space-y-6">
+        <div className="lg:col-span-7 lg:sticky lg:top-24 lg:h-[calc(100vh-120px)] flex flex-col space-y-4 md:space-y-6 overflow-y-auto no-scrollbar pb-6">
           <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-gray-50 border border-gray-100 rounded-2xl sm:rounded-[2rem] shadow-sm shrink-0">
             <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
               <div className="relative shrink-0">
@@ -789,6 +906,14 @@ function CustomizeLabContent() {
                 disabled={isSavingDraft}
                 onClick={async () => {
                   if (isSavingDraft) return;
+                  
+                  const savedNamePrompt = window.prompt("Please enter a name to save your design as:", designName || product?.name || "Untitled Design");
+                  if (savedNamePrompt === null) {
+                    return; // user cancelled the save
+                  }
+                  
+                  setDesignName(savedNamePrompt);
+
                   setIsSavingDraft(true);
                   try {
                     const uploadedTextures = { ...boxTextures };
@@ -803,8 +928,8 @@ function CustomizeLabContent() {
                       }
                     }
                     const designData = {
-                      name: designName || `${user?.name || 'My'} Design - ${dimensions.l}×${dimensions.w}×${dimensions.h}`,
-                      customDesign: { textures: uploadedTextures, colors: boxColors, textureSettings, text: customText, textStyle: boxTextStyle, textColor: boxTextColor, textSettings: boxTextSettings, dimensions, unit },
+                      name: savedNamePrompt || `${user?.name || 'My'} Design - ${dimensions.l}×${dimensions.w}×${dimensions.h}`,
+                      customDesign: { textures: uploadedTextures, colors: boxColors, textureSettings, text: customText, textStyle: boxTextStyle, textColor: boxTextColor, textSettings: boxTextSettings, dimensions, unit, selectedProductType, selectedGSM, selectedMaterial, printingOpt, laminationOpt, foilingOpt, uvOpt, embossingOpt, dieOpt, cuttingOpt, windowOpt, pastingOpt, gummingOpt },
                       productId: product?.id,
                     };
                     const method = activeDesignId ? 'PATCH' : 'POST';
@@ -854,7 +979,7 @@ function CustomizeLabContent() {
                     }
                     const designData = {
                       name: designName || `${user?.name || 'My'} Design - ${dimensions.l}×${dimensions.w}×${dimensions.h}`,
-                      customDesign: { textures: uploadedTextures, colors: boxColors, textureSettings, text: customText, textStyle: boxTextStyle, textColor: boxTextColor, textSettings: boxTextSettings, dimensions, unit },
+                      customDesign: { textures: uploadedTextures, colors: boxColors, textureSettings, text: customText, textStyle: boxTextStyle, textColor: boxTextColor, textSettings: boxTextSettings, dimensions, unit, selectedProductType, selectedGSM, selectedMaterial, printingOpt, laminationOpt, foilingOpt, uvOpt, embossingOpt, dieOpt, cuttingOpt, windowOpt, pastingOpt, gummingOpt },
                       productId: product?.id,
                       isPublic: true,
                     };
@@ -896,7 +1021,7 @@ function CustomizeLabContent() {
           </div>
 
           <div
-            className="relative h-[42vh] sm:h-[52vh] md:h-[60vh] lg:flex-1 lg:h-auto bg-gradient-to-br from-gray-50 via-white to-emerald-50/30 rounded-2xl sm:rounded-[3rem] md:rounded-[4rem] lg:rounded-[5rem] border border-gray-200 shadow-xl overflow-hidden cursor-grab active:cursor-grabbing group touch-none"
+            className="relative h-[42vh] sm:h-[52vh] md:h-[60vh] lg:flex-1 lg:h-auto shrink-0 min-h-[350px] lg:min-h-[500px] bg-gradient-to-br from-gray-50 via-white to-emerald-50/30 rounded-2xl sm:rounded-[3rem] md:rounded-[4rem] lg:rounded-[5rem] border border-gray-200 shadow-xl overflow-hidden cursor-grab active:cursor-grabbing group touch-none"
             onMouseDown={() => {
               isDragging.current = true;
             }}
@@ -1221,6 +1346,179 @@ function CustomizeLabContent() {
               </div>
             </div>
           </div>
+
+          {/* CUSTOMIZATION OPTIONS UI (BELOW 3D MODEL) */}
+          <div className="mt-8 bg-white/80 backdrop-blur-md p-6 sm:p-8 rounded-[2rem] border border-gray-100 shadow-xl space-y-6">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+              <h3 className="text-sm font-black text-gray-950 uppercase tracking-widest">Product Formulation</h3>
+              <button
+                onClick={() => {
+                  setSelectedProductType("Mailers");
+                  setSelectedGSM("300 GSM");
+                  setSelectedMaterial("SBS");
+                  setPrintingOpt("No Printing");
+                  setLaminationOpt("No Lamination");
+                  setFoilingOpt("No Foiling");
+                  setUvOpt("No UV");
+                  setEmbossingOpt("No Embossing");
+                  setDieOpt("No Die");
+                  setCuttingOpt("Cutting");
+                  setWindowOpt("No Window");
+                  setPastingOpt("No Pasting");
+                  setGummingOpt("No Gumming");
+                  setQuantity(10);
+                  setDimensions({ l: 12, w: 8, h: 4 });
+                  setDesignName("Untitled Design");
+                  if (typeof setUnit === "function") setUnit("in");
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 hover:border-red-200 hover:bg-red-50 text-gray-500 hover:text-red-500 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest shadow-sm active:scale-95"
+              >
+                <RefreshCw size={12} />
+                <span>Reset All</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Product Type</label>
+                <select
+                  value={selectedProductType}
+                  onChange={(e) => setSelectedProductType(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  <option value="Mailers">Pro Mailers</option>
+                  <option value="Rigid">Premium Rigid Boxes</option>
+                  <option value="Folding">Folding Cartons</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select GSM</label>
+                <select
+                  value={selectedGSM}
+                  onChange={(e) => setSelectedGSM(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  {["230 GSM", "250 GSM", "300 GSM", "350 GSM", "400 GSM"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Material</label>
+                <select
+                  value={selectedMaterial}
+                  onChange={(e) => setSelectedMaterial(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  {["SBS", "WhiteBack", "GreyBack", "Art Card", "Maplitho", "Custom Paper"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 1: Printing</label>
+                <select
+                  value={printingOpt}
+                  onChange={(e) => setPrintingOpt(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  {["No Printing", "Single Color", "Multi Color", "Flexible Print"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 2: Finishing</label>
+                <select
+                  value={laminationOpt}
+                  onChange={(e) => setLaminationOpt(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  {["No Lamination", "Gloss Lamination", "Matt Lamination", "Thermal Lamination"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 3: Effects (Foiling & UV)</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={foilingOpt}
+                    onChange={(e) => setFoilingOpt(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                  >
+                    {["No Foiling", "Silver Foiling", "Gold Foiling"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                  <select
+                    value={uvOpt}
+                    onChange={(e) => setUvOpt(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                  >
+                    {["No UV", "Spot UV", "Flat UV"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Effects (Emboss) & Group 4 (Die)</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={embossingOpt}
+                    onChange={(e) => setEmbossingOpt(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                  >
+                    {["No Embossing", "Embossing", "Leafing"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                  <select
+                    value={dieOpt}
+                    onChange={(e) => setDieOpt(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                  >
+                    {["No Die", "Standard Die", "Custom Die"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 4: Cutting & Group 5: Extra</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={cuttingOpt}
+                    onChange={(e) => setCuttingOpt(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                  >
+                    {["Cutting", "Punching"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                  <select
+                    value={windowOpt}
+                    onChange={(e) => setWindowOpt(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                  >
+                    {["No Window", "Window"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 5: Extra Work (Pasting)</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={pastingOpt}
+                    onChange={(e) => setPastingOpt(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                  >
+                    {["No Pasting", "Pasting"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                  <select
+                    value={gummingOpt}
+                    onChange={(e) => setGummingOpt(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                  >
+                    {["No Gumming", "Gumming"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
         {/* CONTROL PANEL (RIGHT) */}
@@ -1308,18 +1606,28 @@ function CustomizeLabContent() {
                     <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Order_Quantity</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 0))}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        if (raw === "") { setQuantity(""); return; }
+                        let val = parseInt(raw, 10);
+                        if (isNaN(val)) val = 10;
+                        if (val > 5000) val = 5000;
+                        setQuantity(val);
+                      }}
+                      onBlur={() => {
+                        if (!quantity || quantity < 10) setQuantity(10);
+                      }}
                       className="w-20 h-8 bg-white border border-emerald-200 rounded-lg text-center font-black text-xs focus:border-emerald-500 outline-none"
                     />
                     <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Units</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => setQuantity(Math.max(10, quantity - 50))}
+                  <button
+                    onClick={() => setQuantity(Math.max(10, (parseInt(quantity) || 10) - 50))}
                     className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
                   >
                     <Minus size={14} />
@@ -1329,12 +1637,12 @@ function CustomizeLabContent() {
                     min="10"
                     max="5000"
                     step="10"
-                    value={quantity}
+                    value={quantity || 10}
                     onChange={(e) => setQuantity(parseInt(e.target.value))}
                     className="flex-1 h-1 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                   />
-                  <button 
-                    onClick={() => setQuantity(quantity + 50)}
+                  <button
+                    onClick={() => setQuantity(Math.min(5000, (parseInt(quantity) || 10) + 50))}
                     className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
                   >
                     <Plus size={14} />
@@ -1446,126 +1754,126 @@ function CustomizeLabContent() {
                 </div>
               ) : customMode === "logo" ? (
                 <div className="space-y-6">
-                    <div className="grid grid-cols-4 gap-4">
-                        <label className="aspect-square border-2 border-dashed border-gray-300 bg-white rounded-[2rem] flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all group overflow-hidden">
-                            <input
-                                type="file"
-                                className="hidden"
-                                onChange={(e) => {
-                                    const file = e.target.files[0];
-                                    if (file) {
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => {
-                                            setBoxLogos(prev => ({ ...prev, [selectedFace || 'top']: reader.result }));
-                                            showToast("Logo Uploaded!");
-                                        };
-                                        reader.readAsDataURL(file);
-                                    }
-                                }}
-                            />
-                            <Upload size={24} className="text-gray-400 group-hover:text-blue-600 transition-all" />
-                        </label>
-                        {Object.entries(boxLogos).filter(([_, src]) => src).map(([face, src], idx) => (
-                            <div 
-                                key={idx} 
-                                className="relative aspect-square rounded-[2rem] border-2 border-blue-200 bg-white p-2 group overflow-hidden"
-                            >
-                                <img src={src} className="w-full h-full object-contain" />
-                                <button
-                                    onClick={() => setBoxLogos(prev => ({ ...prev, [face]: null }))}
-                                    className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center scale-0 group-hover:scale-100 transition-all"
-                                >
-                                    <X size={10} />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
+                  <div className="grid grid-cols-4 gap-4">
+                    <label className="aspect-square border-2 border-dashed border-gray-300 bg-white rounded-[2rem] flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all group overflow-hidden">
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setBoxLogos(prev => ({ ...prev, [selectedFace || 'top']: reader.result }));
+                              showToast("Logo Uploaded!");
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <Upload size={24} className="text-gray-400 group-hover:text-blue-600 transition-all" />
+                    </label>
+                    {Object.entries(boxLogos).filter(([_, src]) => src).map(([face, src], idx) => (
+                      <div
+                        key={idx}
+                        className="relative aspect-square rounded-[2rem] border-2 border-blue-200 bg-white p-2 group overflow-hidden"
+                      >
+                        <img src={src} className="w-full h-full object-contain" />
+                        <button
+                          onClick={() => setBoxLogos(prev => ({ ...prev, [face]: null }))}
+                          className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center scale-0 group-hover:scale-100 transition-all"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
 
 
-                    {/* Logo Control Panel */}
-                    {(boxLogos[selectedFace || 'top']) && (
-                        <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm space-y-5">
-                            <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Transform_Logic</span>
-                                <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-3 py-1 rounded-full uppercase tracking-widest">{selectedFace || 'Top'} Layer</span>
-                            </div>
-                            
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
-                                        <span>Logo Scale</span>
-                                        <span>{logoSettings[selectedFace || 'top'].scale}%</span>
-                                    </div>
-                                    <input 
-                                        type="range"
-                                        min="1"
-                                        max="100"
-                                        value={logoSettings[selectedFace || 'top'].scale}
-                                        onChange={(e) => setLogoSettings(prev => ({
-                                            ...prev,
-                                            [selectedFace || 'top']: { ...prev[selectedFace || 'top'], scale: parseInt(e.target.value) }
-                                        }))}
-                                        className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
-                                    />
-                                </div>
+                  {/* Logo Control Panel */}
+                  {(boxLogos[selectedFace || 'top']) && (
+                    <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm space-y-5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Transform_Logic</span>
+                        <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-3 py-1 rounded-full uppercase tracking-widest">{selectedFace || 'Top'} Layer</span>
+                      </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
-                                            <span>X Offset</span>
-                                            <span>{logoSettings[selectedFace || 'top'].x}%</span>
-                                        </div>
-                                        <input 
-                                            type="range"
-                                            min="0"
-                                            max="100"
-                                            value={logoSettings[selectedFace || 'top'].x}
-                                            onChange={(e) => setLogoSettings(prev => ({
-                                                ...prev,
-                                                [selectedFace || 'top']: { ...prev[selectedFace || 'top'], x: parseInt(e.target.value) }
-                                            }))}
-                                            className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
-                                            <span>Y Offset</span>
-                                            <span>{logoSettings[selectedFace || 'top'].y}%</span>
-                                        </div>
-                                        <input 
-                                            type="range"
-                                            min="0"
-                                            max="100"
-                                            value={logoSettings[selectedFace || 'top'].y}
-                                            onChange={(e) => setLogoSettings(prev => ({
-                                                ...prev,
-                                                [selectedFace || 'top']: { ...prev[selectedFace || 'top'], y: parseInt(e.target.value) }
-                                            }))}
-                                            className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 pt-2 border-t border-gray-50">
-                                    <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
-                                        <span>Rotation</span>
-                                        <span>{logoSettings[selectedFace || 'top'].rotate}°</span>
-                                    </div>
-                                    <input 
-                                        type="range"
-                                        min="-180"
-                                        max="180"
-                                        value={logoSettings[selectedFace || 'top'].rotate}
-                                        onChange={(e) => setLogoSettings(prev => ({
-                                            ...prev,
-                                            [selectedFace || 'top']: { ...prev[selectedFace || 'top'], rotate: parseInt(e.target.value) }
-                                        }))}
-                                        className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
-                                    />
-                                </div>
-                            </div>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
+                            <span>Logo Scale</span>
+                            <span>{logoSettings[selectedFace || 'top'].scale}%</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="1"
+                            max="100"
+                            value={logoSettings[selectedFace || 'top'].scale}
+                            onChange={(e) => setLogoSettings(prev => ({
+                              ...prev,
+                              [selectedFace || 'top']: { ...prev[selectedFace || 'top'], scale: parseInt(e.target.value) }
+                            }))}
+                            className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
+                          />
                         </div>
-                    )}
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
+                              <span>X Offset</span>
+                              <span>{logoSettings[selectedFace || 'top'].x}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={logoSettings[selectedFace || 'top'].x}
+                              onChange={(e) => setLogoSettings(prev => ({
+                                ...prev,
+                                [selectedFace || 'top']: { ...prev[selectedFace || 'top'], x: parseInt(e.target.value) }
+                              }))}
+                              className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
+                              <span>Y Offset</span>
+                              <span>{logoSettings[selectedFace || 'top'].y}%</span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0"
+                              max="100"
+                              value={logoSettings[selectedFace || 'top'].y}
+                              onChange={(e) => setLogoSettings(prev => ({
+                                ...prev,
+                                [selectedFace || 'top']: { ...prev[selectedFace || 'top'], y: parseInt(e.target.value) }
+                              }))}
+                              className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 pt-2 border-t border-gray-50">
+                          <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
+                            <span>Rotation</span>
+                            <span>{logoSettings[selectedFace || 'top'].rotate}°</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="-180"
+                            max="180"
+                            value={logoSettings[selectedFace || 'top'].rotate}
+                            onChange={(e) => setLogoSettings(prev => ({
+                              ...prev,
+                              [selectedFace || 'top']: { ...prev[selectedFace || 'top'], rotate: parseInt(e.target.value) }
+                            }))}
+                            className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-6 gap-3">
@@ -2116,71 +2424,71 @@ function CustomizeLabContent() {
                 <h2 className="text-3xl sm:text-5xl font-black italic tracking-tighter mt-1">₹{(parseFloat(calculatedUnitPrice) * quantity).toLocaleString('en-IN')}</h2>
               </div>
               <button
-              disabled={isAddingToCart}
-              onClick={async () => {
-                if (isAddingToCart) return;
-                setIsAddingToCart(true);
+                disabled={isAddingToCart}
+                onClick={async () => {
+                  if (isAddingToCart) return;
+                  setIsAddingToCart(true);
 
-                try {
-                  const uploadedBoxTextures = { ...boxTextures };
-                  const faces = Object.keys(uploadedBoxTextures);
-                  for (let face of faces) {
-                    const texture = uploadedBoxTextures[face];
-                    if (texture && texture.startsWith("data:image")) {
-                      try {
-                        const res = await fetch("/api/upload", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ image: texture })
-                        });
-                        const data = await res.json();
-                        if (data.url) {
-                          uploadedBoxTextures[face] = data.url;
+                  try {
+                    const uploadedBoxTextures = { ...boxTextures };
+                    const faces = Object.keys(uploadedBoxTextures);
+                    for (let face of faces) {
+                      const texture = uploadedBoxTextures[face];
+                      if (texture && texture.startsWith("data:image")) {
+                        try {
+                          const res = await fetch("/api/upload", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ image: texture })
+                          });
+                          const data = await res.json();
+                          if (data.url) {
+                            uploadedBoxTextures[face] = data.url;
+                          }
+                        } catch (err) {
+                          console.error(`Failed to upload texture for ${face}:`, err);
                         }
-                      } catch (err) {
-                        console.error(`Failed to upload texture for ${face}:`, err);
                       }
                     }
+
+                    const userName = user?.name || user?.username || "Guest";
+                    const customName = `${userName}_customize ${dimensions.l}x${dimensions.w}x${dimensions.h}`;
+                    const customImg = uploadedBoxTextures.front || uploadedBoxTextures.top || Object.values(uploadedBoxTextures).find(t => t) || product.img || product.images?.[0];
+
+                    const customizedProduct = {
+                      ...product,
+                      id: `${product.id}-${Date.now()}`,
+                      name: customName,
+                      img: customImg,
+                      price: currentPrice,
+                      customDesign: {
+                        textures: uploadedBoxTextures,
+                        colors: boxColors,
+                        textureSettings: textureSettings,
+                        text: customText,
+                        textStyle: boxTextStyle,
+                        textColor: boxTextColor,
+                        textSettings: boxTextSettings,
+                        dimensions: dimensions,
+                        unit: unit
+                      }
+                    };
+                    addToCart(customizedProduct, quantity);
+                  } finally {
+                    setIsAddingToCart(false);
                   }
-
-                  const userName = user?.name || user?.username || "Guest";
-                  const customName = `${userName}_customize ${dimensions.l}x${dimensions.w}x${dimensions.h}`;
-                  const customImg = uploadedBoxTextures.front || uploadedBoxTextures.top || Object.values(uploadedBoxTextures).find(t => t) || product.img || product.images?.[0];
-
-                  const customizedProduct = {
-                    ...product,
-                    id: `${product.id}-${Date.now()}`,
-                    name: customName,
-                    img: customImg,
-                    price: currentPrice,
-                    customDesign: {
-                      textures: uploadedBoxTextures,
-                      colors: boxColors,
-                      textureSettings: textureSettings,
-                      text: customText,
-                      textStyle: boxTextStyle,
-                      textColor: boxTextColor,
-                      textSettings: boxTextSettings,
-                      dimensions: dimensions,
-                      unit: unit
-                    }
-                  };
-                  addToCart(customizedProduct, quantity);
-                } finally {
-                  setIsAddingToCart(false);
-                }
-              }}
-              className="w-full sm:w-auto py-4 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 bg-black text-white rounded-xl sm:rounded-2xl md:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-[0.3em] sm:tracking-[0.4em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-white hover:text-black transition-all shadow-xl active:scale-95 group shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isAddingToCart ? (
-                <RefreshCw size={20} className="animate-spin shrink-0" />
-              ) : (
-                <ShoppingCart
-                  size={20}
-                  className="group-hover:scale-110 transition-transform"
-                />
-              )}
-              {isAddingToCart ? "Deploying..." : "Add_to_Basket"}
+                }}
+                className="w-full sm:w-auto py-4 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 bg-black text-white rounded-xl sm:rounded-2xl md:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-[0.3em] sm:tracking-[0.4em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-white hover:text-black transition-all shadow-xl active:scale-95 group shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isAddingToCart ? (
+                  <RefreshCw size={20} className="animate-spin shrink-0" />
+                ) : (
+                  <ShoppingCart
+                    size={20}
+                    className="group-hover:scale-110 transition-transform"
+                  />
+                )}
+                {isAddingToCart ? "Deploying..." : "Add_to_Basket"}
               </button>
             </div>
           </div>
