@@ -2460,7 +2460,7 @@ function CustomizeLabContent() {
                       id: `${product.id}-${Date.now()}`,
                       name: customName,
                       img: customImg,
-                      price: currentPrice,
+                      price: calculatedUnitPrice,
                       customDesign: {
                         textures: uploadedBoxTextures,
                         colors: boxColors,

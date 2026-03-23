@@ -170,56 +170,9 @@ export default function CheckoutPage() {
             });
             const data = await res.json();
             if (data.success) {
-                if (finalTotal <= 0) {
-                    window.location.href = `/checkout?status=success&orderId=${data.orderId}`;
-                    return;
-                }
-
-                // Now initiate PayU Payment
-                const txnId = data.orderId; // Use our order ID as transaction ID
-                const hashRes = await fetch('/api/payment/payu/hash', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        txnid: txnId,
-                        amount: finalTotal,
-                        productinfo: "BoxFox Order",
-                        firstname: formData.name,
-                        email: formData.email
-                    })
-                });
-                const { hash } = await hashRes.json();
-
-                // Build PayU Form
-                const payuData = {
-                    key: 'JPM7fg', // Use env in production
-                    txnid: txnId,
-                    amount: finalTotal.toFixed(2),
-                    productinfo: "BoxFox Order",
-                    firstname: formData.name,
-                    email: formData.email,
-                    phone: formData.phone,
-                    surl: `${window.location.origin}/api/payment/payu/response`,
-                    furl: `${window.location.origin}/api/payment/payu/response`,
-                    hash: hash,
-                    service_provider: 'payu_paisa'
-                };
-
-                // Create hidden form and submit
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = 'https://test.payu.in/_payment'; // Use https://secure.payu.in/_payment for prod
-
-                Object.entries(payuData).forEach(([key, value]) => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = value;
-                    form.appendChild(input);
-                });
-
-                document.body.appendChild(form);
-                form.submit();
+                // FOR NOW: Bypass payment and redirect to success directly
+                window.location.href = `/checkout?status=success&orderId=${data.orderId}`;
+                return;
             }
         } catch (e) {
             console.error(e);
@@ -479,6 +432,13 @@ export default function CheckoutPage() {
                                                 <div className="w-1 h-1 bg-gray-200 rounded-full" />
                                                 <span className="text-[9px] font-black uppercase text-gray-950">QTY: {item.quantity}</span>
                                             </div>
+                                            {item.customDesign && (
+                                                <div className="mt-2 flex flex-wrap gap-2">
+                                                    <span className="text-[7px] font-black px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded uppercase tracking-widest">{item.customDesign.selectedGSM || "350 GSM"}</span>
+                                                    <span className="text-[7px] font-black px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded uppercase tracking-widest">{item.customDesign.selectedMaterial || "SBS"}</span>
+                                                    <span className="text-[7px] font-black px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded uppercase tracking-widest">{item.customDesign.printingOpt || "No Printing"}</span>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="text-right">
                                             <span className="text-sm font-black text-gray-950">₹{(parseFloat(typeof item.price === 'number' ? item.price : item.price.replace(/[^0-9.]/g, '')) * item.quantity).toLocaleString('en-IN')}</span>

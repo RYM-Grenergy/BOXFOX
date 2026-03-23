@@ -346,25 +346,60 @@ function CustomDesignBlueprint({ item, order, expandedFace, setExpandedFace, dow
                         <MiniBox3D customDesign={cd} size={160} />
                     </div>
 
-                    {/* Specs Card */}
+                    {/* Specs & Formulation */}
                     <div className="space-y-4">
-                        <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
-                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
-                                <Ruler size={10} /> Specifications
-                            </p>
-                            <div className="grid grid-cols-3 gap-3">
-                                {[
-                                    { label: "Length", value: dims.l },
-                                    { label: "Width", value: dims.w },
-                                    { label: "Height", value: dims.h },
-                                ].map(d => (
-                                    <div key={d.label} className="bg-white rounded-xl p-3 border border-gray-100 text-center">
-                                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">{d.label}</p>
-                                        <p className="text-lg font-black text-gray-950">{d.value}<span className="text-[9px] text-gray-400 ml-0.5">{cd.unit || "in"}</span></p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                                <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
+                                    <Ruler size={10} /> Specifications
+                                </p>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {[
+                                        { label: "Length", value: dims.l },
+                                        { label: "Width", value: dims.w },
+                                        { label: "Height", value: dims.h },
+                                    ].map(d => (
+                                        <div key={d.label} className="bg-white rounded-xl p-3 border border-gray-100 text-center">
+                                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest">{d.label}</p>
+                                            <p className="text-lg font-black text-gray-950">{d.value}<span className="text-[9px] text-gray-400 ml-0.5">{cd.unit || "in"}</span></p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="bg-emerald-50/50 rounded-2xl p-5 border border-emerald-100">
+                                <p className="text-[9px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-3 flex items-center gap-2">
+                                    <Layers size={10} /> Product Formulation
+                                </p>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                                    <div className="space-y-0.5">
+                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Type & GSM</p>
+                                        <p className="text-[10px] font-black text-gray-950 uppercase">{cd.selectedProductType || "Mailers"} • {cd.selectedGSM || "300 GSM"}</p>
                                     </div>
-                                ))}
+                                    <div className="space-y-0.5">
+                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Material</p>
+                                        <p className="text-[10px] font-black text-gray-950 uppercase">{cd.selectedMaterial || "SBS"}</p>
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Printing</p>
+                                        <p className="text-[10px] font-black text-emerald-600 uppercase">{cd.printingOpt || "No Printing"}</p>
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Finishing</p>
+                                        <p className="text-[10px] font-black text-gray-950 uppercase">{cd.laminationOpt || "No Lamination"}</p>
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Effects</p>
+                                        <p className="text-[10px] font-black text-gray-950 uppercase">{cd.foilingOpt || "No Foiling"} / {cd.uvOpt || "No UV"}</p>
+                                    </div>
+                                    <div className="space-y-0.5">
+                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Die & Extra</p>
+                                        <p className="text-[10px] font-black text-gray-950 uppercase">{cd.dieOpt || "No Die"} / {cd.pastingOpt || "No Pasting"}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
                         {cd.text && (
                             <div className="bg-gradient-to-r from-violet-50 to-purple-50 rounded-2xl p-5 border border-violet-100">
                                 <p className="text-[9px] font-black text-violet-500 uppercase tracking-[0.2em] mb-2 flex items-center gap-2"><Type size={10} /> Custom Text</p>

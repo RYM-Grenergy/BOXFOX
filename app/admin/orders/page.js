@@ -132,12 +132,36 @@ export default function OrdersManager() {
                       <p className="text-sm font-black text-gray-950">{order.customer?.name}</p>
                       <p className="text-[10px] font-bold text-gray-400 uppercase italic">{order.customer?.email}</p>
                     </td>
-                    <td className="px-8 py-6 whitespace-nowrap">
-                      <div className="flex flex-col gap-1">
+                    <td className="px-8 py-6">
+                      <div className="flex flex-col gap-4">
                         {order.items.map((item, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <span className="w-4 h-4 rounded bg-gray-100 flex items-center justify-center text-[8px] font-black">{item.quantity}</span>
-                            <span className="text-xs font-bold text-gray-500 line-clamp-1">{item.name}</span>
+                          <div key={i} className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded bg-gray-950 text-white flex items-center justify-center text-[9px] font-black">{item.quantity}</span>
+                              <span className="text-xs font-black text-gray-950 uppercase line-clamp-1">{item.name}</span>
+                            </div>
+                            {item.customDesign && (
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-7">
+                                <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-tighter">
+                                  {item.customDesign.selectedProductType || "Mailers"} • {item.customDesign.selectedGSM || "300 GSM"}
+                                </span>
+                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">
+                                  {item.customDesign.selectedMaterial || "SBS"}
+                                </span>
+                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter italic">
+                                  Print: {item.customDesign.printingOpt || "No Printing"}
+                                </span>
+                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter italic">
+                                  Finish: {item.customDesign.laminationOpt || "No Lamination"}
+                                </span>
+                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter truncate">
+                                  Effects: {item.customDesign.foilingOpt || "No Foiling"} & {item.customDesign.uvOpt || "No UV"}
+                                </span>
+                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter truncate">
+                                  Extra: {item.customDesign.pastingOpt || "No Pasting"} & {item.customDesign.dieOpt || "No Die"}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
