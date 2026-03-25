@@ -143,22 +143,10 @@ export default function OrdersManager() {
                             {item.customDesign && (
                               <div className="grid grid-cols-2 gap-x-4 gap-y-1 pl-7">
                                 <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-tighter">
-                                  {item.customDesign.selectedProductType || "Mailers"} • {item.customDesign.selectedGSM || "300 GSM"}
+                                  {item.customDesign.selectedGSM || "300 GSM"}
                                 </span>
                                 <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">
                                   {item.customDesign.selectedMaterial || "SBS"}
-                                </span>
-                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter italic">
-                                  Print: {item.customDesign.printingOpt || "No Printing"}
-                                </span>
-                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter italic">
-                                  Finish: {item.customDesign.laminationOpt || "No Lamination"}
-                                </span>
-                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter truncate">
-                                  Effects: {item.customDesign.foilingOpt || "No Foiling"} & {item.customDesign.uvOpt || "No UV"}
-                                </span>
-                                <span className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter truncate">
-                                  Extra: {item.customDesign.pastingOpt || "No Pasting"} & {item.customDesign.dieOpt || "No Die"}
                                 </span>
                               </div>
                             )}

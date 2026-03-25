@@ -74,23 +74,9 @@ function CustomizeLabContent() {
   const [dimensions, setDimensions] = useState({ l: 12, w: 8, h: 4 });
   const [isGenerating, setIsGenerating] = useState(false);
   // Custom formula states
-  const [selectedProductType, setSelectedProductType] = useState("Mailers");
   const [selectedGSM, setSelectedGSM] = useState("300 GSM");
   const [selectedMaterial, setSelectedMaterial] = useState("SBS");
-  
-  const [printingOpt, setPrintingOpt] = useState("No Printing");
-  const [laminationOpt, setLaminationOpt] = useState("No Lamination");
-  
-  const [foilingOpt, setFoilingOpt] = useState("No Foiling");
-  const [uvOpt, setUvOpt] = useState("No UV");
-  const [embossingOpt, setEmbossingOpt] = useState("No Embossing");
-  
-  const [dieOpt, setDieOpt] = useState("No Die");
-  const [cuttingOpt, setCuttingOpt] = useState("Cutting");
-  
-  const [windowOpt, setWindowOpt] = useState("No Window");
-  const [pastingOpt, setPastingOpt] = useState("No Pasting");
-  const [gummingOpt, setGummingOpt] = useState("No Gumming");
+
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [draftSaved, setDraftSaved] = useState(false);
@@ -694,42 +680,14 @@ function CustomizeLabContent() {
   // Enhance base logic with practical formulas from Excel customization
   let addonPrice = 0;
   // GSM
-  if(selectedGSM === "300 GSM") addonPrice += 2.5;
-  if(selectedGSM === "350 GSM") addonPrice += 4.5;
-  if(selectedGSM === "400 GSM") addonPrice += 6.5;
-  
+  if (selectedGSM === "300 GSM") addonPrice += 2.5;
+  if (selectedGSM === "350 GSM") addonPrice += 4.5;
+  if (selectedGSM === "400 GSM") addonPrice += 6.5;
+
   // Material
-  if(selectedMaterial === "Art Card") addonPrice += 2.0;
-  if(selectedMaterial === "Custom Paper") addonPrice += 5.0;
-  
-  // Group 1: Printing
-  if(printingOpt === "Single Color") addonPrice += 2.0;
-  if(printingOpt === "Multi Color") addonPrice += 5.0;
-  if(printingOpt === "Flexible Print") addonPrice += 7.0;
-  
-  // Group 2: Finishing
-  if(laminationOpt === "Gloss Lamination") addonPrice += 3.0;
-  if(laminationOpt === "Matt Lamination") addonPrice += 3.5;
-  if(laminationOpt === "Thermal Lamination") addonPrice += 5.0;
-  
-  // Group 3: Effects
-  if(foilingOpt === "Silver Foiling") addonPrice += 6.0;
-  if(foilingOpt === "Gold Foiling") addonPrice += 8.0;
-  if(uvOpt === "Spot UV") addonPrice += 6.5;
-  if(uvOpt === "Flat UV") addonPrice += 4.5;
-  if(embossingOpt === "Embossing") addonPrice += 3.0;
-  if(embossingOpt === "Leafing") addonPrice += 5.0;
-  
-  // Group 4: Die & Cut
-  if(dieOpt === "Standard Die") addonPrice += 2.0;
-  if(dieOpt === "Custom Die") addonPrice += 8.0;
-  if(cuttingOpt === "Punching") addonPrice += 1.0;
-  
-  // Group 5: Extra
-  if(windowOpt === "Window") addonPrice += 3.0;
-  if(pastingOpt === "Pasting") addonPrice += 1.5;
-  if(gummingOpt === "Gumming") addonPrice += 2.0;
-  
+  if (selectedMaterial === "Art Card") addonPrice += 2.0;
+  if (selectedMaterial === "Custom Paper") addonPrice += 5.0;
+
   unitPriceVal += addonPrice;
 
   const calculatedUnitPrice = product
@@ -755,30 +713,19 @@ function CustomizeLabContent() {
             textSettings: boxTextSettings,
             dimensions,
             unit,
-            selectedProductType,
             selectedGSM,
-            selectedMaterial,
-            printingOpt,
-            laminationOpt,
-            foilingOpt,
-            uvOpt,
-            embossingOpt,
-            dieOpt,
-            cuttingOpt,
-            windowOpt,
-            pastingOpt,
-            gummingOpt
+            selectedMaterial
           },
           productId: product?.id,
           isPublic: true,
         };
 
-        await fetch('/api/designs', { 
-            method: 'PATCH', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ ...designData, designId: activeDesignId }) 
+        await fetch('/api/designs', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...designData, designId: activeDesignId })
         });
-        
+
       } catch (err) {
         console.warn("Background auto-save failed quietly: ", err);
       }
@@ -786,10 +733,8 @@ function CustomizeLabContent() {
 
     return () => clearTimeout(autoSyncTimer);
   }, [
-    dimensions, unit, 
-    selectedProductType, selectedGSM, selectedMaterial, 
-    printingOpt, laminationOpt, foilingOpt, uvOpt, embossingOpt, 
-    dieOpt, cuttingOpt, windowOpt, pastingOpt, gummingOpt, 
+    dimensions, unit,
+    selectedGSM, selectedMaterial,
     boxColors, customText, boxTextStyle, boxTextColor, boxTextSettings, textureSettings,
     shareLink, activeDesignId
   ]);
@@ -906,12 +851,12 @@ function CustomizeLabContent() {
                 disabled={isSavingDraft}
                 onClick={async () => {
                   if (isSavingDraft) return;
-                  
+
                   const savedNamePrompt = window.prompt("Please enter a name to save your design as:", designName || product?.name || "Untitled Design");
                   if (savedNamePrompt === null) {
                     return; // user cancelled the save
                   }
-                  
+
                   setDesignName(savedNamePrompt);
 
                   setIsSavingDraft(true);
@@ -929,7 +874,7 @@ function CustomizeLabContent() {
                     }
                     const designData = {
                       name: savedNamePrompt || `${user?.name || 'My'} Design - ${dimensions.l}×${dimensions.w}×${dimensions.h}`,
-                      customDesign: { textures: uploadedTextures, colors: boxColors, textureSettings, text: customText, textStyle: boxTextStyle, textColor: boxTextColor, textSettings: boxTextSettings, dimensions, unit, selectedProductType, selectedGSM, selectedMaterial, printingOpt, laminationOpt, foilingOpt, uvOpt, embossingOpt, dieOpt, cuttingOpt, windowOpt, pastingOpt, gummingOpt },
+                      customDesign: { textures: uploadedTextures, colors: boxColors, textureSettings, text: customText, textStyle: boxTextStyle, textColor: boxTextColor, textSettings: boxTextSettings, dimensions, unit, selectedGSM, selectedMaterial },
                       productId: product?.id,
                     };
                     const method = activeDesignId ? 'PATCH' : 'POST';
@@ -979,7 +924,7 @@ function CustomizeLabContent() {
                     }
                     const designData = {
                       name: designName || `${user?.name || 'My'} Design - ${dimensions.l}×${dimensions.w}×${dimensions.h}`,
-                      customDesign: { textures: uploadedTextures, colors: boxColors, textureSettings, text: customText, textStyle: boxTextStyle, textColor: boxTextColor, textSettings: boxTextSettings, dimensions, unit, selectedProductType, selectedGSM, selectedMaterial, printingOpt, laminationOpt, foilingOpt, uvOpt, embossingOpt, dieOpt, cuttingOpt, windowOpt, pastingOpt, gummingOpt },
+                      customDesign: { textures: uploadedTextures, colors: boxColors, textureSettings, text: customText, textStyle: boxTextStyle, textColor: boxTextColor, textSettings: boxTextSettings, dimensions, unit, selectedGSM, selectedMaterial },
                       productId: product?.id,
                       isPublic: true,
                     };
@@ -1353,19 +1298,8 @@ function CustomizeLabContent() {
               <h3 className="text-sm font-black text-gray-950 uppercase tracking-widest">Product Formulation</h3>
               <button
                 onClick={() => {
-                  setSelectedProductType("Mailers");
                   setSelectedGSM("300 GSM");
                   setSelectedMaterial("SBS");
-                  setPrintingOpt("No Printing");
-                  setLaminationOpt("No Lamination");
-                  setFoilingOpt("No Foiling");
-                  setUvOpt("No UV");
-                  setEmbossingOpt("No Embossing");
-                  setDieOpt("No Die");
-                  setCuttingOpt("Cutting");
-                  setWindowOpt("No Window");
-                  setPastingOpt("No Pasting");
-                  setGummingOpt("No Gumming");
                   setQuantity(10);
                   setDimensions({ l: 12, w: 8, h: 4 });
                   setDesignName("Untitled Design");
@@ -1378,19 +1312,6 @@ function CustomizeLabContent() {
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Product Type</label>
-                <select
-                  value={selectedProductType}
-                  onChange={(e) => setSelectedProductType(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  <option value="Mailers">Pro Mailers</option>
-                  <option value="Rigid">Premium Rigid Boxes</option>
-                  <option value="Folding">Folding Cartons</option>
-                </select>
-              </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select GSM</label>
@@ -1412,108 +1333,6 @@ function CustomizeLabContent() {
                 >
                   {["SBS", "WhiteBack", "GreyBack", "Art Card", "Maplitho", "Custom Paper"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 1: Printing</label>
-                <select
-                  value={printingOpt}
-                  onChange={(e) => setPrintingOpt(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  {["No Printing", "Single Color", "Multi Color", "Flexible Print"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 2: Finishing</label>
-                <select
-                  value={laminationOpt}
-                  onChange={(e) => setLaminationOpt(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  {["No Lamination", "Gloss Lamination", "Matt Lamination", "Thermal Lamination"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 3: Effects (Foiling & UV)</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={foilingOpt}
-                    onChange={(e) => setFoilingOpt(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                  >
-                    {["No Foiling", "Silver Foiling", "Gold Foiling"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                  <select
-                    value={uvOpt}
-                    onChange={(e) => setUvOpt(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                  >
-                    {["No UV", "Spot UV", "Flat UV"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Effects (Emboss) & Group 4 (Die)</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={embossingOpt}
-                    onChange={(e) => setEmbossingOpt(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                  >
-                    {["No Embossing", "Embossing", "Leafing"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                  <select
-                    value={dieOpt}
-                    onChange={(e) => setDieOpt(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                  >
-                    {["No Die", "Standard Die", "Custom Die"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 4: Cutting & Group 5: Extra</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={cuttingOpt}
-                    onChange={(e) => setCuttingOpt(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                  >
-                    {["Cutting", "Punching"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                  <select
-                    value={windowOpt}
-                    onChange={(e) => setWindowOpt(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                  >
-                    {["No Window", "Window"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 5: Extra Work (Pasting)</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <select
-                    value={pastingOpt}
-                    onChange={(e) => setPastingOpt(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                  >
-                    {["No Pasting", "Pasting"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                  <select
-                    value={gummingOpt}
-                    onChange={(e) => setGummingOpt(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                  >
-                    {["No Gumming", "Gumming"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
               </div>
 
             </div>
@@ -1596,59 +1415,6 @@ function CustomizeLabContent() {
                 ))}
               </div>
 
-              {/* Quantity Selector */}
-              <div className="bg-emerald-50/50 rounded-2xl border border-emerald-100 p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center">
-                      <ShoppingCart size={12} className="text-white" />
-                    </div>
-                    <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Order_Quantity</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        if (raw === "") { setQuantity(""); return; }
-                        let val = parseInt(raw, 10);
-                        if (isNaN(val)) val = 10;
-                        if (val > 5000) val = 5000;
-                        setQuantity(val);
-                      }}
-                      onBlur={() => {
-                        if (!quantity || quantity < 10) setQuantity(10);
-                      }}
-                      className="w-20 h-8 bg-white border border-emerald-200 rounded-lg text-center font-black text-xs focus:border-emerald-500 outline-none"
-                    />
-                    <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Units</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setQuantity(Math.max(10, (parseInt(quantity) || 10) - 50))}
-                    className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
-                  >
-                    <Minus size={14} />
-                  </button>
-                  <input
-                    type="range"
-                    min="10"
-                    max="5000"
-                    step="10"
-                    value={quantity || 10}
-                    onChange={(e) => setQuantity(parseInt(e.target.value))}
-                    className="flex-1 h-1 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                  />
-                  <button
-                    onClick={() => setQuantity(Math.min(5000, (parseInt(quantity) || 10) + 50))}
-                    className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
-                  >
-                    <Plus size={14} />
-                  </button>
-                </div>
-              </div>
 
               {/* Real-time Metrics Pill */}
               <div className="flex items-center gap-4 px-6 py-4 bg-white rounded-2xl border border-gray-100 shadow-inner">
@@ -2399,6 +2165,58 @@ function CustomizeLabContent() {
               </div>
             </div>
           </div>
+          <div className="bg-emerald-50/50 rounded-2xl border border-emerald-100 p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center">
+                  <ShoppingCart size={12} className="text-white" />
+                </div>
+                <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Order_Quantity</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === "") { setQuantity(""); return; }
+                    let val = parseInt(raw, 10);
+                    if (isNaN(val)) val = 10;
+                    if (val > 5000) val = 5000;
+                    setQuantity(val);
+                  }}
+                  onBlur={() => {
+                    if (!quantity || quantity < 10) setQuantity(10);
+                  }}
+                  className="w-20 h-8 bg-white border border-emerald-200 rounded-lg text-center font-black text-xs focus:border-emerald-500 outline-none"
+                />
+                <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Units</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setQuantity(Math.max(10, (parseInt(quantity) || 10) - 50))}
+                className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
+              >
+                <Minus size={14} />
+              </button>
+              <input
+                type="range"
+                min="10"
+                max="5000"
+                step="10"
+                value={quantity || 10}
+                onChange={(e) => setQuantity(parseInt(e.target.value))}
+                className="flex-1 h-1 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+              />
+              <button
+                onClick={() => setQuantity(Math.min(5000, (parseInt(quantity) || 10) + 50))}
+                className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </div>
 
           {/* Order Summary */}
           <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl sm:rounded-[2.5rem] md:rounded-[3.5rem] border-2 border-emerald-200 shadow-lg overflow-hidden">
@@ -2410,6 +2228,7 @@ function CustomizeLabContent() {
                 <div className="flex-1">
                   <h3 className="text-base sm:text-lg font-black text-gray-950">Custom Designed Box</h3>
                   <p className="text-xs text-emerald-600 font-bold uppercase tracking-widest mt-0.5">{dimensions.l}{unit} × {dimensions.w}{unit} × {dimensions.h}{unit}</p>
+                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-1.5">{selectedMaterial} • {selectedGSM}</p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2 bg-white rounded-lg p-3 border border-emerald-100">
@@ -2470,7 +2289,9 @@ function CustomizeLabContent() {
                         textColor: boxTextColor,
                         textSettings: boxTextSettings,
                         dimensions: dimensions,
-                        unit: unit
+                        unit: unit,
+                        selectedGSM: selectedGSM,
+                        selectedMaterial: selectedMaterial
                       }
                     };
                     addToCart(customizedProduct, quantity);

@@ -165,13 +165,6 @@ export default function SharedDesignPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Product Type</label>
-                        <div className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-emerald-600">
-                          {cd.selectedProductType || "Mailers"}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select GSM</label>
                         <div className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950">
                           {cd.selectedGSM || "300 GSM"}
@@ -182,68 +175,6 @@ export default function SharedDesignPage() {
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Material</label>
                         <div className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950">
                           {cd.selectedMaterial || "SBS"}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 1: Printing</label>
-                        <div className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950">
-                          {cd.printingOpt || "No Printing"}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 2: Finishing</label>
-                        <div className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950">
-                          {cd.laminationOpt || "No Lamination"}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 3: Effects (Foiling & UV)</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-950">
-                            {cd.foilingOpt || "No Foiling"}
-                          </div>
-                          <div className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-950">
-                            {cd.uvOpt || "No UV"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Effects (Emboss) & Group 4 (Die)</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-950">
-                            {cd.embossingOpt || "No Embossing"}
-                          </div>
-                          <div className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-950">
-                            {cd.dieOpt || "No Die"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 4: Cutting & Group 5: Extra</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-950">
-                            {cd.cuttingOpt || "Cutting"}
-                          </div>
-                          <div className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-950">
-                            {cd.windowOpt || "No Window"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Group 5: Extra Work (Pasting)</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-950">
-                            {cd.pastingOpt || "No Pasting"}
-                          </div>
-                          <div className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-950">
-                            {cd.gummingOpt || "No Gumming"}
-                          </div>
                         </div>
                       </div>
 

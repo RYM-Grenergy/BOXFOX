@@ -187,40 +187,12 @@ export default function OrderInfoPage() {
                                         </p>
                                         <div className="grid grid-cols-2 gap-x-6 gap-y-4 ml-7">
                                             <div className="space-y-0.5">
-                                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Product Type</p>
-                                                <p className="text-[11px] font-black text-gray-950 uppercase">{cd.selectedProductType || "Mailers"}</p>
-                                            </div>
-                                            <div className="space-y-0.5">
                                                 <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Select GSM</p>
                                                 <p className="text-[11px] font-black text-gray-950 uppercase">{cd.selectedGSM || "350 GSM"}</p>
                                             </div>
                                             <div className="space-y-0.5">
                                                 <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Select Material</p>
                                                 <p className="text-[11px] font-black text-gray-950 uppercase">{cd.selectedMaterial || "SBS"}</p>
-                                            </div>
-                                            <div className="space-y-0.5">
-                                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Group 1: Printing</p>
-                                                <p className="text-[11px] font-black text-gray-950 uppercase">{cd.printingOpt || "No Printing"}</p>
-                                            </div>
-                                            <div className="space-y-0.5">
-                                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Group 2: Finishing</p>
-                                                <p className="text-[11px] font-black text-gray-950 uppercase">{cd.laminationOpt || "No Lamination"}</p>
-                                            </div>
-                                            <div className="space-y-0.5">
-                                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Group 3: Effects (Foiling & UV)</p>
-                                                <p className="text-[11px] font-black text-gray-950 uppercase">{cd.foilingOpt || "No Foiling"} / {cd.uvOpt || "No UV"}</p>
-                                            </div>
-                                            <div className="space-y-0.5">
-                                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Effects (Emboss) & Group 4 (Die)</p>
-                                                <p className="text-[11px] font-black text-gray-950 uppercase">{cd.embossingOpt || "No Embossing"} / {cd.dieOpt || "No Die"}</p>
-                                            </div>
-                                            <div className="space-y-0.5">
-                                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Group 4: Cutting & Group 5: Extra</p>
-                                                <p className="text-[11px] font-black text-gray-950 uppercase">{cd.cuttingOpt || "Cutting"} / {cd.windowOpt || "No Window"}</p>
-                                            </div>
-                                            <div className="space-y-0.5 col-span-2">
-                                                <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Group 5: Extra Work (Pasting)</p>
-                                                <p className="text-[11px] font-black text-emerald-600 uppercase">{cd.pastingOpt || "No Pasting"} / {cd.gummingOpt || "No Gumming"}</p>
                                             </div>
                                         </div>
                                     </div>

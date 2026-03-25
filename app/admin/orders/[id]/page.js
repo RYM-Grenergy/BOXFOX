@@ -373,28 +373,12 @@ function CustomDesignBlueprint({ item, order, expandedFace, setExpandedFace, dow
                                 </p>
                                 <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                                     <div className="space-y-0.5">
-                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Type & GSM</p>
-                                        <p className="text-[10px] font-black text-gray-950 uppercase">{cd.selectedProductType || "Mailers"} • {cd.selectedGSM || "300 GSM"}</p>
+                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">GSM</p>
+                                        <p className="text-[10px] font-black text-gray-950 uppercase">{cd.selectedGSM || "300 GSM"}</p>
                                     </div>
                                     <div className="space-y-0.5">
                                         <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Material</p>
                                         <p className="text-[10px] font-black text-gray-950 uppercase">{cd.selectedMaterial || "SBS"}</p>
-                                    </div>
-                                    <div className="space-y-0.5">
-                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Printing</p>
-                                        <p className="text-[10px] font-black text-emerald-600 uppercase">{cd.printingOpt || "No Printing"}</p>
-                                    </div>
-                                    <div className="space-y-0.5">
-                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Finishing</p>
-                                        <p className="text-[10px] font-black text-gray-950 uppercase">{cd.laminationOpt || "No Lamination"}</p>
-                                    </div>
-                                    <div className="space-y-0.5">
-                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Effects</p>
-                                        <p className="text-[10px] font-black text-gray-950 uppercase">{cd.foilingOpt || "No Foiling"} / {cd.uvOpt || "No UV"}</p>
-                                    </div>
-                                    <div className="space-y-0.5">
-                                        <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Die & Extra</p>
-                                        <p className="text-[10px] font-black text-gray-950 uppercase">{cd.dieOpt || "No Die"} / {cd.pastingOpt || "No Pasting"}</p>
                                     </div>
                                 </div>
                             </div>

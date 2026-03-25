@@ -5,13 +5,13 @@ import { MessageSquare, X, Send, Bot, User, Sparkles, ShoppingBag, Truck } from 
 import { useAuth } from "@/app/context/AuthContext";
 
 export default function AIChatBot() {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: "assistant", content: "Good day! I'm Foxie 🦊, your structural packaging concierge. I'm here to ensure your brand's boxes are absolutely perfect. How can I assist you today?" }
+    { role: "assistant", content: `Good day! I'm Foxie 🦊, your structural packaging concierge. I'm here to ensure your brand's boxes are absolutely perfect. How can I assist you today?` }
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const { user } = useAuth();
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -19,6 +19,15 @@ export default function AIChatBot() {
       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (user?.name && messages.length === 1 && messages[0].role === 'assistant') {
+       setMessages([{ 
+         role: "assistant", 
+         content: `Exciting to see you again, ${user.name}! 🦊 I've got your latest designs and order status ready. How can I help your brand today?` 
+       }]);
+    }
+  }, [user]);
 
   const handleSend = async (e) => {
     e?.preventDefault();
