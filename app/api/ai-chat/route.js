@@ -14,8 +14,16 @@ export async function POST(req) {
     // 1. Validate userId
     const isValidUserId = userId && mongoose.Types.ObjectId.isValid(userId);
 
-    // 2. Fetch Context Data
-    const products = await Product.find({}, { name: 1, price: 1, categories: 1, short_description: 1, minOrderQuantity: 1, _id: 1 }).lean();
+    // 2. Fetch Context Data - Optimized for premium relevance
+    const products = await Product.find({}, { 
+      name: 1, 
+      price: 1, 
+      categories: 1, 
+      short_description: 1, 
+      minOrderQuantity: 1,
+      specifications: 1,
+      _id: 1 
+    }).sort({ isFeatured: -1, createdAt: -1 }).limit(25).lean();
     
     let userDetails = null;
     let userOrders = [];
@@ -33,118 +41,118 @@ export async function POST(req) {
         userOrders = orders;
         savedDesigns = designs;
       } catch (dbErr) {
-        console.warn("Foxie: User profile data fetch failed, continuing with guest info.", dbErr);
+        console.warn("Foxie: Secure context fetch failed, continuing with guest profile.", dbErr);
       }
     }
 
-    // 3. Prepare Prompt
-    const catalogContext = products.slice(0, 15).map(p => 
-      `• ${p.name}: ₹${p.price} | Min Order: ${p.minOrderQuantity || 10} units | Desc: ${p.short_description || 'Custom Packaging'}`
+    // 3. Prepare Multi-Layered Knowledge Base
+    const catalogContext = products.map(p => 
+      `• **${p.name}**: ₹${p.price} | MOQ: ${p.minOrderQuantity || 10} | ${p.short_description || 'Elite Structural Packaging'}`
     ).join('\n');
 
     const ordersContext = userOrders.length > 0 
-      ? userOrders.map(o => `Logistics ID #${o.orderId}: Status is ${o.status}, Total ₹${o.total}`).join('\n')
-      : "The user has no recorded order history.";
+      ? userOrders.map(o => `Track #${o.orderId}: Status [${o.status.toUpperCase()}], Total ₹${o.total}`).join('\n')
+      : "No previous order records found for this account.";
 
     const designsContext = savedDesigns.length > 0 
-      ? savedDesigns.map(d => `• "${d.name}": Created on ${new Date(d.createdAt).toLocaleDateString()}.`).join('\n')
-      : "The user has no saved designs yet.";
+      ? savedDesigns.map(d => `• "${d.name}": Last modified ${new Date(d.updatedAt).toLocaleDateString()}.`).join('\n')
+      : "No designs saved in the Design Lab yet.";
 
-    const addressContext = userDetails?.shippingAddress 
-      ? `${userDetails.shippingAddress.street}, ${userDetails.shippingAddress.city}, ${userDetails.shippingAddress.state} ${userDetails.shippingAddress.zipCode}`
-      : "No shipping address on file.";
+    const systemPrompt = `You are "Foxie" 🦊, the Lead Structural Packaging Architect and Concierge for **BoxFox** (Indo Omakase Pvt. Ltd.). 
+Your objective is to provide expert-level technical guidance, order tracking, and design consulting.
 
-    const systemPrompt = `You are "Foxie" 🦊, the Elite Structural Packaging Concierge for BoxFox (Indo Omakase Pvt. Ltd.). 
-Your mission is to provide "Perfect & Accurate" guidance to our high-value clients.
+### 🏛️ CORPORATE IDENTITY & LEGACY
+- **Company**: BoxFox (Division of Indo Omakase Pvt. Ltd. / IOPL).
+- **Established**: 2010 by Jay Agarwal (RichieJay). ISO 9001:2008 Certified.
+- **Scale**: 1.8K active production nodes, serving 10.5K+ global buyers.
+- **Expertise**: Manufacturing premium Duplex, Rigid, and Corrugated custom packaging.
+- **Specialized Sectors**: LED Bulbs, Mobile/Electronics, Luxury Watches, FMCG, and Luxury Rigid Gifting.
 
-COMPANY KNOWLEDGE (INTERNAL):
-- Brand: BoxFox (Part of Indo Omakase Pvt. Ltd. / IOPL).
-- Legacy: Established in 2010, ISO 9001:2008 Certified.
-- Expertise: Premium Duplex & Rigid Custom Packaging, 3D Real-time Design Labs.
-- Products: LED Bulb, Mobile, Watch, Headphone, FMCG, and Luxury Rigid Boxes.
-- Leadership: Founded by Jay Agarwal (RichieJay).
-- Value Prop: Turning ideas into physical reality with state-of-the-art machinery and designer expertise.
+### 🗓️ HISTORICAL MILESTONES
+- **2010-2012**: Inception with 0 investment; first corporate investment by Corporation Bank.
+- **2014-2016**: Expansion to 4000+ sq. ft. facility; began serving elite Japanese and Indian clientele.
+- **2020-2023**: Digital transformation and expansion into high-speed automation.
+- **Jan 2024**: Launch of **"The AI Forge"** (3D AI-powered customization lab) and real-time Pacdora integration.
 
-SERVICE PROTOCOLS:
-- Lead Times: 2 business days (inventory items), 7-10 working days (bespoke/printed orders).
-- Shipping: Pan-India delivery within 2-10 working days.
-- Free Shipping: Available on retail orders over ₹2,000 within India.
-- Express Shipping: Available for an extra charge (Delhi NCR: 1 day, Others: 1-2 days).
-- Returns: 14-day window. Refunds for totals < ₹2,000 are issued as discount vouchers, not cash.
-- Operational Hours: Mon-Fri, 10 AM - 8 PM (No processing on Sat/Sun).
+### 📦 TECHNICAL CAPABILITIES (PACKAGING LAB)
+- **Materials**: Kappa Board (Rigid), Duplex Board (Folding), Corrugated E-flute/B-flute.
+- **Features**: Real-time 3D Preview (Pacdora), Custom 3D Design Lab.
+- **Finishing**: Gloss/Matte/Soft-touch Lamination, Spot UV, Foil Stamping, Thermal Embossing.
+- **Sampling**: Offers digital proofs and physical sample production for bulk orders.
 
-PERSONALITY & TONE:
-- Sophisticated yet approachable. Use emojis like 🦊, ✨, 📦, 🎨 sparingly.
-- Professional, efficient, and extremely accurate.
-- Always address the user by name if available (${userDetails?.name || 'Guest'}).
+### ⚙️ LOGISTICS & BUSINESS RULES
+- **Turnaround (TAT)**: 
+  - Stock Items: 48 Hours.
+  - Bespoke/Printed: 7-10 Working Days post design sign-off.
+- **Shipping**: Pan-India. Free delivery on retail orders > ₹2,000. Express available (Next Day in NCR).
+- **MOQ Policy**: 
+  - Standard Boxes: Usually 10-50 units.
+  - Custom Printed: Starting from 500 units for best scaling.
+- **Returns**: 14-day window. Refunds < ₹2,000 via Store Vouchers; > ₹2,000 via Bank Transfer.
 
-INTERACTION RULES:
-- ONLY discuss BoxFox products, orders, and packaging. Redirect other queries gracefully back to packaging.
-- ALWAYS use clean formatting:
-  - Newlines between paragraphs.
-  - Bullet points (•) for all listings.
-  - Bold key terms using **text**.
-- If a user asks about their order, use the "Recent Orders History" provided below.
-- If a user asks about designs, refer to their "Latest Saved Designs".
-- If a user is a Guest, encourage them to log in to see their specific saved designs and order tracking.
+### 🤖 FOXIE'S INTERACTION PROTOCOLS
+1. **Model of Thinking**: Act as a Senior Consultant. If a user asks a simple question, provide a detailed, professional answer.
+2. **Personalization**: Always address ${userDetails?.name || 'Guest'} by name. Reference their specific orders or designs (listed below) if relevant.
+3. **Advanced Formatting**: Use Markdown **Bold** for emphasis, 🟢 for success statuses, and Markdown Tables for any pricing comparisons.
+4. **Tool Recommendation**: Proactively suggest using the "3D Design Lab" for visualizing brand transformations.
 
-USER CONTEXT:
-- Name: ${userDetails?.name || 'Guest'}
-- Shipping Address: ${addressContext}
-- Recent Orders History:
+### 👤 CURRENT SESSION CONTEXT
+- **User**: ${userDetails?.name || 'Guest'}
+- **Location Context**: ${userDetails?.shippingAddress?.state || 'Global'}
+- **Internal Records (Order History)**: 
 ${ordersContext}
-- Latest Saved Designs:
+- **Internal Records (Saved Designs)**: 
 ${designsContext}
 
-AVAILABLE CATALOG PREVIEW:
+### 🏷️ DYNAMIC CATALOG PREVIEW (LATEST ARCHETYPES)
 ${catalogContext}
-`;
 
-    // 4. CALL OpenRouter
+---
+STRICT BOUNDARY: Redirect all non-packaging/non-BoxFox queries with: "As the BoxFox Concierge, my knowledge is optimized for elite structural packaging. I'm unable to assist with [topic], but I can certainly help you optimize your brand's next box. Shall we look at some Rigid Box options? 📦🦊"`;
+
+    // 4. CALL OpenRouter (Gemini 2.0 Flash)
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey || apiKey.includes('YOUR_KEY_HERE')) {
-      return NextResponse.json({ reply: "My brain isn't fully configured. Please provide the OPENROUTER_API_KEY in the server environment!" });
+      return NextResponse.json({ reply: "My AI core is in standby. Admin needs to configure the OPENROUTER_API_KEY!" });
     }
-
-    // ENSURE HEADERS ARE CLEAN ASCII ONLY
-    const headers = {
-      "Authorization": `Bearer ${apiKey}`.trim(),
-      "Content-Type": "application/json",
-      "HTTP-Referer": (process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000").trim(),
-      "X-Title": "BoxFox Store Assistant".trim()
-    };
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
-      headers: headers,
+      headers: {
+        "Authorization": `Bearer ${apiKey}`.trim(),
+        "Content-Type": "application/json",
+        "HTTP-Referer": (process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000").trim(),
+        "X-Title": "BoxFox Store Assistant".trim()
+      },
       body: JSON.stringify({
-        model: "nvidia/nemotron-3-super-120b-a12b:free",
+        model: "nvidia/nemotron-3-nano-30b-a3b:free", // switched to ultra-fast 30B model within the same family that is known to work
         messages: [
           { role: "system", content: systemPrompt },
-          ...history.slice(-10),
+          ...history.slice(-6), // reduced history for faster prompt processing
           { role: "user", content: message }
         ],
-        temperature: 0.7,
-        max_tokens: 500
+        temperature: 0.55, 
+        max_tokens: 1200 // Increased token limit to allow for full tables and detailed packaging advice
       })
     });
 
     if (!response.ok) {
         const errorDetail = await response.text();
-        console.error("OpenRouter Response Error:", errorDetail);
-        throw new Error(`OpenRouter Error: ${response.status}`);
+        console.error("BoxFox AI Error:", errorDetail);
+        throw new Error(`OpenRouter_Link_Failed: ${response.status}`);
     }
 
     const data = await response.json();
     const reply = data.choices?.[0]?.message?.content;
     
-    return NextResponse.json({ reply: reply || "I understood your request but my brain returned an empty response. Try refreshing!" });
+    return NextResponse.json({ reply: reply || "I understood your request but my neural net returned an empty response. Let's try once more!" });
 
   } catch (error) {
-    console.error("Foxie System Error:", error);
-    // Be helpful but avoid leaking secrets
+    console.error("Critical Foxie Failure:", error);
     return NextResponse.json({ 
-      reply: `🤖 FOXIE_V2_ERROR: "${error.message}". Note: If you just added your API key, please restart the server in your terminal!` 
+      reply: `🤖 FOXIE_V3_RECOVERY: "${error.message}". Note: This could be a connection or configuration issue.` 
     }, { status: 500 });
   }
 }
+
+

@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send, Bot, User, Sparkles, ShoppingBag, Truck } from "lucide-react";
 import { useAuth } from "@/app/context/AuthContext";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function AIChatBot() {
   const { user } = useAuth();
@@ -90,7 +92,7 @@ export default function AIChatBot() {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed bottom-[190px] right-6 z-[9998] w-[350px] sm:w-[400px] h-[550px] max-h-[70vh] flex flex-col bg-white rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-gray-100"
+            className="fixed bottom-[190px] right-6 z-[9998] w-[350px] sm:w-[500px] h-[580px] max-h-[75vh] flex flex-col bg-white rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-gray-100"
           >
             {/* Header */}
             <div className="bg-gray-950 p-5 flex items-center justify-between">
@@ -112,18 +114,31 @@ export default function AIChatBot() {
             <div className="flex-1 overflow-y-auto p-5 scrollbar-hide space-y-4 bg-gray-50/50">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[85%] rounded-2xl p-3.5 text-xs font-medium leading-relaxed ${
+                  <div className={`max-w-[90%] rounded-2xl p-4 text-xs font-medium leading-relaxed ${
                     msg.role === "user" 
-                      ? "bg-emerald-600 text-white rounded-tr-none" 
-                      : "bg-white text-gray-800 shadow-sm border border-gray-100 rounded-tl-none"
-                  } whitespace-pre-wrap`}>
-                    <div 
-                      dangerouslySetInnerHTML={{ 
-                        __html: msg.content
-                          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-black text-gray-900">$1</strong>')
-                          .replace(/• /g, '<span class="mr-2 text-emerald-500">•</span>')
-                      }} 
-                    />
+                      ? "bg-emerald-600 text-white rounded-tr-none shadow-lg shadow-emerald-500/10" 
+                      : "bg-white text-gray-800 shadow-sm border border-gray-100 rounded-tl-none pr-6"
+                  }`}>
+                    <div className={`markdown-content prose prose-sm max-w-none text-[10px] sm:text-[11px] ${msg.role === "user" ? "prose-invert" : ""}`}>
+                      <ReactMarkdown 
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          table: ({node, ...props}) => <div className="overflow-x-auto my-3"><table className="w-full border-collapse border border-gray-200 text-[9px] sm:text-[10px]" {...props} /></div>,
+                          th: ({node, ...props}) => <th className="border border-gray-200 px-2 py-1.5 bg-gray-50 text-left font-black uppercase tracking-widest text-[8px]" {...props} />,
+                          td: ({node, ...props}) => <td className="border border-gray-200 px-2 py-1.5" {...props} />,
+                          strong: ({node, ...props}) => <strong className={`font-black ${msg.role === "user" ? "text-white" : "text-gray-950"}`} {...props} />,
+                          p: ({node, ...props}) => <p className="mb-2 last:mb-0 leading-relaxed" {...props} />,
+                          ul: ({node, ...props}) => <ul className="list-disc ml-4 mb-2 space-y-1" {...props} />,
+                          ol: ({node, ...props}) => <ol className="list-decimal ml-4 mb-2 space-y-1" {...props} />,
+                          h2: ({node, ...props}) => <h2 className="text-xs font-black mb-2 uppercase tracking-tighter mt-4" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="text-[10px] font-black mb-1 uppercase tracking-widest text-emerald-600 mt-2" {...props} />,
+                          hr: ({node, ...props}) => <hr className="my-4 border-gray-100" {...props} />,
+                          blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-emerald-500/50 pl-3 py-1 italic bg-emerald-50 my-2 text-emerald-800" {...props} />
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 </div>
               ))}
