@@ -76,9 +76,87 @@ function CustomizeLabContent() {
   // Customization States
   const [dimensions, setDimensions] = useState({ l: 12, w: 8, h: 4 });
   const [isGenerating, setIsGenerating] = useState(false);
+  
   // Custom formula states
   const [selectedGSM, setSelectedGSM] = useState("300 GSM");
   const [selectedMaterial, setSelectedMaterial] = useState("SBS");
+  const [selectedFinish, setSelectedFinish] = useState("Plain");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedSubCategory, setSelectedSubCategory] = useState("All");
+  const [selectedPrintType, setSelectedPrintType] = useState("Four Colour");
+
+  const [categories, setCategories] = useState(["All"]);
+  const [subCategories, setSubCategories] = useState(["All"]);
+  const [allSections, setAllSections] = useState([]);
+
+  const FINISH_OPTIONS = [
+    "Plain",
+    "Lamination Thermal",
+    "Lamination Normal Gloss",
+    "Lamination Normal Matt",
+    "Varnish",
+    "UV Hybrid",
+    "UV Flat",
+    "Spot UV",
+    "UV Crystal",
+  ];
+
+  const PRINT_OPTIONS = [
+    "Single Colour",
+    "Double Colour",
+    "Four Colour",
+    "Four + One Colour",
+    "Four + Two Colour",
+    "Four + Four Colour",
+    "Without Print",
+  ];
+
+  const GSM_OPTIONS = ["230 GSM", "250 GSM", "300 GSM", "350 GSM", "400 GSM"];
+  const MATERIAL_OPTIONS = ["SBS", "WhiteBack", "GreyBack", "Art Card", "Maplitho", "Custom Paper"];
+
+  // Fetch Categories from Product Backend
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const res = await fetch('/api/products?all=true');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setAllSections(data);
+          const cats = data.map(section => section.category);
+          setCategories(["All", ...new Set(cats)]);
+        }
+      } catch (e) {
+        console.error("Categories Fetch Error:", e);
+      }
+    };
+    fetchCats();
+  }, []);
+
+  // Sync Sub-Categories when Category changes
+  useEffect(() => {
+    if (selectedCategory === "All") {
+      setSubCategories(["All"]);
+      setSelectedSubCategory("All");
+      return;
+    }
+    
+    const activeSection = allSections.find(s => s.category === selectedCategory);
+    if (activeSection && activeSection.items) {
+      // Extract all unique categories[0] or categories[1] from items
+      const subs = new Set();
+      activeSection.items.forEach(item => {
+        if (item.categories && item.categories.length > 0) {
+          // Take the second to last if exists, else the last
+          const sub = item.categories.length > 1 ? item.categories[item.categories.length - 2] : item.categories[0];
+          if (sub) subs.add(sub);
+        }
+      });
+      setSubCategories(["All", ...Array.from(subs)]);
+    } else {
+      setSubCategories(["All"]);
+    }
+    setSelectedSubCategory("All");
+  }, [selectedCategory, allSections]);
 
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -1349,7 +1427,11 @@ function CustomizeLabContent() {
                 onClick={() => {
                   setSelectedGSM("300 GSM");
                   setSelectedMaterial("SBS");
-                  setQuantity(10);
+                  setSelectedFinish("Plain");
+                  setSelectedPrintType("Four Colour");
+                  setSelectedCategory("All");
+                  setSelectedSubCategory("All");
+                  setQuantity(100);
                   setDimensions({ l: 12, w: 8, h: 4 });
                   setDesignName("Untitled Design");
                   if (typeof setUnit === "function") setUnit("in");
@@ -1360,8 +1442,33 @@ function CustomizeLabContent() {
                 <span>Reset All</span>
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Category */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  {categories.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+
+              {/* Sub-Category */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Sub-Category</label>
+                <select
+                  value={selectedSubCategory}
+                  onChange={(e) => setSelectedSubCategory(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  {subCategories.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+
+              {/* GSM */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select GSM</label>
                 <select
@@ -1369,10 +1476,11 @@ function CustomizeLabContent() {
                   onChange={(e) => setSelectedGSM(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
                 >
-                  {["230 GSM", "250 GSM", "300 GSM", "350 GSM", "400 GSM"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  {GSM_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
 
+              {/* Material */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Material</label>
                 <select
@@ -1380,10 +1488,33 @@ function CustomizeLabContent() {
                   onChange={(e) => setSelectedMaterial(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
                 >
-                  {["SBS", "WhiteBack", "GreyBack", "Art Card", "Maplitho", "Custom Paper"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  {MATERIAL_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
 
+              {/* Finish */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lamination / Finish</label>
+                <select
+                  value={selectedFinish}
+                  onChange={(e) => setSelectedFinish(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  {FINISH_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+
+              {/* Print Type */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Printing Type</label>
+                <select
+                  value={selectedPrintType}
+                  onChange={(e) => setSelectedPrintType(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  {PRINT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
             </div>
           </div>
 

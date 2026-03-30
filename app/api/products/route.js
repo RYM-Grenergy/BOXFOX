@@ -113,6 +113,7 @@ export async function GET(req) {
         hasVariants: p.type === "variable",
         outOfStock: p.stock_status === "outofstock",
         dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' },
+        categories: p.categories,
         pacdoraId: p.pacdoraId
       });
     });
