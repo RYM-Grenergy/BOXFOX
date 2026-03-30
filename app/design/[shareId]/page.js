@@ -71,7 +71,7 @@ export default function SharedDesignPage() {
     return (
         <div className="min-h-screen bg-gray-50/50">
             <Navbar />
-            <main className="max-w-4xl mx-auto px-6 pt-28 pb-20">
+            <main className="max-w-4xl mx-auto px-6 pt-[92px] pb-20">
                 {/* Header */}
                 <div className="mb-8">
                     <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-400 hover:text-gray-950 transition-colors mb-4 text-sm font-bold">

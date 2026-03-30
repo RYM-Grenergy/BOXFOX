@@ -74,13 +74,25 @@ export default function Navbar() {
   return (
     <>
       {/* ─── Navbar ──────────────────────────────────────────────────────── */}
-      <nav className="fixed top-0 left-0 right-0 z-[100] w-full">
-        <AnnouncementBar />
+      <nav className={`fixed top-0 left-0 right-0 z-[100] w-full transition-all duration-500 ${isScrolled ? "bg-white/95 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)]" : ""}`}>
+        <AnimatePresence>
+          {!isScrolled && (
+            <motion.div
+              initial={{ height: "auto", opacity: 1 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <AnnouncementBar />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Floating pill wrapper */}
         <div className={`mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isScrolled
-            ? "w-[92%] xl:max-w-[1280px] bg-white/96 backdrop-blur-2xl border border-gray-200/60 shadow-[0_8px_40px_rgba(0,0,0,0.10)] rounded-full py-2 px-5 lg:px-8 mt-3"
-            : "w-full bg-white border-b border-gray-100 py-0 px-4 sm:px-8 lg:px-14"
+            ? "w-[94%] xl:max-w-[1300px] mt-2 mb-2 bg-white/95 backdrop-blur-md border border-gray-200/50 shadow-2xl rounded-[2.5rem] py-1.5 px-6 lg:px-10"
+            : "w-full bg-white border-b border-gray-100 py-0 px-4 sm:px-8 lg:px-14 shadow-none"
           }`}>
           <div className="flex items-center justify-between h-14">
 

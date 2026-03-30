@@ -105,12 +105,12 @@ export default function HeroBanner() {
   return (
 
     <section
-      className="relative w-full bg-[#f4f4f2] overflow-hidden min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-90px)]"
+      className="relative w-full bg-[#111] overflow-hidden pt-[90px]"
     >
 
-      {/* ── Slider fills the full hero area ── */}
+      {/* ── Slider fills the half-hero area ── */}
       <div
-        className="relative w-full h-full group min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-90px)]"
+        className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -135,21 +135,20 @@ export default function HeroBanner() {
               if (swipe < -swipeConfidenceThreshold) paginate(1);
               else if (swipe > swipeConfidenceThreshold) paginate(-1);
             }}
-            className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing min-h-[460px] sm:min-h-[540px] md:min-h-[calc(100vh-90px)]"
+            className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"
           >
             {banners[currentIndex].type === "image" ? (
               <>
-                {/* Blurred background fill */}
+                {/* Immersive blurred background to fill the frame */}
                 <div
-                  className="absolute inset-0 w-full h-full bg-cover bg-center"
+                  className="absolute inset-0 w-full h-full bg-cover bg-center opacity-40 scale-110"
                   style={{
                     backgroundImage: `url('${banners[currentIndex].image}')`,
-                    filter: "blur(28px) saturate(1.2)",
-                    transform: "scale(1.12)",
-                    opacity: 0.55,
+                    filter: "blur(40px) saturate(1.8)",
                   }}
                 />
-                {/* Sharp foreground — fully contained, never cropped */}
+
+                {/* Sharp foreground — contained to keep products/designs perfectly visible */}
                 <Image
                   src={banners[currentIndex].image}
                   alt={banners[currentIndex].alt}
@@ -158,26 +157,35 @@ export default function HeroBanner() {
                   style={{ objectFit: "contain", objectPosition: "center" }}
                   priority={currentIndex === 0}
                   sizes="100vw"
-                  quality={75}
+                  quality={95}
                 />
               </>
             ) : (
               <>
-                <div
-                  className="absolute inset-0 bg-black/20"
+                {/* Blurred Video Background */}
+                <video
+                  src={banners[currentIndex].src}
+                  muted
+                  playsInline
+                  autoPlay
+                  loop
+                  className="absolute inset-0 w-full h-full bg-cover opacity-30 scale-110 blur-3xl saturate-150"
+                  style={{ objectFit: "cover", objectPosition: "center" }}
                 />
+
+                {/* Main Video — contained to prevent cropping sensitive content */}
                 <video
                   ref={(el) => {
                     if (el) {
                       videoRef.current = el;
-                      el.play().catch(() => {});
+                      el.play().catch(() => { });
                     }
                   }}
                   src={banners[currentIndex].src}
                   muted
                   playsInline
                   onEnded={() => paginate(1)}
-                  className="absolute inset-0 w-full h-full pointer-events-none"
+                  className="relative z-10 w-full h-full pointer-events-none"
                   style={{ objectFit: "contain", objectPosition: "center" }}
                 />
               </>
@@ -237,7 +245,7 @@ export default function HeroBanner() {
                 className="inline-flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-[#B8860B] via-[#D4AF37] to-[#B8860B] hover:brightness-110 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_40px_rgba(0,0,0,0.55)] transition-all duration-300 hover:scale-[1.03] active:scale-95"
               >
                 Start Designing
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
               </a>
               <a
                 href="/shop"
@@ -275,11 +283,10 @@ export default function HeroBanner() {
                 setDirection(idx > currentIndex ? 1 : -1);
                 setCurrentIndex(idx);
               }}
-              className={`transition-all duration-300 rounded-full ${
-                idx === currentIndex
-                  ? "w-6 sm:w-8 h-[3px] bg-white"
-                  : "w-[3px] h-[3px] bg-white/50 hover:bg-white/80"
-              }`}
+              className={`transition-all duration-300 rounded-full ${idx === currentIndex
+                ? "w-6 sm:w-8 h-[3px] bg-white"
+                : "w-[3px] h-[3px] bg-white/50 hover:bg-white/80"
+                }`}
               aria-label={`Go to slide ${idx + 1}`}
             />
           ))}
