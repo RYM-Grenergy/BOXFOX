@@ -13,6 +13,8 @@ import {
   Heart,
   Minus,
   Plus,
+  Sparkles,
+  Briefcase,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -65,8 +67,8 @@ export default function Navbar() {
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "Shop", href: "/shop" },
-    { label: " AI Customize", href: "/customize", isSpecial: true },
-    { label: "B2B", href: "/b2b" },
+    { label: "AI Customize", href: "/customize", isAI: true },
+    { label: "B2B", href: "/b2b", isB2B: true },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },
   ];
@@ -107,28 +109,42 @@ export default function Navbar() {
 
             {/* ── Nav Links — centered (desktop only) ── */}
             <div className="hidden lg:flex items-center gap-0.5 xl:gap-1 absolute left-1/2 -translate-x-1/2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className={`relative px-3 xl:px-4 py-1.5 text-[10.5px] xl:text-[11.5px] font-black uppercase tracking-[0.18em] transition-all duration-300 group active:scale-95 rounded-lg ${pathname === link.href
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href;
+                const isAI = link.isAI;
+                const isB2B = link.isB2B;
+
+                return (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className={`relative px-3 xl:px-4 py-2 text-[10px] xl:text-[11px] font-black uppercase tracking-[0.16em] transition-all duration-300 group active:scale-95 rounded-xl flex items-center gap-1.5 ${isActive
                       ? "text-emerald-600"
-                      : link.isSpecial
-                        ? "text-emerald-500"
-                        : "text-gray-400 hover:text-gray-900"
-                    }`}
-                >
-                  <span className="relative z-10">{link.label}</span>
-                  <div className="absolute inset-0 bg-transparent group-hover:bg-gray-900/[0.04] rounded-lg transition-all duration-200" />
-                  {pathname === link.href && (
-                    <motion.div
-                      layoutId="nav-active"
-                      className="absolute inset-0 bg-emerald-500/10 rounded-lg z-0"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
-                    />
-                  )}
-                </Link>
-              ))}
+                      : isAI
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5"
+                        : isB2B
+                          ? "bg-gray-950 text-white shadow-lg shadow-gray-900/10 hover:bg-emerald-600 hover:shadow-emerald-500/20 hover:-translate-y-0.5"
+                          : "text-gray-400 hover:text-gray-900"
+                      }`}
+                  >
+                    {isAI && <Sparkles size={12} className="animate-pulse" />}
+                    {isB2B && <Briefcase size={11} />}
+                    <span className="relative z-10">{link.label}</span>
+                    
+                    {!isAI && !isB2B && (
+                      <div className="absolute inset-0 bg-transparent group-hover:bg-gray-900/[0.04] rounded-lg transition-all duration-200" />
+                    )}
+                    
+                    {isActive && !isAI && !isB2B && (
+                      <motion.div
+                        layoutId="nav-active"
+                        className="absolute inset-0 bg-emerald-500/10 rounded-lg z-0"
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
+                      />
+                    )}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* ── Right Actions ── */}
@@ -333,11 +349,24 @@ export default function Navbar() {
                   >
                     <Link
                       href={link.href}
-                      className={`text-2xl sm:text-3xl font-black uppercase tracking-tighter flex items-center justify-between group ${pathname === link.href || link.isSpecial ? "text-emerald-500" : "text-gray-950"}`}
+                      className={`text-2xl sm:text-3xl font-black uppercase tracking-tighter flex items-center justify-between group py-2 px-4 rounded-2xl transition-all ${pathname === link.href
+                          ? "text-emerald-500 bg-emerald-50"
+                          : link.isAI
+                            ? "text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/20"
+                            : link.isB2B
+                              ? "text-white bg-gray-950 shadow-xl shadow-gray-900/10"
+                              : "text-gray-950 hover:bg-gray-50"
+                        }`}
                       onClick={() => setMenuOpen(false)}
                     >
-                      <div className="flex flex-col">
-                        <span>{link.label}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col">
+                          <span className="flex items-center gap-2">
+                            {link.isAI && <Sparkles size={20} className="text-white animate-pulse" />}
+                            {link.isB2B && <Briefcase size={18} className="text-white" />}
+                            {link.label}
+                          </span>
+                        </div>
                       </div>
                       <ChevronRight size={24} className={`transition-transform group-hover:translate-x-1 ${pathname === link.href ? "opacity-100" : "opacity-0"}`} />
                     </Link>
