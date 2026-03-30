@@ -217,7 +217,7 @@ function LoginContent() {
                                                 </div>
                                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest group-hover:text-gray-950 transition-colors">Remember Me</span>
                                             </label>
-                                            <Link href="#" className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-emerald-500 transition-colors">
+                                            <Link href="/forgot-password" className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-emerald-500 transition-colors">
                                                 Forgot Password?
                                             </Link>
                                         </div>

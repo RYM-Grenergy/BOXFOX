@@ -36,6 +36,8 @@ import {
   Share2,
   Link2,
   Copy,
+  Star,
+  Lock,
 } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import AuthModal from "@/app/components/AuthModal";
@@ -46,6 +48,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import Link from "next/link";
 import Script from "next/script";
 import Cropper from 'react-easy-crop';
+import { downloadDieLine } from "@/lib/dieline-generator";
 
 function CustomizeLabContent() {
   const router = useRouter();
@@ -109,6 +112,52 @@ function CustomizeLabContent() {
   const [assetPool, setAssetPool] = useState([]);
   const [savedPatterns, setSavedPatterns] = useState([]);
   const [activeAssetIndex, setActiveAssetIndex] = useState(0);
+
+  // Brand Vault State
+  const [brandVault, setBrandVault] = useState({ logos: [], colors: [], fonts: [] });
+
+  // Sync brand vault from server
+  useEffect(() => {
+    if (user) {
+      fetch('/api/user/brand-vault')
+        .then(res => res.json())
+        .then(data => {
+          if (data.brandVault) setBrandVault(data.brandVault);
+        })
+        .catch(err => console.error("Vault Sync Error:", err));
+    }
+  }, [user]);
+
+  const saveToVault = async (type, value, name) => {
+    try {
+      const res = await fetch('/api/user/brand-vault', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, value, name })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBrandVault(data.brandVault);
+        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} secured in vault!`);
+      }
+    } catch (e) {
+      console.error("Vault Save Error:", e);
+      showToast("Failed to save to vault", "error");
+    }
+  };
+
+  const deleteFromVault = async (type, value) => {
+    try {
+      const res = await fetch(`/api/user/brand-vault?type=${type}&value=${encodeURIComponent(value)}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBrandVault(data.brandVault);
+        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} removed from vault.`);
+      }
+    } catch (e) { console.error(e); }
+  };
 
   // Sync saved patterns from user object
   useEffect(() => {
@@ -1428,6 +1477,7 @@ function CustomizeLabContent() {
                   <p className="text-sm font-black text-gray-950">{(unit === "mm" ? 2 * (dimensions.l * dimensions.w + dimensions.w * dimensions.h + dimensions.h * dimensions.l) : currentSA).toFixed(unit === "mm" ? 0 : 1)}<span className="text-[10px] ml-1 opacity-40 uppercase">{unit}²</span></p>
                 </div>
               </div>
+
             </div>
 
             {/* Section 2: Asset Library */}
@@ -1545,15 +1595,51 @@ function CustomizeLabContent() {
                         className="relative aspect-square rounded-[2rem] border-2 border-blue-200 bg-white p-2 group overflow-hidden"
                       >
                         <img src={src} className="w-full h-full object-contain" />
-                        <button
-                          onClick={() => setBoxLogos(prev => ({ ...prev, [face]: null }))}
-                          className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center scale-0 group-hover:scale-100 transition-all"
-                        >
-                          <X size={10} />
-                        </button>
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => saveToVault('logo', src, `Logo_${face}_${new Date().toLocaleDateString()}`)}
+                            title="Save to Vault"
+                            className="p-1.5 bg-white rounded-lg hover:bg-emerald-500 hover:text-white transition-all shadow-lg"
+                          >
+                            <Sparkles size={12} />
+                          </button>
+                          <button
+                            onClick={() => setBoxLogos(prev => ({ ...prev, [face]: null }))}
+                            title="Remove"
+                            className="p-1.5 bg-white rounded-lg hover:bg-red-500 hover:text-white transition-all shadow-lg"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
+
+                  {/* Brand Asset Vault - Logos */}
+                  {brandVault.logos?.length > 0 && (
+                    <div className="pt-4 border-t border-gray-100">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
+                        <Lock size={10} className="text-emerald-500" /> Brand_Vault Assets
+                      </p>
+                      <div className="grid grid-cols-4 gap-3">
+                        {brandVault.logos.map((vaultLogo, lidx) => (
+                          <div
+                            key={lidx}
+                            onClick={() => setBoxLogos(prev => ({ ...prev, [selectedFace || 'top']: vaultLogo.url }))}
+                            className="aspect-square rounded-2xl border border-gray-100 bg-white p-2 cursor-pointer hover:border-emerald-500 hover:scale-105 transition-all group relative overflow-hidden shadow-sm"
+                          >
+                            <img src={vaultLogo.url} alt={vaultLogo.name} className="w-full h-full object-contain" />
+                            <button
+                              onClick={(e) => { e.stopPropagation(); deleteFromVault('logo', vaultLogo.url); }}
+                              className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center translate-x-10 group-hover:translate-x-0 transition-transform duration-300 shadow-md"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
 
                   {/* Logo Control Panel */}
@@ -1642,35 +1728,76 @@ function CustomizeLabContent() {
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-6 gap-3">
-                  {[
-                    "#000000",
-                    "#FFFFFF",
-                    "#059669",
-                    "#1D4ED8",
-                    "#B91C1C",
-                    "#D97706",
-                    "#7C3AED",
-                    "#DB2777",
-                  ].map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => setActiveColor(color)}
-                      style={{ backgroundColor: color }}
-                      className={`aspect-square rounded-2xl border-2 transition-all ${activeColor === color ? "border-emerald-500 scale-90 ring-4 ring-emerald-500/10 shadow-lg" : "border-gray-100 hover:border-emerald-500/40"}`}
-                    />
-                  ))}
-                  <div className="aspect-square rounded-2xl bg-white border border-gray-100 flex items-center justify-center relative group overflow-hidden">
-                    <input
-                      type="color"
-                      value={activeColor}
-                      onChange={(e) => setActiveColor(e.target.value)}
-                      className="absolute inset-0 opacity-0 cursor-pointer scale-[5]"
-                    />
-                    <Palette
-                      size={16}
-                      className="text-gray-400 group-hover:text-emerald-500 transition-colors"
-                    />
+                <div className="space-y-6">
+                  <div className="grid grid-cols-6 gap-3">
+                    {[
+                      "#000000",
+                      "#FFFFFF",
+                      "#059669",
+                      "#1D4ED8",
+                      "#B91C1C",
+                      "#D97706",
+                      "#7C3AED",
+                      "#DB2777",
+                    ].map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => setActiveColor(color)}
+                        style={{ backgroundColor: color }}
+                        className={`aspect-square rounded-2xl border-2 transition-all ${activeColor === color ? "border-emerald-500 scale-90 ring-4 ring-emerald-500/10 shadow-lg" : "border-gray-100 hover:border-emerald-500/40"}`}
+                      />
+                    ))}
+                    <div className="aspect-square rounded-2xl bg-white border border-gray-100 flex items-center justify-center relative group overflow-hidden">
+                      <input
+                        type="color"
+                        value={activeColor}
+                        onChange={(e) => setActiveColor(e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer scale-[5]"
+                      />
+                      <Palette
+                        size={16}
+                        className="text-gray-400 group-hover:text-emerald-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Brand Asset Vault - Colors */}
+                  <div className="pt-4 border-t border-gray-100 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                        <Lock size={10} className="text-emerald-500" /> My_Branding_Palette
+                      </p>
+                      <button
+                        onClick={() => saveToVault('color', activeColor)}
+                        className="p-1 px-3 bg-white border border-gray-200 text-gray-400 rounded-lg text-[8px] font-black uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-500 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                      >
+                        <Star size={10} className="text-emerald-500" fill={brandVault.colors.includes(activeColor) ? "currentColor" : "none"} /> 
+                        {brandVault.colors.includes(activeColor) ? "Identified" : "Secure Color"}
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      {brandVault.colors?.length > 0 ? (
+                        brandVault.colors.map((c, cidx) => (
+                          <div key={cidx} className="relative group">
+                            <button
+                              onClick={() => setActiveColor(c)}
+                              style={{ backgroundColor: c }}
+                              className={`w-12 h-12 rounded-2xl border-2 transition-all ${activeColor === c ? "border-emerald-500 scale-90 ring-4 ring-emerald-500/10 shadow-lg" : "border-gray-100 hover:border-emerald-500/40"}`}
+                            />
+                            <button
+                              onClick={(e) => { e.stopPropagation(); deleteFromVault('color', c); }}
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center scale-0 group-hover:scale-100 transition-transform shadow-md"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="w-full py-4 border-2 border-dashed border-gray-100 rounded-2xl flex items-center justify-center">
+                          <p className="text-[8px] font-black text-gray-300 uppercase tracking-widest italic">Vault is empty. Secure a color to begin.</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

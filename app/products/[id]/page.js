@@ -10,7 +10,10 @@ import {
     Truck,
     Star,
     ArrowRight,
-    Heart
+    Heart,
+    RefreshCw,
+    Eye,
+    EyeOff
 } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
 import { useCart } from '@/app/context/CartContext';
@@ -126,26 +129,26 @@ export default function ProductPage() {
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center p-8 md:p-16 text-center">
-                                        <img src={displayImage} className="max-w-full max-h-full object-contain drop-shadow-2xl" />
+                                        <img src={displayImage} className="max-w-full max-h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-700" />
                                     </div>
                                 )}
 
-                                {product.pacdoraId && (
-                                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center bg-white/90 backdrop-blur-xl p-1 rounded-2xl border border-gray-950/10 shadow-2xl">
-                                        <button
-                                            onClick={() => setViewMode('2D')}
-                                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === '2D' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-400 hover:text-gray-950'}`}
-                                        >
-                                            Gallery
-                                        </button>
+                                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center bg-white/95 backdrop-blur-xl p-1 rounded-2xl border border-gray-950/10 shadow-2xl">
+                                    <button
+                                        onClick={() => setViewMode('2D')}
+                                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === '2D' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-400 hover:text-gray-950'}`}
+                                    >
+                                        Gallery
+                                    </button>
+                                    {product.pacdoraId && (
                                         <button
                                             onClick={() => setViewMode('3D')}
-                                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === '3D' ? 'bg-emerald-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-950'}`}
+                                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === '3D' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-950'}`}
                                         >
-                                            3D View
+                                            3D Mode
                                         </button>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </motion.div>
 
                             <div className="flex gap-4 p-2 bg-gray-50/50 rounded-3xl w-fit">
@@ -163,6 +166,21 @@ export default function ProductPage() {
                                         </div>
                                     </button>
                                 ))}
+
+                                {product.pacdoraId && (
+                                    <button
+                                        onClick={() => setViewMode('3D')}
+                                        className={`relative w-24 h-24 rounded-2xl transition-all duration-300 shrink-0 ${viewMode === '3D'
+                                            ? 'ring-2 ring-indigo-600 ring-offset-4 ring-offset-white scale-95 shadow-lg'
+                                            : 'opacity-60 hover:opacity-100 hover:scale-105 bg-gray-50 border-2 border-dashed border-gray-200'
+                                            }`}
+                                    >
+                                        <div className="w-full h-full rounded-2xl overflow-hidden flex flex-col items-center justify-center gap-1 p-2">
+                                            <RefreshCw size={18} className="text-indigo-600" />
+                                            <span className="text-[8px] font-black uppercase tracking-widest text-indigo-600">3D Mode</span>
+                                        </div>
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -232,37 +250,30 @@ export default function ProductPage() {
 
                                 <div className="space-y-4">
 
-                                    <div className="pt-2">
-                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-2">Select Quantity (Standard Size)</p>
-                                        <div className="flex flex-wrap gap-2">
-                                            {[10, 20, 30, 100, 200, 300, 500, 1000].map(q => (
-                                                <button
-                                                    key={q}
-                                                    onClick={() => setQuantity(q)}
-                                                    className={`flex-[1_1_0%] min-w-[60px] py-3 rounded-xl border-2 font-black text-xs transition-all ${quantity === q ? 'border-gray-950 bg-gray-950 text-white shadow-md' : 'border-gray-200 text-gray-500 hover:border-gray-950 hover:text-gray-950'}`}
-                                                >
-                                                    {q}
-                                                </button>
-                                            ))}
-                                            <div className="relative flex-[2_2_0%] min-w-[100px]">
+                                    <div className="space-y-4">
+                                        <div className="relative">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Specify Units</p>
+                                            <div className="relative group">
                                                 <input
                                                     type="number"
                                                     value={quantity}
                                                     onChange={(e) => setQuantity(Math.max(10, parseInt(e.target.value) || 10))}
-                                                    className="w-full h-full py-3 px-4 rounded-xl border-2 border-gray-200 font-black text-xs text-gray-950 focus:border-gray-950 outline-none transition-all"
-                                                    placeholder="Custom..."
+                                                    className="w-full py-4 px-6 rounded-2xl bg-white border-2 border-gray-100 font-black text-sm text-gray-950 focus:border-emerald-500 focus:bg-emerald-50/10 outline-none transition-all pr-20"
                                                     min={10}
                                                 />
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1 bg-gray-50 rounded-lg text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                                                    Min 10
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <button
-                                        onClick={() => addToCart(product, quantity)}
-                                        className="w-full py-5 border-2 border-gray-950 text-gray-950 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-gray-950 hover:text-white transition-all flex items-center justify-center gap-3"
-                                    >
-                                        <ShoppingCart size={18} /> Add {quantity} Units to Cart
-                                    </button>
+                                        <button
+                                            onClick={() => addToCart(product, quantity)}
+                                            className="w-full py-5 bg-gray-950 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-emerald-600 transition-all flex items-center justify-center gap-3 shadow-xl shadow-gray-200 group"
+                                        >
+                                            <ShoppingCart size={18} className="group-hover:scale-110 transition-transform" /> Add to Basket
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 

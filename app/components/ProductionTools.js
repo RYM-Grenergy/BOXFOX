@@ -236,8 +236,26 @@ function DieCutLayout({ customDesign, orderId, size = 500 }) {
                     <span className="flex items-center gap-1"><span className="w-4 h-0.5 border-t-2 border-dashed border-red-500 inline-block"></span> Fold Line</span>
                     <span className="flex items-center gap-1"><span className="w-3 h-3 bg-gray-200 border border-gray-300 rounded-sm inline-block"></span> Glue Tab</span>
                 </div>
-                <button onClick={downloadDieCut} className="flex items-center gap-2 px-4 py-2 bg-gray-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all">
-                    <Download size={12} /> Download Die-Cut
+                <button onClick={downloadDieCut} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">
+                    <Download size={12} /> Download PNG Preview
+                </button>
+                <button 
+                    onClick={() => {
+                        const { generateMailerDieLine } = require("@/lib/dieline-generator");
+                        const svg = generateMailerDieLine(dims.l, dims.w, dims.h, cd.unit || 'in');
+                        const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `BoxFox_Dieline_${orderId || 'Template'}_${dims.l}x${dims.w}x${dims.h}.svg`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 transition-all shadow-md shadow-orange-100"
+                >
+                    <Download size={12} /> Download SVG Template
                 </button>
             </div>
         </div>

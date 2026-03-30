@@ -2,14 +2,16 @@
 import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { LogOut, User as UserIcon, Settings, Package, MapPin, Phone, Mail, Lock, Heart, Trash2, ChevronRight, RotateCw, Layers, Ruler, Type, Palette, Eye, RefreshCw, Box, Share2, Link2, Copy, Check, Pencil } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, Package, MapPin, Phone, Mail, Lock, Heart, Trash2, ChevronRight, RotateCw, Layers, Ruler, Type, Palette, Eye, RefreshCw, Box, Share2, Link2, Copy, Check, Pencil, Sparkles, Plus, Upload } from "lucide-react";
 import Navbar from "../components/Navbar";
+import { useToast } from "@/app/context/ToastContext";
 import { useSearchParams } from "next/navigation";
 import { BoxFacePreview, MiniBox3D } from "@/app/components/BoxPreview3D";
 
 function AccountManagementContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { showToast } = useToast();
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [orders, setOrders] = useState([]);
@@ -19,6 +21,7 @@ function AccountManagementContent() {
     const [savedDesigns, setSavedDesigns] = useState([]);
     const [copiedDesignId, setCopiedDesignId] = useState(null);
     const [pwdData, setPwdData] = useState({ current: "", new: "", confirm: "" });
+    const [brandVault, setBrandVault] = useState({ logos: [], colors: [], fonts: [] });
 
     // Missing state from previous version
     const [errorMsg, setErrorMsg] = useState("");
@@ -78,6 +81,13 @@ function AccountManagementContent() {
                     if (designsRes.ok) {
                         const designsData = await designsRes.json();
                         setSavedDesigns(designsData.designs || []);
+                    }
+
+                    // Fetch brand vault assets
+                    const vaultRes = await fetch('/api/user/brand-vault');
+                    if (vaultRes.ok) {
+                        const vaultData = await vaultRes.json();
+                        if (vaultData.brandVault) setBrandVault(vaultData.brandVault);
                     }
                 } else {
                     router.push("/login");
@@ -148,6 +158,22 @@ function AccountManagementContent() {
             setPwdData({ current: "", new: "", confirm: "" });
         } catch (err) {
             setErrorMsg(err.message);
+        }
+    };
+
+    const deleteFromVault = async (type, value) => {
+        try {
+            const res = await fetch(`/api/user/brand-vault?type=${type}&value=${encodeURIComponent(value)}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (data.success) {
+                setBrandVault(data.brandVault);
+                showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} removed from vault!`);
+            }
+        } catch (e) {
+            console.error("Vault Delete Error:", e);
+            showToast("Failed to remove from vault", "error");
         }
     };
 
@@ -433,6 +459,14 @@ function AccountManagementContent() {
                             >
                                 <Lock size={18} />
                                 Change Password
+                            </button>
+
+                            <button
+                                onClick={() => setActiveTab("brand_vault")}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'brand_vault' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}`}
+                            >
+                                <Sparkles size={18} />
+                                Brand Assets
                             </button>
 
                             {user?.role === 'admin' && (
@@ -955,6 +989,152 @@ function AccountManagementContent() {
                                             })}
                                         </div>
                                     )}
+                                </motion.div>
+                            )}
+
+                            {activeTab === 'brand_vault' && (
+                                <motion.div
+                                    key="brand_vault"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="bg-white rounded-[2rem] p-8 sm:p-10 shadow-sm border border-gray-100 min-h-[400px]"
+                                >
+                                    <div className="flex items-center justify-between mb-8">
+                                        <h2 className="text-2xl font-black uppercase tracking-tight text-gray-950">
+                                            Brand Asset Vault
+                                        </h2>
+                                        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-4 py-1.5 rounded-full border border-emerald-100">
+                                            <Sparkles size={12} />
+                                            <span className="text-[10px] font-black uppercase tracking-widest">Active Identity</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-12">
+                                        {/* Logos Section */}
+                                        <div className="space-y-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-950 border border-gray-100 shadow-sm">
+                                                    <Layers size={14} />
+                                                </div>
+                                                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-950 italic">Corporate_Logos</h3>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6 gap-4">
+                                                {(brandVault?.logos || []).map((logo, idx) => (
+                                                    <div key={idx} className="group relative aspect-square bg-gray-50 rounded-[1.5rem] border border-gray-100 p-4 flex items-center justify-center hover:bg-white hover:shadow-2xl hover:-translate-y-1 hover:border-emerald-200 transition-all duration-300">
+                                                        <img src={logo.url} className="max-w-full max-h-full object-contain" alt={logo.name || "Brand Logo"} />
+                                                        <button 
+                                                            onClick={() => deleteFromVault('logo', logo.url)}
+                                                            className="absolute -top-2 -right-2 w-7 h-7 bg-white text-red-500 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all hover:scale-110 shadow-xl border border-red-50"
+                                                        >
+                                                            <Trash2 size={12} />
+                                                        </button>
+                                                        <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-all pointer-events-none rounded-[1.5rem]" />
+                                                    </div>
+                                                ))}
+                                                <button 
+                                                    onClick={() => router.push('/customize')}
+                                                    className="aspect-square bg-white border-2 border-dashed border-gray-200 rounded-[1.5rem] flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50/10 transition-all active:scale-95 group"
+                                                >
+                                                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-emerald-100 transition-all">
+                                                        <Upload size={18} />
+                                                    </div>
+                                                    <span className="text-[9px] font-black uppercase tracking-widest text-center">Cloud Upload</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Colors Section */}
+                                        <div className="lg:col-span-12 space-y-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-950 border border-gray-100 shadow-sm">
+                                                    <Palette size={14} />
+                                                </div>
+                                                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-950 italic">Unified_Hex_Palette</h3>
+                                            </div>
+
+                                            <div className="flex flex-wrap gap-4">
+                                                {(brandVault?.colors || []).map((color, idx) => (
+                                                    <div key={idx} className="group relative w-24 h-24 rounded-[1.5rem] border border-gray-100 shadow-sm flex flex-col items-center justify-end p-3 transition-all hover:scale-105 active:scale-95 duration-300" style={{ backgroundColor: color }}>
+                                                        <div className="bg-white/95 backdrop-blur-md px-2 py-1 rounded-lg border border-gray-100 shadow-sm flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+                                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                                                            <span className="text-[9px] font-black text-gray-950">{color}</span>
+                                                        </div>
+                                                        <button 
+                                                            onClick={() => deleteFromVault('color', color)}
+                                                            className="absolute -top-2 -right-2 w-7 h-7 bg-white text-red-500 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all hover:scale-110 shadow-xl border border-red-50"
+                                                        >
+                                                            <Trash2 size={12} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <button 
+                                                     onClick={() => router.push('/customize')}
+                                                    className="w-24 h-24 bg-white border-2 border-dashed border-gray-200 rounded-[1.5rem] flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50/10 transition-all active:scale-95 group"
+                                                >
+                                                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-emerald-100 transition-all">
+                                                        <Plus size={20} />
+                                                    </div>
+                                                    <span className="text-[9px] font-black uppercase tracking-widest">New Hex</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Fonts Section */}
+                                        <div className="lg:col-span-12 space-y-6">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-gray-950 border border-gray-100 shadow-sm">
+                                                    <Type size={14} />
+                                                </div>
+                                                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-950 italic">Typography_Vault</h3>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                                {(brandVault?.fonts || []).map((font, idx) => (
+                                                    <div key={idx} className="group relative bg-gray-50 rounded-[1.5rem] border border-gray-100 p-6 hover:bg-white hover:shadow-xl transition-all duration-300">
+                                                        <p className="text-lg font-black uppercase text-center" style={{ fontFamily: font }}>Aa</p>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-center mt-2 text-gray-500 truncate">{font}</p>
+                                                        <button 
+                                                            onClick={() => deleteFromVault('font', font)}
+                                                            className="absolute -top-2 -right-2 w-7 h-7 bg-white text-red-500 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all hover:scale-110 shadow-xl border border-red-50"
+                                                        >
+                                                            <Trash2 size={12} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <button 
+                                                     onClick={() => router.push('/customize')}
+                                                    className="bg-white border-2 border-dashed border-gray-200 rounded-[1.5rem] p-6 flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50/10 transition-all active:scale-95 group"
+                                                >
+                                                    <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-emerald-100 transition-all">
+                                                        <Plus size={20} />
+                                                    </div>
+                                                    <span className="text-[9px] font-black uppercase tracking-widest">Add Font</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="mt-12 p-8 bg-gray-950 rounded-[3rem] text-white overflow-hidden relative group">
+                                        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                            <div className="space-y-2">
+                                                <h4 className="text-lg font-black uppercase tracking-tight text-emerald-400 flex items-center gap-2">
+                                                    <Sparkles size={20} /> Ignite_Forge Sync
+                                                </h4>
+                                                <p className="text-xs text-gray-400 font-medium leading-relaxed max-w-xl">
+                                                    Your Brand Vault assets are synced across the entire platform. When you enter the **Customize Lab**, our AI will prioritize these assets to generate cohesive, brand-accurate packaging designs in seconds.
+                                                </p>
+                                            </div>
+                                            <button 
+                                                onClick={() => router.push('/customize')}
+                                                className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-900/40 shrink-0"
+                                            >
+                                                Open Customize Lab
+                                            </button>
+                                        </div>
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />
+                                    </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>

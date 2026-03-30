@@ -21,11 +21,22 @@ const UserSchema = new mongoose.Schema({
     aiGenerationCount: { type: Number, default: 0 },
     lastAiGenerationDate: { type: Date },
     aiUnlimitedUntil: { type: Date },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
     aiPatterns: [{
         url: String,
         prompt: String,
         createdAt: { type: Date, default: Date.now }
-    }]
+    }],
+    brandVault: {
+        logos: [{
+            url: String,
+            name: String,
+            createdAt: { type: Date, default: Date.now }
+        }],
+        colors: [String], // Saved hex codes
+        fonts: [String], // Saved preferred font options
+    }
 }, {
     timestamps: true,
     strict: false
