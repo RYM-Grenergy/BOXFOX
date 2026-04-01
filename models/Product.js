@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 const productSchema = new mongoose.Schema({
     wpId: { type: Number, required: true, unique: true },
     type: { type: String, default: 'simple' }, // simple, variable, variation
-    sku: String,
+    sku: { type: String, unique: true, sparse: true },
+    patternImg: String,
     name: { type: String, required: true },
     isFeatured: { type: Boolean, default: false },
     short_description: String,

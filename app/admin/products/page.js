@@ -28,6 +28,8 @@ export default function ProductsManager() {
 
     const [formData, setFormData] = useState({
         name: '',
+        sku: '',
+        patternImg: '',
         category: 'CupCake',
         minPrice: '',
         maxPrice: '',
@@ -106,6 +108,38 @@ export default function ProductsManager() {
         }
     };
 
+    const handlePatternUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        try {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            await new Promise((resolve) => {
+                reader.onload = async () => {
+                    const base64Data = reader.result;
+                    const response = await fetch('/api/upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: base64Data })
+                    });
+                    const data = await response.json();
+                    if (data.url) {
+                        setFormData({ ...formData, patternImg: data.url });
+                    }
+                    resolve();
+                };
+            });
+        } catch (error) {
+            console.error('Pattern upload failed:', error);
+            alert('Failed to upload pattern');
+        } finally {
+            setIsUploading(false);
+            e.target.value = '';
+        }
+    };
+
     const handleSave = async (e) => {
         e.preventDefault();
         setIsSaving(true);
@@ -128,6 +162,8 @@ export default function ProductsManager() {
                     setSuccessMsg('');
                     setFormData({
                         name: '',
+                        sku: '',
+                        patternImg: '',
                         category: 'Packaging',
                         minPrice: '',
                         maxPrice: '',
@@ -169,11 +205,13 @@ export default function ProductsManager() {
         }
     };
 
+
     const handleEdit = (product) => {
         setFormData({
             _id: product._id,
-            id: product.id,
             name: product.name,
+            sku: product.sku || '',
+            patternImg: product.patternImg || '',
             category: product.category,
             minPrice: product.minPrice || '',
             maxPrice: product.maxPrice || '',
@@ -200,6 +238,8 @@ export default function ProductsManager() {
     const handleDuplicate = (product) => {
         setFormData({
             name: product.name + " (Copy)",
+            sku: (product.sku ? product.sku + "-copy" : ''),
+            patternImg: product.patternImg || '',
             category: product.category,
             minPrice: product.minPrice || '',
             maxPrice: product.maxPrice || '',
@@ -240,8 +280,13 @@ export default function ProductsManager() {
     const flatProducts = products.filter(p => {
         const matchesSearch = searchQuery.trim() === '' ||
             (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase())) ||
             (p.categories && p.categories.some(c => c.toLowerCase().includes(searchQuery.toLowerCase())));
-        const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
+        const matchesCategory = selectedCategory === 'All'
+            ? true
+            : selectedCategory === 'Pending SKU'
+                ? (!p.sku || !p.sku.startsWith('BFX-'))
+                : p.category === selectedCategory;
         return matchesSearch && matchesCategory;
     });
 
@@ -283,6 +328,7 @@ export default function ProductsManager() {
                         className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-500 hover:text-gray-950 transition-all appearance-none outline-none pr-10 cursor-pointer"
                     >
                         <option value="All">All Categories</option>
+                        <option value="Pending SKU">Pending SKU</option>
                         <option value="CupCake">CupCake</option>
                         <option value="Brownie">Brownie</option>
                         <option value="Hamper Box">Hamper Box</option>
@@ -327,6 +373,7 @@ export default function ProductsManager() {
                             <thead>
                                 <tr className="bg-gray-50/50">
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Product</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">SKU</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Category</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Price Range</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Size</th>
@@ -354,6 +401,11 @@ export default function ProductsManager() {
                                                     <p className="text-[10px] font-bold text-gray-400 uppercase">ID: {product.id}</p>
                                                 </div>
                                             </div>
+                                        </td>
+                                        <td className="px-8 py-5">
+                                            <span className="text-[11px] font-black text-gray-950 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+                                                {product.sku || 'PENDING'}
+                                            </span>
                                         </td>
                                         <td className="px-8 py-5">
                                             <div className="flex flex-col gap-1">
@@ -449,15 +501,33 @@ export default function ProductsManager() {
                                 <form onSubmit={handleSave} className="space-y-8">
                                     <div className="space-y-6">
                                         <div className="grid grid-cols-1 gap-6">
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-black uppercase tracking-widest text-gray-400">Product Name</label>
-                                                <input
-                                                    required
-                                                    value={formData.name}
-                                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                                    placeholder="e.g. 3 Ply Luxury Pizza Box"
-                                                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
-                                                />
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Product Name</label>
+                                                    <input
+                                                        required
+                                                        value={formData.name}
+                                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                                        placeholder="e.g. 3 Ply Luxury Pizza Box"
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Product SKU</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            readOnly
+                                                            value={formData.sku}
+                                                            placeholder="Auto-generated on save"
+                                                            className="w-full bg-gray-100 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-400 cursor-not-allowed outline-none transition-all"
+                                                        />
+                                                        {!formData.sku && (
+                                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded-lg">
+                                                                AUTO GENERATE
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-6">
@@ -721,6 +791,47 @@ export default function ProductsManager() {
                                                         ))}
                                                     </div>
                                                 </div>
+                                            </div>
+
+                                            <div className="space-y-3 bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
+                                                <div className="flex items-center justify-between">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Internal Pattern Overlay (Admin Only)</label>
+                                                    <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full uppercase tracking-widest">Order Processing Only</span>
+                                                </div>
+                                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">The following pattern image is for internal use by the admin team and will be attached to customer orders for reproduction purposes. It is not publicly visible on the main catalog.</p>
+                                                <div className="space-y-2">
+                                                <div className="flex gap-4">
+                                                    <div className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 flex items-center gap-4">
+                                                        {formData.patternImg ? (
+                                                            <div className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden shrink-0 relative group">
+                                                                <img src={formData.patternImg} className="w-full h-full object-cover" alt="Pattern" />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setFormData({ ...formData, patternImg: '' })}
+                                                                    className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 border border-gray-100">
+                                                                <ImageIcon size={20} className="text-gray-300" />
+                                                            </div>
+                                                        )}
+                                                        <input
+                                                            value={formData.patternImg}
+                                                            onChange={e => setFormData({ ...formData, patternImg: e.target.value })}
+                                                            placeholder="Pattern URL or upload ->"
+                                                            className="flex-1 bg-transparent font-bold text-gray-950 outline-none text-sm"
+                                                        />
+                                                    </div>
+                                                    <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                        {isUploading ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">Upload Pattern</span>
+                                                        <input type="file" accept="image/*" className="hidden" onChange={handlePatternUpload} />
+                                                    </label>
+                                                </div>
+                                                <p className="text-[9px] font-medium text-gray-400 uppercase tracking-wider pl-2">This image will be used as the default design pattern in the customization lab.</p>
                                             </div>
                                         </div>
 

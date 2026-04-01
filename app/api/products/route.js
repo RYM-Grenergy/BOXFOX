@@ -56,6 +56,7 @@ export async function GET(req) {
           _id: p._id,
           id: p.wpId,
           name: p.name,
+          sku: p.sku || '',
           category: (p.categories && p.categories.length > 0) ? (p.categories[p.categories.length - 1] || "Uncategorized") : "Uncategorized",
           price: formattedPrice,
           minPrice: p.minPrice,
@@ -153,10 +154,55 @@ export async function POST(req) {
       ? data.images.split(',').map(s => s.trim()).filter(Boolean)
       : (Array.isArray(data.images) ? data.images : [data.img || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg"]);
 
+    // SKU Auto-Generation Logic (Ensures Uniqueness)
+    const generateSKU = async (category) => {
+      const CATEGORY_MAP = {
+        'CupCake': 'CPC',
+        'Brownie': 'BRW',
+        'Hamper Box': 'HMP',
+        'Macaron': 'MCR',
+        'Chocolate Box': 'CHB',
+        'Pastry': 'PST',
+        'Gifting': 'GFT',
+        'Loaf': 'LOA',
+        'Platter': 'PLT',
+        'Cake Box': 'CKB',
+        'Burger Box': 'BGB',
+        'Food Box': 'FDB',
+        'Pizza Box': 'PZA',
+        'Wok Box': 'WOK',
+        'Wrap Box': 'WRP',
+        'Popcorn': 'PCN',
+        'Packaging': 'PKG',
+        'Custom': 'CST'
+      };
+
+      const catCode = CATEGORY_MAP[category] || (category || "GEN").substring(0, 3).toUpperCase();
+      
+      // Find the highest current sequence for this category
+      const lastProduct = await Product.findOne({ sku: new RegExp(`^BFX-${catCode}-`) }).sort({ sku: -1 }).lean();
+      
+      let nextNum = 1;
+      if (lastProduct && lastProduct.sku) {
+        const parts = lastProduct.sku.split('-');
+        const lastNum = parseInt(parts[parts.length - 1]);
+        if (!isNaN(lastNum)) {
+          nextNum = lastNum + 1;
+        }
+      }
+
+      // Format with 3 digits, e.g., 001, 002
+      return `BFX-${catCode}-${String(nextNum).padStart(3, '0')}`;
+    };
+
     if (data._id) {
       // UPDATE
+      const existingProduct = await Product.findById(data._id);
+      const sku = data.sku || existingProduct?.sku || await generateSKU(data.category);
+
       const updatedProduct = await Product.findByIdAndUpdate(data._id, {
         ...data,
+        sku,
         price: data.minPrice ? String(data.minPrice) : undefined, // fallback for legacy
         minPrice: data.minPrice,
         maxPrice: data.maxPrice,
@@ -181,8 +227,11 @@ export async function POST(req) {
       return NextResponse.json({ success: true, product: updatedProduct });
     }
 
+    const sku = data.sku || await generateSKU(data.category);
+
     const product = await Product.create({
       ...data,
+      sku,
       price: data.minPrice ? String(data.minPrice) : undefined, // fallback for legacy
       minPrice: data.minPrice,
       maxPrice: data.maxPrice,

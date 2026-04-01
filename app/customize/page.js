@@ -49,6 +49,7 @@ import Link from "next/link";
 import Script from "next/script";
 import Cropper from 'react-easy-crop';
 import { downloadDieLine } from "@/lib/dieline-generator";
+import { BOX_SPECIFICATIONS } from "@/lib/box-specifications";
 
 function CustomizeLabContent() {
   const router = useRouter();
@@ -173,6 +174,7 @@ function CustomizeLabContent() {
   const [designName, setDesignName] = useState("Untitled Design");
   const [activeDesignId, setActiveDesignId] = useState(null);
 
+  const [selectedSpec, setSelectedSpec] = useState(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   // AI Forge: Smart Prompt Builder
@@ -578,6 +580,25 @@ function CustomizeLabContent() {
       }));
     }
   };
+
+  // Automatically match dimensions with BOX_SPECIFICATIONS
+  useEffect(() => {
+    // Only auto-match if not explicitly in "custom_contact" mode
+    if (selectedSpec === "custom_contact") return;
+
+    const match = BOX_SPECIFICATIONS.find(s => 
+      s.l === dimensions.l && 
+      s.w === dimensions.w && 
+      s.h === dimensions.h && 
+      s.unit === unit
+    );
+
+    if (match) {
+      setSelectedSpec(match);
+    } else {
+      setSelectedSpec(null);
+    }
+  }, [dimensions, unit]);
 
   const applyToAllFaces = () => {
     if (customMode === "texture") {
@@ -1566,6 +1587,99 @@ function CustomizeLabContent() {
                   </div>
                 </div>
               </div>
+
+              {/* Standard Sizes Dropdown */}
+              <div className="space-y-2">
+                <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Predefined Standard Sizes</label>
+                <div className="relative group">
+                  <select
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "custom_contact") {
+                        setSelectedSpec("custom_contact");
+                        return;
+                      }
+
+                      const selected = BOX_SPECIFICATIONS.find(s => s.spec === val);
+                      if (selected) {
+                        setDimensions({ l: selected.l, w: selected.w, h: selected.h });
+                        setUnit(selected.unit);
+                        setSelectedSpec(selected);
+                        if (selected.category !== "All") setSelectedCategory(selected.category);
+                        if (selected.subCategory !== "All") setSelectedSubCategory(selected.subCategory);
+                      } else {
+                        setSelectedSpec(null);
+                      }
+                    }}
+                    className="w-full bg-white border-2 border-emerald-100 hover:border-emerald-500 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-wider text-gray-950 outline-none transition-all cursor-pointer shadow-sm appearance-none"
+                  >
+                    <option value="">Select a calibrated size...</option>
+                    {Array.from(new Set(BOX_SPECIFICATIONS.map(s => s.category))).map(cat => (
+                      <optgroup key={cat} label={cat.toUpperCase()}>
+                        {BOX_SPECIFICATIONS.filter(s => s.category === cat).map((spec, idx) => (
+                          <option key={idx} value={spec.spec}>
+                            {spec.subCategory} - {spec.spec.split('|')[0].trim()}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                    <optgroup label="CAN'T FIND YOUR SIZE?">
+                      <option value="custom_contact">REQUEST CUSTOM SIZE (WHATSAPP)</option>
+                    </optgroup>
+                  </select>
+                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none group-hover:scale-110 transition-transform" size={18} />
+                </div>
+                {selectedSpec === "custom_contact" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-gray-900 border border-emerald-500/30 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden"
+                  >
+                     <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl rounded-full" />
+                     <div className="relative z-10">
+                        <div className="flex items-center gap-3 mb-3">
+                           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center animate-pulse">
+                              <Shield size={16} className="text-white" />
+                           </div>
+                           <h4 className="text-[10px] font-black text-white uppercase tracking-widest leading-none italic">Structural_Request_Active</h4>
+                        </div>
+                        <p className="text-[11px] font-medium text-gray-400 leading-relaxed max-w-[280px]">
+                           Dimensions <span className="text-emerald-400 font-black">{dimensions.l}{unit} × {dimensions.w}{unit} × {dimensions.h}{unit}</span> require custom die-line calibration. Our engineering team can deploy this for you via WhatsApp.
+                        </p>
+                        <button
+                          onClick={() => {
+                            const msg = `Hi BoxFox Team! I need a custom box size that is not in your standard list.\nDimensions: ${dimensions.l}${unit} x ${dimensions.w}${unit} x ${dimensions.h}${unit}\nProduct: ${product?.name || 'Custom Box'}\nQuantity: ${quantity}\nCategory: ${selectedCategory}`;
+                            window.open(`https://wa.me/918449339999?text=${encodeURIComponent(msg)}`, '_blank');
+                          }}
+                          className="mt-4 w-full py-3 bg-emerald-500 text-white rounded-xl font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:bg-white hover:text-emerald-500 transition-all flex items-center justify-center gap-2"
+                        >
+                           <Zap size={12} className="fill-current" />
+                           Direct_WhatsApp_Forge
+                        </button>
+                     </div>
+                  </motion.div>
+                )}
+                {selectedSpec && typeof selectedSpec === 'object' && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 flex flex-wrap gap-4"
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-[7px] font-black text-emerald-400 uppercase">Ups</span>
+                      <span className="text-xs font-black text-emerald-700">{selectedSpec.ups} UPS</span>
+                    </div>
+                    <div className="flex flex-col border-l border-emerald-100 pl-4">
+                      <span className="text-[7px] font-black text-emerald-400 uppercase">Machine</span>
+                      <span className="text-xs font-black text-emerald-700">MOD_{selectedSpec.machine}</span>
+                    </div>
+                    <div className="flex flex-col border-l border-emerald-100 pl-4">
+                      <span className="text-[7px] font-black text-emerald-400 uppercase">Sheet Size</span>
+                      <span className="text-xs font-black text-emerald-700">{selectedSpec.sheetW}″ × {selectedSpec.sheetH}″</span>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
               <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-5">
                 {["l", "w", "h"].map((d) => (
                   <div key={d} className="space-y-2 sm:space-y-3">
@@ -2500,75 +2614,90 @@ function CustomizeLabContent() {
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-70">Est. Total Cost</p>
                 <h2 className="text-3xl sm:text-5xl font-black italic tracking-tighter mt-1">₹{(parseFloat(calculatedUnitPrice) * quantity).toLocaleString('en-IN')}</h2>
               </div>
-              <button
-                disabled={isAddingToCart}
-                onClick={async () => {
-                  if (isAddingToCart) return;
-                  setIsAddingToCart(true);
+              {!selectedSpec || typeof selectedSpec !== 'object' ? (
+                <button
+                  onClick={() => {
+                    const msg = `Hi BoxFox! I've designed a custom box and would like a quote.\n\nDimensions: ${dimensions.l}${unit} x ${dimensions.w}${unit} x ${dimensions.h}${unit}\nQuantity: ${quantity}\nMaterial: ${selectedMaterial}\nGSM: ${selectedGSM}\n\nI have the design ready in the lab. Please help with the die-line and quote.`;
+                    window.open(`https://wa.me/918449339999?text=${encodeURIComponent(msg)}`, '_blank');
+                    showToast("Redirecting to WhatsApp for custom calibration...");
+                  }}
+                  className="w-full sm:w-auto py-4 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 bg-gray-900 text-white rounded-xl sm:rounded-2xl md:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-[0.3em] sm:tracking-[0.4em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-emerald-500 transition-all shadow-xl active:scale-95 group shrink-0"
+                >
+                  <Zap size={20} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+                  Request_Custom_Quote
+                </button>
+              ) : (
+                <button
+                  disabled={isAddingToCart}
+                  onClick={async () => {
+                    if (isAddingToCart) return;
+                    setIsAddingToCart(true);
 
-                  try {
-                    const uploadedBoxTextures = { ...boxTextures };
-                    const faces = Object.keys(uploadedBoxTextures);
-                    for (let face of faces) {
-                      const texture = uploadedBoxTextures[face];
-                      if (texture && texture.startsWith("data:image")) {
-                        try {
-                          const res = await fetch("/api/upload", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ image: texture })
-                          });
-                          const data = await res.json();
-                          if (data.url) {
-                            uploadedBoxTextures[face] = data.url;
+                    try {
+                      const uploadedBoxTextures = { ...boxTextures };
+                      const faces = Object.keys(uploadedBoxTextures);
+                      for (let face of faces) {
+                        const texture = uploadedBoxTextures[face];
+                        if (texture && texture.startsWith("data:image")) {
+                          try {
+                            const res = await fetch("/api/upload", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ image: texture })
+                            });
+                            const data = await res.json();
+                            if (data.url) {
+                              uploadedBoxTextures[face] = data.url;
+                            }
+                          } catch (err) {
+                            console.error(`Failed to upload texture for ${face}:`, err);
                           }
-                        } catch (err) {
-                          console.error(`Failed to upload texture for ${face}:`, err);
                         }
                       }
+
+                      const userName = user?.name || user?.username || "Guest";
+                      const customName = `${userName}_customize ${dimensions.l}x${dimensions.w}x${dimensions.h}`;
+                      const customImg = uploadedBoxTextures.front || uploadedBoxTextures.top || Object.values(uploadedBoxTextures).find(t => t) || product.img || product.images?.[0];
+
+                      const customizedProduct = {
+                        ...product,
+                        id: `${product.id}-${Date.now()}`,
+                        name: customName,
+                        img: customImg,
+                        price: calculatedUnitPrice,
+                        customDesign: {
+                          textures: uploadedBoxTextures,
+                          colors: boxColors,
+                          textureSettings: textureSettings,
+                          text: customText,
+                          textStyle: boxTextStyle,
+                          textColor: boxTextColor,
+                          textSettings: boxTextSettings,
+                          dimensions: dimensions,
+                          unit: unit,
+                          selectedGSM: selectedGSM,
+                          selectedMaterial: selectedMaterial,
+                          specData: selectedSpec // Store the calibrated spec info
+                        }
+                      };
+                      addToCart(customizedProduct, quantity);
+                    } finally {
+                      setIsAddingToCart(false);
                     }
-
-                    const userName = user?.name || user?.username || "Guest";
-                    const customName = `${userName}_customize ${dimensions.l}x${dimensions.w}x${dimensions.h}`;
-                    const customImg = uploadedBoxTextures.front || uploadedBoxTextures.top || Object.values(uploadedBoxTextures).find(t => t) || product.img || product.images?.[0];
-
-                    const customizedProduct = {
-                      ...product,
-                      id: `${product.id}-${Date.now()}`,
-                      name: customName,
-                      img: customImg,
-                      price: calculatedUnitPrice,
-                      customDesign: {
-                        textures: uploadedBoxTextures,
-                        colors: boxColors,
-                        textureSettings: textureSettings,
-                        text: customText,
-                        textStyle: boxTextStyle,
-                        textColor: boxTextColor,
-                        textSettings: boxTextSettings,
-                        dimensions: dimensions,
-                        unit: unit,
-                        selectedGSM: selectedGSM,
-                        selectedMaterial: selectedMaterial
-                      }
-                    };
-                    addToCart(customizedProduct, quantity);
-                  } finally {
-                    setIsAddingToCart(false);
-                  }
-                }}
-                className="w-full sm:w-auto py-4 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 bg-black text-white rounded-xl sm:rounded-2xl md:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-[0.3em] sm:tracking-[0.4em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-white hover:text-black transition-all shadow-xl active:scale-95 group shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isAddingToCart ? (
-                  <RefreshCw size={20} className="animate-spin shrink-0" />
-                ) : (
-                  <ShoppingCart
-                    size={20}
-                    className="group-hover:scale-110 transition-transform"
-                  />
-                )}
-                {isAddingToCart ? "Deploying..." : "Add_to_Basket"}
-              </button>
+                  }}
+                  className="w-full sm:w-auto py-4 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 bg-black text-white rounded-xl sm:rounded-2xl md:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-[0.3em] sm:tracking-[0.4em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-white hover:text-black transition-all shadow-xl active:scale-95 group shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isAddingToCart ? (
+                    <RefreshCw size={20} className="animate-spin shrink-0" />
+                  ) : (
+                    <ShoppingCart
+                      size={20}
+                      className="group-hover:scale-110 transition-transform"
+                    />
+                  )}
+                  {isAddingToCart ? "Deploying..." : "Add_to_Basket"}
+                </button>
+              )}
             </div>
           </div>
           {/* Share Toast Notification */}
