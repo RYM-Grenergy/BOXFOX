@@ -30,12 +30,13 @@ export default function ProductsManager() {
         name: '',
         sku: '',
         patternImg: '',
+        dielineImg: '',
         category: 'CupCake',
         minPrice: '',
         maxPrice: '',
         originalPrice: '',
         discount: '',
-        images: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80',
+        images: 'https://res.cloudinary.com/dklavcjrl/image/upload/v1774544987/boxfox/products/large_burrito_box_1_1774544835718.jpg, https://res.cloudinary.com/dklavcjrl/image/upload/v1774544989/boxfox/products/large_burrito_box_2_1774544858239.jpg',
         badge: '',
         hasVariants: true,
         description: '',
@@ -139,6 +140,38 @@ export default function ProductsManager() {
             e.target.value = '';
         }
     };
+    
+    const handleDielineUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        try {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            await new Promise((resolve) => {
+                reader.onload = async () => {
+                    const base64Data = reader.result;
+                    const response = await fetch('/api/upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image: base64Data })
+                    });
+                    const data = await response.json();
+                    if (data.url) {
+                        setFormData({ ...formData, dielineImg: data.url });
+                    }
+                    resolve();
+                };
+            });
+        } catch (error) {
+            console.error('Dieline upload failed:', error);
+            alert('Failed to upload dieline');
+        } finally {
+            setIsUploading(false);
+            e.target.value = '';
+        }
+    };
 
     const handleSave = async (e) => {
         e.preventDefault();
@@ -164,12 +197,13 @@ export default function ProductsManager() {
                         name: '',
                         sku: '',
                         patternImg: '',
+                        dielineImg: '',
                         category: 'Packaging',
                         minPrice: '',
                         maxPrice: '',
                         originalPrice: '',
                         discount: '',
-                        images: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80',
+                        images: 'https://res.cloudinary.com/dklavcjrl/image/upload/v1774544987/boxfox/products/large_burrito_box_1_1774544835718.jpg, https://res.cloudinary.com/dklavcjrl/image/upload/v1774544989/boxfox/products/large_burrito_box_2_1774544858239.jpg',
                         badge: '',
                         hasVariants: true,
                         description: '',
@@ -212,6 +246,7 @@ export default function ProductsManager() {
             name: product.name,
             sku: product.sku || '',
             patternImg: product.patternImg || '',
+            dielineImg: product.dielineImg || '',
             category: product.category,
             minPrice: product.minPrice || '',
             maxPrice: product.maxPrice || '',
@@ -240,6 +275,7 @@ export default function ProductsManager() {
             name: product.name + " (Copy)",
             sku: (product.sku ? product.sku + "-copy" : ''),
             patternImg: product.patternImg || '',
+            dielineImg: product.dielineImg || '',
             category: product.category,
             minPrice: product.minPrice || '',
             maxPrice: product.maxPrice || '',
@@ -832,6 +868,48 @@ export default function ProductsManager() {
                                                     </label>
                                                 </div>
                                                 <p className="text-[9px] font-medium text-gray-400 uppercase tracking-wider pl-2">This image will be used as the default design pattern in the customization lab.</p>
+                                            </div>
+                                        </div>
+
+                                            <div className="space-y-3 bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
+                                                <div className="flex items-center justify-between">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Dieline (Admin Only)</label>
+                                                    <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full uppercase tracking-widest">Admin Reference</span>
+                                                </div>
+                                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">Upload the dieline file for this product. This is strictly for admin reference and internal use.</p>
+                                                <div className="space-y-2">
+                                                    <div className="flex gap-4">
+                                                        <div className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 flex items-center gap-4">
+                                                            {formData.dielineImg ? (
+                                                                <div className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden shrink-0 relative group">
+                                                                    <img src={formData.dielineImg} className="w-full h-full object-cover" alt="Dieline" />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setFormData({ ...formData, dielineImg: '' })}
+                                                                        className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                                                                    >
+                                                                        <Trash2 size={14} />
+                                                                    </button>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 border border-gray-100">
+                                                                    <ImageIcon size={20} className="text-gray-300" />
+                                                                </div>
+                                                            )}
+                                                            <input
+                                                                value={formData.dielineImg}
+                                                                onChange={e => setFormData({ ...formData, dielineImg: e.target.value })}
+                                                                placeholder="Dieline URL or upload ->"
+                                                                className="flex-1 bg-transparent font-bold text-gray-950 outline-none text-sm"
+                                                            />
+                                                        </div>
+                                                        <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                            {isUploading ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">Upload Dieline</span>
+                                                            <input type="file" accept="image/*" className="hidden" onChange={handleDielineUpload} />
+                                                        </label>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 

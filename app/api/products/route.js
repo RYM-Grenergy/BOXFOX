@@ -76,7 +76,9 @@ export async function GET(req) {
           tags: p.tags || [],
           specifications: p.specifications || [],
           dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' },
-          pacdoraId: p.pacdoraId
+          pacdoraId: p.pacdoraId,
+          patternImg: p.patternImg,
+          dielineImg: p.dielineImg
         };
       });
       return NextResponse.json(flatList);

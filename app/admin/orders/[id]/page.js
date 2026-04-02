@@ -305,6 +305,18 @@ function CustomDesignBlueprint({ item, order, expandedFace, setExpandedFace, dow
     const dims = cd.dimensions || { l: 12, w: 8, h: 4 };
     const FACES = ["front", "back", "top", "bottom", "left", "right"];
     const [activeToolTab, setActiveToolTab] = useState(null); // 'diecut' | 'qr' | 'pdf'
+    const [productDetails, setProductDetails] = useState(null);
+
+    useEffect(() => {
+        if (item.productId) {
+            fetch(`/api/products/${item.productId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.error) setProductDetails(data);
+                })
+                .catch(console.error);
+        }
+    }, [item.productId]);
 
     const getFaceDims = (face) => {
         const w = ["left", "right"].includes(face) ? dims.w : dims.l;
@@ -589,7 +601,101 @@ function CustomDesignBlueprint({ item, order, expandedFace, setExpandedFace, dow
                         )}
                     </AnimatePresence>
                 </div>
+
+                {/* ===== INTERNAL PRODUCTION ASSETS (ADMIN ONLY) ===== */}
+                <div className="mt-8 pt-8 border-t border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Pattern Asset */}
+                    <div className="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                            <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">Internal Pattern Overlay (Admin Only)</label>
+                            <span className="text-[9px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full uppercase tracking-widest">Order Processing Only</span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic mb-4">
+                            The following pattern image is for internal use by the admin team and will be attached to customer orders for reproduction purposes.
+                        </p>
+                        
+                        {productDetails?.patternImg ? (
+                            <div className="mt-auto space-y-4">
+                                <div className="relative aspect-video rounded-2xl border border-gray-200 overflow-hidden group">
+                                    <img src={productDetails.patternImg} className="w-full h-full object-cover" alt="Pattern" />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                        <button 
+                                            onClick={() => window.open(productDetails.patternImg, "_blank")}
+                                            className="p-3 bg-white rounded-full text-gray-950 hover:scale-110 transition-all shadow-xl"
+                                        >
+                                            <Eye size={18} />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDownload(productDetails.patternImg, "pattern", order.orderId)}
+                                            className="p-3 bg-emerald-500 rounded-full text-white hover:scale-110 transition-all shadow-xl"
+                                        >
+                                            <Download size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-white rounded-2xl border border-gray-100 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <ImageIcon size={18} className="text-emerald-500" />
+                                        <span className="text-[10px] font-black text-gray-950 uppercase tracking-widest">Master Pattern</span>
+                                    </div>
+                                    <span className="text-[9px] font-bold text-gray-400 uppercase">Default Lab Asset</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="h-40 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-3xl mt-auto">
+                                <ImageIcon size={24} className="text-gray-300 mb-2" />
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">No Master Pattern Linked</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Dieline Asset */}
+                    <div className="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                            <label className="text-[11px] font-black uppercase tracking-widest text-gray-400">Dieline (Admin Only)</label>
+                            <span className="text-[9px] font-black bg-blue-50 text-blue-600 px-2 py-1 rounded-full uppercase tracking-widest">Admin Reference</span>
+                        </div>
+                        <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic mb-4">
+                            Upload the dieline file for this product. This is strictly for admin reference and internal use.
+                        </p>
+
+                        {productDetails?.dielineImg ? (
+                            <div className="mt-auto space-y-4">
+                                <div className="relative aspect-video rounded-2xl border border-gray-200 overflow-hidden group">
+                                    <img src={productDetails.dielineImg} className="w-full h-full object-cover" alt="Dieline" />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                        <button 
+                                            onClick={() => window.open(productDetails.dielineImg, "_blank")}
+                                            className="p-3 bg-white rounded-full text-gray-950 hover:scale-110 transition-all shadow-xl"
+                                        >
+                                            <Eye size={18} />
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDownload(productDetails.dielineImg, "dieline", order.orderId)}
+                                            className="p-3 bg-blue-500 rounded-full text-white hover:scale-110 transition-all shadow-xl"
+                                        >
+                                            <Download size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="p-4 bg-white rounded-2xl border border-gray-100 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Scissors size={18} className="text-blue-500" />
+                                        <span className="text-[10px] font-black text-gray-950 uppercase tracking-widest">Production Dieline</span>
+                                    </div>
+                                    <span className="text-[9px] font-bold text-gray-400 uppercase">Master Copy</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="h-40 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-3xl mt-auto">
+                                <Scissors size={24} className="text-gray-300 mb-2" />
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">No Dieline Linked</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
+
     );
 }

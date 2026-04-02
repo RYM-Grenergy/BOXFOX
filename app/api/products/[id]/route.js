@@ -56,7 +56,9 @@ export async function GET(req, { params }) {
             tags: product.tags || [],
             specifications: product.specifications || [],
             meta: product.meta,
-            pacdoraId: product.pacdoraId
+            pacdoraId: product.pacdoraId,
+            patternImg: product.patternImg,
+            dielineImg: product.dielineImg
         };
 
         return NextResponse.json(result);
