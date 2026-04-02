@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { LogOut, User as UserIcon, Settings, Package, MapPin, Phone, Mail, Lock, Heart, Trash2, ChevronRight, RotateCw, Layers, Ruler, Type, Palette, Eye, RefreshCw, Box, Share2, Link2, Copy, Check, Pencil, Sparkles, Plus, Upload } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, Search, Package, MapPin, Phone, Mail, Lock, Heart, Trash2, ChevronRight, RotateCw, Layers, Ruler, Type, Palette, Eye, RefreshCw, Box, Share2, Link2, Copy, Check, Pencil, Sparkles, Plus, Upload } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useToast } from "@/app/context/ToastContext";
 import { useSearchParams } from "next/navigation";
@@ -22,6 +22,7 @@ function AccountManagementContent() {
     const [copiedDesignId, setCopiedDesignId] = useState(null);
     const [pwdData, setPwdData] = useState({ current: "", new: "", confirm: "" });
     const [brandVault, setBrandVault] = useState({ logos: [], colors: [], fonts: [] });
+    const [orderSearch, setOrderSearch] = useState("");
 
     // Missing state from previous version
     const [errorMsg, setErrorMsg] = useState("");
@@ -809,9 +810,21 @@ function AccountManagementContent() {
                                     exit={{ opacity: 0, y: -10 }}
                                     className="bg-white rounded-[2rem] p-8 sm:p-10 shadow-sm border border-gray-100 min-h-[400px]"
                                 >
-                                    <h2 className="text-2xl font-black uppercase tracking-tight text-gray-950 mb-8">
-                                        Order History
-                                    </h2>
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                                        <h2 className="text-3xl font-black uppercase tracking-tighter text-gray-950">
+                                            Order History
+                                        </h2>
+                                        <div className="relative flex-1 max-w-sm">
+                                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search by Order ID or Product..." 
+                                                value={orderSearch}
+                                                onChange={(e) => setOrderSearch(e.target.value)}
+                                                className="w-full pl-12 pr-6 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
 
                                     {orders.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -821,16 +834,23 @@ function AccountManagementContent() {
                                             <p className="text-xs font-black text-gray-400 uppercase tracking-widest">No orders found.</p>
                                         </div>
                                     ) : (
-                                        <div className="space-y-4">
-                                            {orders.map(order => (
+                                        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                                            {orders
+                                                .filter(o => 
+                                                    o.orderId.toLowerCase().includes(orderSearch.toLowerCase()) || 
+                                                    o.items?.some(it => it.name.toLowerCase().includes(orderSearch.toLowerCase()))
+                                                )
+                                                .map(order => (
                                                 <div
                                                     key={order._id}
                                                     onClick={() => setSelectedOrder(order)}
-                                                    className="p-6 rounded-[2rem] border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-2xl hover:shadow-gray-100 hover:scale-[1.01] transition-all cursor-pointer group"
+                                                    className="p-8 rounded-[2.5rem] border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-2xl hover:shadow-gray-200/50 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
                                                 >
-                                                    <div className="flex flex-wrap items-center justify-between gap-4">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="w-12 h-12 rounded-xl bg-white border border-gray-100 p-1.5 shrink-0 flex items-center justify-center">
+                                                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -translate-y-16 translate-x-16"></div>
+                                                    
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 relative z-10">
+                                                        <div className="flex items-center gap-6">
+                                                            <div className="w-16 h-16 rounded-[1.25rem] bg-white border border-gray-100 p-2 shrink-0 flex items-center justify-center shadow-sm">
                                                                 <img 
                                                                     src={order.items?.[0]?.customDesign?.textures?.front || order.items?.[0]?.image || order.items?.[0]?.img || '/BOXFOX-1.png'} 
                                                                     className="w-full h-full object-contain" 
@@ -838,23 +858,54 @@ function AccountManagementContent() {
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Shipping ID</p>
-                                                                <h4 className="text-sm font-black text-gray-950 uppercase group-hover:text-emerald-500 transition-colors">#{order.orderId}</h4>
+                                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Shipping ID</p>
+                                                                <h4 className="text-lg font-black text-gray-950 uppercase group-hover:text-emerald-500 transition-colors">#{order.orderId}</h4>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                                                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Active Status: {order.status}</p>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <div className="text-right">
-                                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Dispatched</p>
-                                                            <p className="text-xs font-bold text-gray-950">{new Date(order.createdAt).toLocaleDateString()}</p>
+
+                                                        <div className="grid grid-cols-2 sm:flex sm:items-center gap-8 sm:gap-12">
+                                                            <div>
+                                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Dispatched</p>
+                                                                <p className="text-xs font-black text-gray-950 uppercase tracking-tight">
+                                                                    {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                                </p>
+                                                            </div>
+
+                                                            <div>
+                                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Order Value</p>
+                                                                <p className="text-lg font-black text-gray-950 tracking-tighter">₹{order.total.toLocaleString('en-IN')}</p>
+                                                            </div>
+
+                                                            <div className="col-span-2 sm:col-span-1">
+                                                                <div className={`inline-flex items-center px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] shadow-sm transition-all ${
+                                                                    order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-600' : 
+                                                                    order.status === 'Shipped' ? 'bg-blue-100 text-blue-600' : 
+                                                                    order.status === 'Cancelled' ? 'bg-red-100 text-red-600' : 
+                                                                    'bg-gray-950 text-white shadow-gray-200'
+                                                                }`}>
+                                                                    {order.status}
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex items-center gap-6">
-                                                            <p className="text-lg font-black text-gray-950 tracking-tighter">₹{order.total.toLocaleString('en-IN')}</p>
-                                                            <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-600' : 'bg-white border border-gray-100 text-gray-950'}`}>
-                                                                {order.status}
-                                                            </span>
+                                                        
+                                                        <div className="hidden sm:block">
+                                                            <div className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-300 group-hover:text-emerald-500 group-hover:bg-emerald-50 group-hover:border-emerald-100 transition-all">
+                                                                <ChevronRight size={20} />
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             ))}
+                                            {orders.filter(o => 
+                                                o.orderId.toLowerCase().includes(orderSearch.toLowerCase()) || 
+                                                o.items?.some(it => it.name.toLowerCase().includes(orderSearch.toLowerCase()))
+                                            ).length === 0 && (
+                                                <div className="py-20 text-center italic text-gray-400 text-sm">No matches found for "{orderSearch}"</div>
+                                            )}
                                         </div>
                                     )}
                                 </motion.div>

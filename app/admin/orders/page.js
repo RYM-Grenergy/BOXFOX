@@ -11,6 +11,7 @@ export default function OrdersManager() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchOrders = () => {
     setLoading(true);
@@ -40,9 +41,13 @@ export default function OrdersManager() {
     fetchOrders();
   }, []);
 
-  const filteredOrders = Array.isArray(orders) ? orders.filter(o =>
-    filter === "All" || o.status === filter
-  ) : [];
+  const filteredOrders = Array.isArray(orders) ? orders.filter(o => {
+    const matchesFilter = filter === "All" || o.status === filter;
+    const matchesSearch = o.orderId.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         o.customer?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         o.customer?.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
+  }) : [];
 
   if (loading && orders.length === 0) return (
     <div className="flex items-center justify-center min-h-[400px]">
@@ -72,7 +77,9 @@ export default function OrdersManager() {
           <Search size={18} className="text-gray-400" />
           <input
             type="text"
-            placeholder="Search by Order ID..."
+            placeholder="Search by Order ID, Name or Email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-transparent outline-none w-full text-sm font-medium"
           />
         </div>
