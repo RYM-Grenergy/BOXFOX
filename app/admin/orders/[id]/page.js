@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import {
     ArrowLeft, Package, Truck, CheckCircle2, Clock, User, Mail, Phone,
     MapPin, CreditCard, ExternalLink, Box, Printer, Layers, Download,
-    Eye, Maximize2, Ruler, Type, Palette, ZoomIn, RotateCw, Scissors, QrCode, FileText
+    Eye, Maximize2, Ruler, Type, Palette, ZoomIn, RotateCw, Scissors, QrCode, FileText, Image as ImageIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BoxFacePreview, MiniBox3D, useFaceSnapshot } from "@/app/components/BoxPreview3D";
