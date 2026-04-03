@@ -16,8 +16,11 @@ function SignUpContent() {
         password: "",
         phone: "",
         businessName: "",
-        emailOptIn: false
+        emailOptIn: false,
+        otp: ""
     });
+    const [otpSent, setOtpSent] = useState(false);
+    const [sendingOtp, setSendingOtp] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
@@ -28,6 +31,32 @@ function SignUpContent() {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSendOTP = async () => {
+        if (!formData.email) {
+            setErrorMsg("Please enter your email first to receive a verification code.");
+            return;
+        }
+        setSendingOtp(true);
+        setErrorMsg("");
+        try {
+            const res = await fetch("/api/auth/send-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: formData.email })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setOtpSent(true);
+            } else {
+                setErrorMsg(data.error || "Failed to send OTP. Account already exists or system error.");
+            }
+        } catch (err) {
+            setErrorMsg("Network error. Could not send OTP.");
+        } finally {
+            setSendingOtp(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -195,13 +224,61 @@ function SignUpContent() {
 
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-5">Email Address</label>
-                                        <div className="relative group/input">
-                                            <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none text-gray-300 group-focus-within/input:text-emerald-500 transition-colors">
-                                                <Mail size={18} />
+                                        <div className="relative group/input flex gap-3">
+                                            <div className="relative flex-1">
+                                                <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none text-gray-300 group-focus-within/input:text-emerald-500 transition-colors">
+                                                    <Mail size={18} />
+                                                </div>
+                                                <input 
+                                                    required 
+                                                    name="email" 
+                                                    value={formData.email} 
+                                                    onChange={handleChange} 
+                                                    type="email" 
+                                                    className="w-full pl-16 pr-6 py-4 rounded-[1.5rem] bg-gray-50/50 border border-gray-100 focus:bg-white focus:ring-[15px] focus:ring-emerald-500/[0.03] outline-none transition-all font-bold text-sm text-gray-950 placeholder:text-gray-300" 
+                                                    placeholder="name@company.com" 
+                                                />
                                             </div>
-                                            <input required name="email" value={formData.email} onChange={handleChange} type="email" className="w-full pl-16 pr-6 py-4 rounded-[1.5rem] bg-gray-50/50 border border-gray-100 focus:bg-white focus:ring-[15px] focus:ring-emerald-500/[0.03] outline-none transition-all font-bold text-sm text-gray-950 placeholder:text-gray-300" placeholder="name@company.com" />
+                                            {!otpSent && (
+                                                <button 
+                                                    type="button" 
+                                                    onClick={handleSendOTP}
+                                                    disabled={sendingOtp}
+                                                    className="px-6 py-4 bg-gray-950 text-white rounded-[1.2rem] text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all disabled:opacity-50"
+                                                >
+                                                    {sendingOtp ? "..." : "Verify"}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
+
+                                    {otpSent && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="space-y-3"
+                                        >
+                                            <label className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] ml-5 flex items-center gap-2">
+                                                Verification Code 
+                                                <span className="text-[8px] lowercase font-medium text-gray-400 italic font-sans">(Sent to email)</span>
+                                            </label>
+                                            <div className="relative group/input">
+                                                <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none text-emerald-500">
+                                                    <ShieldCheck size={18} />
+                                                </div>
+                                                <input 
+                                                    required 
+                                                    name="otp" 
+                                                    value={formData.otp} 
+                                                    onChange={handleChange} 
+                                                    type="text" 
+                                                    maxLength="6"
+                                                    className="w-full pl-16 pr-6 py-4 rounded-[1.5rem] bg-emerald-50/30 border border-emerald-100 focus:bg-white focus:ring-[15px] focus:ring-emerald-500/[0.03] outline-none transition-all font-black text-lg tracking-[0.5em] text-emerald-950 placeholder:text-emerald-200" 
+                                                    placeholder="000000" 
+                                                />
+                                            </div>
+                                        </motion.div>
+                                    )}
 
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-5">Phone Number</label>
@@ -209,7 +286,7 @@ function SignUpContent() {
                                             <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none text-gray-300 group-focus-within/input:text-emerald-500 transition-colors">
                                                 <Phone size={18} />
                                             </div>
-                                            <input required name="phone" value={formData.phone} onChange={handleChange} type="tel" className="w-full pl-16 pr-6 py-4 rounded-[1.5rem] bg-gray-50/50 border border-gray-100 focus:bg-white focus:ring-[15px] focus:ring-emerald-500/[0.03] outline-none transition-all font-bold text-sm text-gray-950 placeholder:text-gray-300" placeholder="+1 123 456 7890" />
+                                            <input required name="phone" value={formData.phone} onChange={handleChange} type="tel" className="w-full pl-16 pr-6 py-4 rounded-[1.5rem] bg-gray-50/50 border border-gray-100 focus:bg-white focus:ring-[15px] focus:ring-emerald-500/[0.03] outline-none transition-all font-bold text-sm text-gray-950 placeholder:text-gray-300" placeholder="+91 10-digit number" />
                                         </div>
                                     </div>
 
@@ -227,10 +304,11 @@ function SignUpContent() {
                                     </div>
 
                                     <div className="md:col-span-2 pt-2 pb-6">
-                                        <label className="flex items-start gap-4 cursor-pointer group/optin">
+                                        <label className={`flex items-start gap-4 cursor-pointer group/optin transition-opacity ${!otpSent ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
                                             <div className="relative mt-1">
                                                 <input 
                                                     required 
+                                                    disabled={!otpSent}
                                                     type="checkbox" 
                                                     name="emailOptIn"
                                                     checked={formData.emailOptIn}
@@ -245,18 +323,20 @@ function SignUpContent() {
                                                 I agree to receive <span className="text-gray-950 font-black underline decoration-emerald-500/30">order updates and exclusive promotions</span> from BoxFox. <span className="text-emerald-500 font-black">*Required</span>
                                             </span>
                                         </label>
+                                        {!otpSent && <p className="text-[8px] font-bold text-emerald-600 uppercase mt-2 ml-9 animate-pulse">Verify email above to unlock this option.</p>}
                                     </div>
 
                                     <div className="md:col-span-2">
                                         <button
                                             type="submit"
-                                            disabled={isLoading}
+                                            disabled={isLoading || !otpSent}
                                             className="w-full relative py-6 bg-gray-950 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-[0.4em] overflow-hidden group/btn hover:shadow-[0_25px_60px_rgba(16,185,129,0.15)] active:scale-[0.98] transition-all disabled:opacity-50"
                                         >
                                             <div className="absolute inset-0 bg-emerald-500 translate-x-full group-hover/btn:translate-x-0 transition-transform duration-500" />
                                             <span className="relative z-10 flex items-center justify-center gap-4">
-                                                {isLoading ? "Creating Account..." : "Create Account"}
-                                                {!isLoading && <ArrowRight size={18} className="group-hover/btn:translate-x-2 transition-transform duration-500" />}
+                                                {isLoading ? "Verifying & Creating..." : (otpSent ? "Create Account" : "Verify Email First")}
+                                                {!isLoading && otpSent && <ArrowRight size={18} className="group-hover/btn:translate-x-2 transition-transform duration-500" />}
+                                                {!isLoading && !otpSent && <ShieldCheck size={18} className="animate-bounce" />}
                                             </span>
                                         </button>
                                     </div>

@@ -3,6 +3,7 @@ import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import OTP from '@/models/OTP';
 import { rateLimit, getIP } from '@/lib/rateLimit';
 
 const limiter = rateLimit({ interval: 60 * 1000 }); // 60 seconds
@@ -18,15 +19,24 @@ export async function POST(req) {
 
         await dbConnect();
 
-        const { name, email, password, phone, businessName, emailOptIn } = await req.json();
+        const { name, email, password, phone, businessName, emailOptIn, otp } = await req.json();
 
-        if (!name || !email || !password || !phone || emailOptIn === undefined) {
-            return NextResponse.json({ error: 'Please provide all required fields including email subscription consent' }, { status: 400 });
+        if (!name || !email || !password || !phone || emailOptIn === undefined || !otp) {
+            return NextResponse.json({ error: 'Please provide all required fields including OTP and email consent' }, { status: 400 });
         }
 
         if (!emailOptIn) {
             return NextResponse.json({ error: 'Please accept email notifications to continue' }, { status: 400 });
         }
+
+        // Verify OTP
+        const otpRecord = await OTP.findOne({ email, otp });
+        if (!otpRecord) {
+            return NextResponse.json({ error: "Invalid or expired verification code" }, { status: 400 });
+        }
+
+        // OTP is valid, proceed and delete it
+        await OTP.deleteOne({ _id: otpRecord._id });
 
         const userExists = await User.findOne({ email });
 
