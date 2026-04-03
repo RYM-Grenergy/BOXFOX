@@ -64,7 +64,7 @@ export async function POST(req) {
                     const product = await Product.findOneAndUpdate(
                         { $or: [{ _id: item.productId }, { wpId: item.productId }] },
                         { $inc: { stock_quantity: -(item.quantity || 1) } },
-                        { new: true }
+                        { returnDocument: 'after' }
                     );
 
                     // Alert admin if stock is exhausted or low (< 5)
@@ -139,7 +139,7 @@ export async function PATCH(req) {
         const order = await Order.findOneAndUpdate(
             query,
             updateData,
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         if (order) {

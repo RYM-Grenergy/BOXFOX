@@ -26,7 +26,7 @@ export async function POST(req) {
         await OTP.findOneAndUpdate(
             { email },
             { otp, createdAt: new Date() },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }
         );
 
         // Send Email
