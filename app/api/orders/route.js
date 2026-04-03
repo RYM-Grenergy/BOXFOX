@@ -8,7 +8,6 @@ import {
     getAdminOrderTemplate, 
     getUserOrderTemplate, 
     generateInvoicePDF,
-    getLowStockTemplate,
     getStatusUpdateTemplate
 } from '@/lib/mail';
 
@@ -66,20 +65,10 @@ export async function POST(req) {
                         ? { $or: [{ _id: item.productId }, { wpId: item.productId }] }
                         : { wpId: item.productId };
 
-                    const product = await Product.findOneAndUpdate(
+                    await Product.findOneAndUpdate(
                         productQuery,
-                        { $inc: { stock_quantity: -(item.quantity || 1) } },
-                        { returnDocument: 'after' }
+                        { $inc: { stock_quantity: -(item.quantity || 1) } }
                     );
-
-                    // Alert admin if stock is exhausted or low (< 5)
-                    if (product && (product.stock_quantity <= 5)) {
-                        await sendEmail({
-                            to: process.env.EMAIL_USER,
-                            subject: `Inventory Alert: ${product.name} is Low!`,
-                            html: getLowStockTemplate(product)
-                        });
-                    }
                 }
             }
         }
