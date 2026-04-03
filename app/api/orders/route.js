@@ -61,8 +61,13 @@ export async function POST(req) {
         if (orderData.items && orderData.items.length > 0) {
             for (const item of orderData.items) {
                 if (item.productId) {
+                    const isVObjectId = /^[0-9a-fA-F]{24}$/.test(item.productId);
+                    const productQuery = isVObjectId 
+                        ? { $or: [{ _id: item.productId }, { wpId: item.productId }] }
+                        : { wpId: item.productId };
+
                     const product = await Product.findOneAndUpdate(
-                        { $or: [{ _id: item.productId }, { wpId: item.productId }] },
+                        productQuery,
                         { $inc: { stock_quantity: -(item.quantity || 1) } },
                         { returnDocument: 'after' }
                     );
@@ -85,6 +90,8 @@ export async function POST(req) {
             customerName: newOrder.customer?.name || 'Customer',
             customerEmail: newOrder.customer?.email,
             totalAmount: newOrder.total || 0,
+            discount: newOrder.discount || 0,
+            shippingAddress: newOrder.shipping?.address + ', ' + newOrder.shipping?.city + ', ' + newOrder.shipping?.state,
             status: newOrder.status,
             items: newOrder.items || [],
         };

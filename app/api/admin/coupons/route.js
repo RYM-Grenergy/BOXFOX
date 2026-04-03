@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server';
+import dbConnect from "@/lib/mongodb";
 import Coupon from "@/models/Coupon";
 import User from "@/models/User";
 import { sendEmail, getCouponTemplate } from "@/lib/mail";
@@ -8,6 +10,7 @@ export async function GET() {
         const coupons = await Coupon.find({}).sort({ createdAt: -1 });
         return NextResponse.json(coupons);
     } catch (error) {
+        console.error("GET Coupons Error:", error);
         return NextResponse.json({ error: "Failed to fetch coupons" }, { status: 500 });
     }
 }
@@ -34,6 +37,7 @@ export async function POST(req) {
 
         return NextResponse.json(coupon);
     } catch (error) {
+        console.error("POST Coupon Error:", error);
         if (error.code === 11000) {
             return NextResponse.json({ error: "Coupon code already exists" }, { status: 400 });
         }
@@ -46,9 +50,10 @@ export async function PATCH(req) {
         await dbConnect();
         const body = await req.json();
         const { id, ...updates } = body;
-        const coupon = await Coupon.findByIdAndUpdate(id, updates, { new: true });
+        const coupon = await Coupon.findByIdAndUpdate(id, updates, { returnDocument: 'after' });
         return NextResponse.json(coupon);
     } catch (error) {
+        console.error("PATCH Coupon Error:", error);
         return NextResponse.json({ error: "Failed to update coupon" }, { status: 500 });
     }
 }
@@ -61,6 +66,7 @@ export async function DELETE(req) {
         await Coupon.findByIdAndDelete(id);
         return NextResponse.json({ success: true });
     } catch (error) {
+        console.error("DELETE Coupon Error:", error);
         return NextResponse.json({ error: "Failed to delete coupon" }, { status: 500 });
     }
 }
