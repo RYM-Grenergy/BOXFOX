@@ -13,8 +13,7 @@ import {
     UploadCloud,
     Loader2,
     Copy,
-    Download,
-    ChevronRight,
+    Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -27,14 +26,6 @@ export default function ProductsManager() {
     const [successMsg, setSuccessMsg] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
-    const [expandedRows, setExpandedRows] = useState({});
-
-    const toggleRow = (id) => {
-        setExpandedRows(prev => ({
-            ...prev,
-            [id]: !prev[id]
-        }));
-    };
 
     const [formData, setFormData] = useState({
         name: '',
@@ -452,177 +443,88 @@ export default function ProductsManager() {
                             </div>
                         </div>
                     ) : (
-                        <div className="relative">
-                            <table className="w-full text-left border-separate border-spacing-0 min-w-[1200px]">
-                                <thead>
-                                    <tr className="bg-gray-50/50">
-                                        <th className="sticky left-0 z-10 bg-gray-50/50 px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap border-b border-gray-100">Product</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap border-b border-gray-100">SKU</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap border-b border-gray-100">Category</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap border-b border-gray-100">Price Range</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap border-b border-gray-100">Size</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap border-b border-gray-100">Status</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap border-b border-gray-100">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {flatProducts.map((product) => {
-                                        const isExpanded = expandedRows[product.id];
-                                        return (
-                                            <React.Fragment key={product.id}>
-                                                <tr
-                                                    className={`hover:bg-gray-50/50 transition-colors group cursor-pointer ${isExpanded ? 'bg-gray-50/30' : ''}`}
-                                                    onClick={() => toggleRow(product.id)}
-                                                >
-                                                    <td className="sticky left-0 z-10 bg-white group-hover:bg-gray-50/50 transition-colors px-8 py-5 border-b border-gray-50">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`}>
-                                                                <ChevronRight size={16} className="text-gray-300" />
-                                                            </div>
-                                                            <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
-                                                                <img src={product.img} alt="" className="w-full h-full object-cover" />
-                                                            </div>
-                                                            <div>
-                                                                <div className="flex items-center gap-2">
-                                                                    <p className="text-sm font-black text-gray-950 whitespace-nowrap">{product.name}</p>
-                                                                    {product.badge && (
-                                                                        <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-600 rounded text-[8px] font-black uppercase tracking-tighter">
-                                                                            {product.badge}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <p className="text-[10px] font-bold text-gray-400 uppercase">ID: {product.id}</p>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-5 border-b border-gray-50">
-                                                        <span className="text-[11px] font-black text-gray-950 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm whitespace-nowrap">
-                                                            {product.sku || 'PENDING'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-8 py-5 border-b border-gray-50">
-                                                        <div className="flex flex-col gap-1 items-start">
-                                                            <span className="px-3 py-1 bg-gray-100 text-gray-500 rounded-lg text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">
-                                                                {product.category}
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-gray-50/50">
+                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Product</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">SKU</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Category</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Price Range</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Size</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Status</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {flatProducts.map((product) => (
+                                    <tr key={product.id} className="hover:bg-gray-50/50 transition-colors group">
+                                        <td className="px-8 py-5">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
+                                                    <img src={product.img} alt="" className="w-full h-full object-cover" />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-sm font-black text-gray-950 line-clamp-1">{product.name}</p>
+                                                        {product.badge && (
+                                                            <span className="px-1.5 py-0.5 bg-accent/10 text-accent rounded text-[8px] font-black uppercase tracking-tighter">
+                                                                {product.badge}
                                                             </span>
-                                                            {product.pacdoraId && (
-                                                                <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-lg text-[8px] font-black uppercase tracking-widest text-center whitespace-nowrap">
-                                                                    3D READY
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-5 border-b border-gray-50">
-                                                        <span className="text-sm font-black text-gray-950 whitespace-nowrap">{product.price}</span>
-                                                    </td>
-                                                    <td className="px-8 py-5 border-b border-gray-50">
-                                                        {(() => {
-                                                            const d = formatDimensions(product.dimensions);
-                                                            if (!d) return <span className="text-[10px] text-gray-300 font-bold">—</span>;
-                                                            return (
-                                                                <div className="flex flex-col gap-0.5">
-                                                                    <span className="text-[10px] font-bold text-gray-700 whitespace-nowrap">{d.inch}</span>
-                                                                    <span className="text-[10px] font-bold text-gray-400 whitespace-nowrap">{d.cm}</span>
-                                                                    <span className="text-[10px] font-bold text-gray-300 whitespace-nowrap">{d.mm}</span>
-                                                                </div>
-                                                            );
-                                                        })()}
-                                                    </td>
-                                                    <td className="px-8 py-5 border-b border-gray-50">
-                                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${product.outOfStock ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'
-                                                            }`}>
-                                                            {product.outOfStock ? 'Out of Stock' : 'Active'}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-8 py-5 border-b border-gray-50">
-                                                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                                                            <button onClick={() => handleEdit(product)} title="Edit" className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><Edit size={16} /></button>
-                                                            <button onClick={() => handleDownloadProductAssets(product)} title="Download All Assets" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Download size={16} /></button>
-                                                            <button onClick={() => handleDuplicate(product)} title="Duplicate" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all"><Copy size={16} /></button>
-                                                            <button onClick={() => handleDelete(product._id || product.id)} title="Delete" className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                {isExpanded && (
-                                                    <tr>
-                                                        <td colSpan="7" className="bg-gray-50/30 px-8 py-8 border-b border-gray-100">
-                                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 animate-in fade-in slide-in-from-top-4 duration-300">
-                                                                <div className="space-y-4">
-                                                                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Description</h4>
-                                                                    <p className="text-sm font-medium text-gray-600 leading-relaxed">{product.description || 'No description provided.'}</p>
-                                                                    {product.short_description && (
-                                                                        <div className="pt-2">
-                                                                            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Short Description</h4>
-                                                                            <p className="text-xs font-bold text-gray-400 italic">"{product.short_description}"</p>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                                <div className="space-y-6">
-                                                                    <div className="space-y-4">
-                                                                        <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Metadata</h4>
-                                                                        <div className="grid grid-cols-2 gap-4">
-                                                                            <div className="bg-white p-3 rounded-xl border border-gray-100">
-                                                                                <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Brand</p>
-                                                                                <p className="text-xs font-black text-gray-950">{product.brand || 'BoxFox'}</p>
-                                                                            </div>
-                                                                            <div className="bg-white p-3 rounded-xl border border-gray-100">
-                                                                                <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Min Order</p>
-                                                                                <p className="text-xs font-black text-gray-950">{product.minOrderQuantity || 10} Units</p>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                    {product.tags && (
-                                                                        <div className="space-y-3">
-                                                                            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tags</h4>
-                                                                            <div className="flex flex-wrap gap-2">
-                                                                                {(Array.isArray(product.tags) ? product.tags : product.tags.split(',')).map((tag, i) => (
-                                                                                    <span key={i} className="px-2 py-1 bg-white border border-gray-100 rounded-lg text-[9px] font-black text-gray-500 uppercase">
-                                                                                        #{tag.trim()}
-                                                                                    </span>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                                <div className="space-y-6">
-                                                                    {product.specifications && product.specifications.length > 0 && (
-                                                                        <div className="space-y-4">
-                                                                            <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Technical Specs</h4>
-                                                                            <div className="space-y-2">
-                                                                                {product.specifications.map((spec, i) => (
-                                                                                    <div key={i} className="flex justify-between items-center py-2 border-b border-gray-100/50">
-                                                                                        <span className="text-[10px] font-bold text-gray-400 uppercase">{spec.key}</span>
-                                                                                        <span className="text-[10px] font-black text-gray-950">{spec.value}</span>
-                                                                                    </div>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-                                                                    <div className="flex gap-4">
-                                                                        {product.patternImg && (
-                                                                            <div className="flex-1 p-3 bg-white border border-gray-100 rounded-xl">
-                                                                                <p className="text-[8px] font-black text-gray-400 uppercase mb-2">Pattern Design</p>
-                                                                                <img src={product.patternImg} className="w-full h-12 object-contain rounded-md" alt="Pattern" />
-                                                                            </div>
-                                                                        )}
-                                                                        {product.dielineImg && (
-                                                                            <div className="flex-1 p-3 bg-white border border-gray-100 rounded-xl">
-                                                                                <p className="text-[8px] font-black text-gray-400 uppercase mb-2">Dieline</p>
-                                                                                <img src={product.dielineImg} className="w-full h-12 object-contain rounded-md" alt="Dieline" />
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-[10px] font-bold text-gray-400 uppercase">ID: {product.id}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-5">
+                                            <span className="text-[11px] font-black text-gray-950 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+                                                {product.sku || 'PENDING'}
+                                            </span>
+                                        </td>
+                                        <td className="px-8 py-5">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="px-3 py-1 bg-gray-100 text-gray-500 rounded-lg text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">
+                                                    {product.category}
+                                                </span>
+                                                {product.pacdoraId && (
+                                                    <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-lg text-[8px] font-black uppercase tracking-widest text-center">
+                                                        3D READY
+                                                    </span>
                                                 )}
-                                            </React.Fragment>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-5 text-sm font-black text-gray-950">{product.price}</td>
+                                        <td className="px-8 py-5">
+                                            {(() => {
+                                                const d = formatDimensions(product.dimensions);
+                                                if (!d) return <span className="text-[10px] text-gray-300 font-bold">—</span>;
+                                                return (
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span className="text-[10px] font-bold text-gray-700 whitespace-nowrap">{d.inch}</span>
+                                                        <span className="text-[10px] font-bold text-gray-400 whitespace-nowrap">{d.cm}</span>
+                                                        <span className="text-[10px] font-bold text-gray-300 whitespace-nowrap">{d.mm}</span>
+                                                    </div>
+                                                );
+                                            })()}
+                                        </td>
+                                        <td className="px-8 py-5">
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${product.outOfStock ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'
+                                                }`}>
+                                                {product.outOfStock ? 'Out of Stock' : 'Active'}
+                                            </span>
+                                        </td>
+                                        <td className="px-8 py-5">
+                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => handleEdit(product)} title="Edit" className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><Edit size={16} /></button>
+                                                <button onClick={() => handleDownloadProductAssets(product)} title="Download All Assets" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Download size={16} /></button>
+                                                <button onClick={() => handleDuplicate(product)} title="Duplicate" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all"><Copy size={16} /></button>
+                                                <button onClick={() => handleDelete(product._id || product.id)} title="Delete" className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     )}
                 </div>
             </div>
