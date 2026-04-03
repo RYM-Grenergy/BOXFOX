@@ -5,46 +5,25 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 // Banners can now be images or videos
-
 const banners = [
   {
     id: 1,
     type: "image",
-    image: "/banner/ChatGPT Image Mar 10, 2026, 11_10_18 AM.png",
-    alt: "Boxfox Premium Packaging - Style 1",
+    image: "/luxury7.jpeg",
+    alt: "Luxury Custom Packaging - Premium Model 7",
   },
   {
     id: 2,
     type: "image",
-    image: "/banner/ChatGPT Image Mar 10, 2026, 10_47_25 AM.png",
-    alt: "Boxfox Premium Packaging - Style 2",
+    image: "/luxury6.jpg.jpeg",
+    alt: "Luxury Custom Packaging - Premium Model 6",
   },
-
   {
     id: 3,
-    type: "video",
-    src: "/hero_video_2.mp4",
-    alt: "Boxfox Premium Production Video",
-  },
-
-  {
-    id: 4,
     type: "image",
-    image: "/banner/ChatGPT Image Mar 10, 2026, 10_28_18 AM.png",
-    alt: "Boxfox Premium Packaging - Style 3",
+    image: "/luxury5.jpg.jpeg",
+    alt: "Luxury Custom Packaging - Premium Model 5",
   },
-  {
-    id: 5,
-    type: "image",
-    image: "/banner/ChatGPT Image Mar 10, 2026, 10_24_14 AM.png",
-    alt: "Boxfox Premium Packaging - Style 4",
-  },
-  {
-    id: 6,
-    type: "video",
-    src: "/banner/hero_video.mp4",
-    alt: "Boxfox Premium Hero Video",
-  }
 ];
 
 
@@ -53,6 +32,9 @@ export default function HeroBanner() {
   const [direction, setDirection] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const videoRef = useRef(null);
+
+  // Ensure we always have a valid banner
+  const currentBanner = banners && banners.length > 0 ? banners[currentIndex % banners.length] : null;
 
   const slideVariants = {
     enter: (direction) => ({
@@ -90,7 +72,7 @@ export default function HeroBanner() {
 
     const timer = setInterval(() => {
       paginate(1);
-    }, 2000); // 2 second interval for both mobile and desktop
+    }, 5000); // 5 second interval for a more premium experience
     return () => clearInterval(timer);
   }, [isHovered, currentIndex, paginate]);
 
@@ -137,21 +119,21 @@ export default function HeroBanner() {
             }}
             className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"
           >
-            {banners[currentIndex].type === "image" ? (
+            {currentBanner && currentBanner.type === "image" ? (
               <>
                 {/* Immersive blurred background to fill the frame */}
                 <div
                   className="absolute inset-0 w-full h-full bg-cover bg-center opacity-40 scale-110"
                   style={{
-                    backgroundImage: `url('${banners[currentIndex].image}')`,
+                    backgroundImage: `url('${currentBanner.image}')`,
                     filter: "blur(40px) saturate(1.8)",
                   }}
                 />
 
                 {/* Sharp foreground — contained to keep products/designs perfectly visible */}
                 <Image
-                  src={banners[currentIndex].image}
-                  alt={banners[currentIndex].alt}
+                  src={currentBanner.image}
+                  alt={currentBanner.alt}
                   fill
                   className="relative z-10"
                   style={{ objectFit: "contain", objectPosition: "center" }}
@@ -160,11 +142,11 @@ export default function HeroBanner() {
                   quality={95}
                 />
               </>
-            ) : (
+            ) : currentBanner && currentBanner.type === "video" ? (
               <>
                 {/* Blurred Video Background */}
                 <video
-                  src={banners[currentIndex].src}
+                  src={currentBanner.src}
                   muted
                   playsInline
                   autoPlay
@@ -181,7 +163,7 @@ export default function HeroBanner() {
                       el.play().catch(() => { });
                     }
                   }}
-                  src={banners[currentIndex].src}
+                  src={currentBanner.src}
                   muted
                   playsInline
                   onEnded={() => paginate(1)}
@@ -189,7 +171,7 @@ export default function HeroBanner() {
                   style={{ objectFit: "contain", objectPosition: "center" }}
                 />
               </>
-            )}
+            ) : null}
 
 
             {/* Dark wash for text visibility — stronger from bottom-left */}

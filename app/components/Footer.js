@@ -65,7 +65,8 @@ export default function Footer() {
               {[
                 { name: "Shipping Policy", href: "/shipping" },
                 { name: "Domestic Shipping", href: "/domestic-shipping" },
-                { name: "International Shipping", href: "/international-shipping" }
+                { name: "International Shipping", href: "/international-shipping" },
+                { name: "Return & Exchange", href: "/exchange" }
               ].map((item) => (
                 <li key={item.name}>
                   <Link href={item.href} className="text-[12px] font-black text-gray-950 hover:text-emerald-600 transition-all uppercase tracking-wider">{item.name}</Link>
