@@ -236,14 +236,14 @@ export default function CheckoutPage() {
         <div className="min-h-screen bg-white">
             <Navbar />
             <main className="pt-32 pb-24 px-6 lg:px-12 max-w-[1600px] mx-auto">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 border-b border-gray-100 pb-16">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12 lg:mb-16 border-b border-gray-100 pb-12 lg:pb-16">
                     <div>
-                        <h1 className="text-7xl md:text-9xl font-black text-gray-950 tracking-tighter uppercase leading-[0.8]">Confirm<br /><span className="text-emerald-500">Shipping.</span></h1>
+                        <h1 className="text-5xl md:text-7xl lg:text-9xl font-black text-gray-950 tracking-tighter uppercase leading-[0.8]">Confirm<br /><span className="text-emerald-500">Shipping.</span></h1>
                     </div>
-                    <div className="flex bg-gray-50 p-2 rounded-2xl border border-gray-100">
-                        <div className="px-6 py-3 flex items-center gap-2">
+                    <div className="flex bg-gray-50 p-2 rounded-2xl border border-gray-100 self-start">
+                        <div className="px-4 lg:px-6 py-2 lg:py-3 flex items-center gap-2">
                             <ShieldCheck size={16} className="text-emerald-500" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-950">Bank-Grade Security</span>
+                            <span className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-gray-950 whitespace-nowrap">Bank-Grade Security</span>
                         </div>
                     </div>
                 </div>
@@ -260,54 +260,54 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
                     <div className="lg:col-span-7 space-y-16">
                         {/* Stepper */}
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 lg:gap-4 overflow-x-auto pb-4 lg:pb-0 no-scrollbar">
                             {[1, 2].map(i => (
                                 <React.Fragment key={i}>
-                                    <div className={`flex items-center gap-4 group cursor-pointer`} onClick={() => setStep(i)}>
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black transition-all ${step >= i ? 'bg-gray-950 text-white shadow-xl' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
+                                    <div className={`flex items-center gap-2 lg:gap-4 group cursor-pointer shrink-0`} onClick={() => setStep(i)}>
+                                        <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl flex items-center justify-center text-xs font-black transition-all ${step >= i ? 'bg-gray-950 text-white shadow-xl' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
                                             {i}
                                         </div>
-                                        <span className={`text-[10px] font-black uppercase tracking-widest ${step >= i ? 'text-gray-950' : 'text-gray-400'}`}>
+                                        <span className={`text-[9px] lg:text-[10px] font-black uppercase tracking-widest ${step >= i ? 'text-gray-950' : 'text-gray-400'}`}>
                                             {i === 1 ? 'Personal' : 'Shipping'}
                                         </span>
                                     </div>
-                                    {i === 1 && <div className="h-px w-12 bg-gray-100" />}
+                                    {i === 1 && <div className="h-px w-8 lg:w-12 bg-gray-100 shrink-0" />}
                                 </React.Fragment>
                             ))}
                         </div>
 
                         {step === 1 ? (
                             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-10">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
                                     <div className="space-y-4">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Recipient Name</label>
+                                        <label className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Recipient Name</label>
                                         <input
                                             name="name" value={formData.name || ''} onChange={handleFormChange}
                                             placeholder="John Doe"
-                                            className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all uppercase tracking-widest"
+                                            className="w-full bg-gray-50 border border-transparent rounded-[1.25rem] lg:rounded-[1.5rem] px-6 lg:px-8 py-5 lg:py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all uppercase tracking-widest"
                                         />
                                     </div>
                                     <div className="space-y-4">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Contact Email</label>
+                                        <label className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Contact Email</label>
                                         <input
                                             type="email" name="email" value={formData.email || ''} onChange={handleFormChange}
                                             placeholder="support@boxfox.in"
-                                            className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
+                                            className="w-full bg-gray-50 border border-transparent rounded-[1.25rem] lg:rounded-[1.5rem] px-6 lg:px-8 py-5 lg:py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
                                         />
                                     </div>
                                     <div className="space-y-4 md:col-span-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Encrypted Phone</label>
+                                        <label className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Encrypted Phone</label>
                                         <input
                                             name="phone" value={formData.phone || ''} onChange={handleFormChange}
                                             placeholder="+91 00000 00000"
-                                            className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
+                                            className="w-full bg-gray-50 border border-transparent rounded-[1.25rem] lg:rounded-[1.5rem] px-6 lg:px-8 py-5 lg:py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
                                         />
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setStep(2)}
                                     disabled={!formData.name || !formData.email || !formData.phone}
-                                    className="w-full py-6 bg-gray-950 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] hover:bg-emerald-500 transition-all disabled:opacity-30 shadow-2xl shadow-gray-200"
+                                    className="w-full py-5 lg:py-6 bg-gray-950 text-white rounded-[1.5rem] lg:rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] lg:tracking-[0.4em] hover:bg-emerald-500 transition-all disabled:opacity-30 shadow-2xl shadow-gray-200 active:scale-[0.98]"
                                 >
                                     Define Shipping address
                                 </button>
@@ -395,17 +395,17 @@ export default function CheckoutPage() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex gap-6">
+                                <div className="flex flex-col sm:flex-row gap-4 lg:gap-6">
                                     <button
                                         onClick={() => setStep(1)}
-                                        className="flex-1 py-6 bg-gray-100 text-gray-950 rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all"
+                                        className="sm:flex-1 py-5 lg:py-6 bg-gray-100 text-gray-950 rounded-[1.5rem] lg:rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all"
                                     >
                                         Back
                                     </button>
                                     <button
                                         disabled={isSubmitting || !formData.shippingAddress.street || !formData.shippingAddress.city}
                                         onClick={placeOrder}
-                                        className="flex-[2] py-6 bg-emerald-500 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] hover:bg-gray-950 transition-all shadow-2xl shadow-emerald-500/10 active:scale-95"
+                                        className="sm:flex-[2] py-5 lg:py-6 bg-emerald-500 text-white rounded-[1.5rem] lg:rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] lg:tracking-[0.4em] hover:bg-gray-950 transition-all shadow-2xl shadow-emerald-500/10 active:scale-[0.98]"
                                     >
                                         {isSubmitting ? 'SECURING...' : 'Authorize Transaction'}
                                     </button>
@@ -494,10 +494,10 @@ export default function CheckoutPage() {
                                     <span>Eco-Shipment</span>
                                     <span className="text-emerald-500 font-black italic">Free</span>
                                 </div>
-                                <div className="pt-8 flex items-end justify-between">
+                                <div className="pt-4 lg:pt-8 flex items-end justify-between">
                                     <div>
-                                        <p className="text-[10px] font-black uppercase text-emerald-500 mb-1 tracking-widest">Total Valuation</p>
-                                        <h2 className="text-5xl font-black text-gray-950 tracking-tighter leading-none">₹{finalTotal.toLocaleString('en-IN')}</h2>
+                                        <p className="text-[9px] lg:text-[10px] font-black uppercase text-emerald-500 mb-1 tracking-widest">Total Valuation</p>
+                                        <h2 className="text-4xl lg:text-5xl font-black text-gray-950 tracking-tighter leading-none">₹{finalTotal.toLocaleString('en-IN')}</h2>
                                     </div>
                                 </div>
                             </div>
