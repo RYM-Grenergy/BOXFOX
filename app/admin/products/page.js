@@ -12,7 +12,8 @@ import {
     CheckCircle2,
     UploadCloud,
     Loader2,
-    Copy
+    Copy,
+    Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -236,6 +237,43 @@ export default function ProductsManager() {
             }
         } catch (e) {
             console.error('Failed to delete product', e);
+        }
+    };
+
+    const handleDownload = async (url, filename) => {
+        if (!url) return;
+        try {
+            const res = await fetch(url);
+            const blob = await res.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = filename || url.split('/').pop().split('?')[0];
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(blobUrl);
+        } catch (e) {
+            window.open(url, '_blank');
+        }
+    };
+
+    const handleDownloadProductAssets = async (p) => {
+        const images = Array.isArray(p.images) ? p.images : (typeof p.images === 'string' ? p.images.split(',').map(i => i.trim()).filter(Boolean) : []);
+        
+        // Product Images
+        for (let i = 0; i < images.length; i++) {
+            await handleDownload(images[i], `${p.name.replace(/\s+/g, '_')}_p${i+1}`);
+        }
+        
+        // Pattern
+        if (p.patternImg) {
+            await handleDownload(p.patternImg, `${p.name.replace(/\s+/g, '_')}_pattern`);
+        }
+        
+        // Dieline
+        if (p.dielineImg) {
+            await handleDownload(p.dielineImg, `${p.name.replace(/\s+/g, '_')}_dieline`);
         }
     };
 
@@ -478,7 +516,8 @@ export default function ProductsManager() {
                                         <td className="px-8 py-5">
                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button onClick={() => handleEdit(product)} title="Edit" className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><Edit size={16} /></button>
-                                                <button onClick={() => handleDuplicate(product)} title="Duplicate" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Copy size={16} /></button>
+                                                <button onClick={() => handleDownloadProductAssets(product)} title="Download All Assets" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Download size={16} /></button>
+                                                <button onClick={() => handleDuplicate(product)} title="Duplicate" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all"><Copy size={16} /></button>
                                                 <button onClick={() => handleDelete(product._id || product.id)} title="Delete" className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
                                             </div>
                                         </td>
@@ -808,21 +847,32 @@ export default function ProductsManager() {
                                                             <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
                                                         </label>
                                                     </div>
-                                                    <div className="flex flex-wrap gap-4 mt-4">
+                                                    <div className="flex flex-wrap gap-4">
                                                         {formData.images.split(',').map((url, i) => url.trim() && (
                                                             <div key={i} className="w-20 h-20 rounded-2xl border border-gray-100 overflow-hidden shrink-0 relative group">
                                                                 <img src={url.trim()} className="w-full h-full object-cover" alt={`Preview ${i + 1}`} />
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const newUrls = formData.images.split(',').map(u => u.trim()).filter(Boolean);
-                                                                        newUrls.splice(i, 1);
-                                                                        setFormData({ ...formData, images: newUrls.join(', ') });
-                                                                    }}
-                                                                    className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:scale-110"
-                                                                >
-                                                                    <X size={12} />
-                                                                </button>
+                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleDownload(url.trim(), `${formData.name}_img_${i + 1}`)}
+                                                                        className="w-7 h-7 bg-white text-gray-900 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 shadow-lg"
+                                                                        title="Download"
+                                                                    >
+                                                                        <Download size={14} />
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const newUrls = formData.images.split(',').map(u => u.trim()).filter(Boolean);
+                                                                            newUrls.splice(i, 1);
+                                                                            setFormData({ ...formData, images: newUrls.join(', ') });
+                                                                        }}
+                                                                        className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:scale-110 active:scale-95 shadow-lg"
+                                                                        title="Remove"
+                                                                    >
+                                                                        <X size={14} />
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         ))}
                                                     </div>
@@ -836,40 +886,48 @@ export default function ProductsManager() {
                                                 </div>
                                                 <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">The following pattern image is for internal use by the admin team and will be attached to customer orders for reproduction purposes. It is not publicly visible on the main catalog.</p>
                                                 <div className="space-y-2">
-                                                <div className="flex gap-4">
-                                                    <div className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 flex items-center gap-4">
-                                                        {formData.patternImg ? (
-                                                            <div className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden shrink-0 relative group">
-                                                                <img src={formData.patternImg} className="w-full h-full object-cover" alt="Pattern" />
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setFormData({ ...formData, patternImg: '' })}
-                                                                    className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                                                                >
-                                                                    <Trash2 size={14} />
-                                                                </button>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 border border-gray-100">
-                                                                <ImageIcon size={20} className="text-gray-300" />
-                                                            </div>
-                                                        )}
-                                                        <input
-                                                            value={formData.patternImg}
-                                                            onChange={e => setFormData({ ...formData, patternImg: e.target.value })}
-                                                            placeholder="Pattern URL or upload ->"
-                                                            className="flex-1 bg-transparent font-bold text-gray-950 outline-none text-sm"
-                                                        />
+                                                    <div className="flex gap-4">
+                                                        <div className="flex-1 bg-white border border-gray-100 rounded-2xl px-6 py-4 flex items-center gap-4">
+                                                            {formData.patternImg ? (
+                                                                <div className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden shrink-0 relative group">
+                                                                    <img src={formData.patternImg} className="w-full h-full object-cover" alt="Pattern" />
+                                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleDownload(formData.patternImg, `${formData.name}_pattern`)}
+                                                                            className="p-1 bg-white text-gray-900 rounded-md hover:scale-105"
+                                                                        >
+                                                                            <Download size={12} />
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => setFormData({ ...formData, patternImg: '' })}
+                                                                            className="p-1 bg-red-500 text-white rounded-md hover:scale-105"
+                                                                        >
+                                                                            <Trash2 size={12} />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 border border-gray-100">
+                                                                    <ImageIcon size={20} className="text-gray-300" />
+                                                                </div>
+                                                            )}
+                                                            <input
+                                                                value={formData.patternImg}
+                                                                onChange={e => setFormData({ ...formData, patternImg: e.target.value })}
+                                                                placeholder="Pattern URL or upload ->"
+                                                                className="flex-1 bg-transparent font-bold text-gray-950 outline-none text-sm"
+                                                            />
+                                                        </div>
+                                                        <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                            {isUploading ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">Upload Pattern</span>
+                                                            <input type="file" accept="image/*" className="hidden" onChange={handlePatternUpload} />
+                                                        </label>
                                                     </div>
-                                                    <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                                                        {isUploading ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">Upload Pattern</span>
-                                                        <input type="file" accept="image/*" className="hidden" onChange={handlePatternUpload} />
-                                                    </label>
                                                 </div>
-                                                <p className="text-[9px] font-medium text-gray-400 uppercase tracking-wider pl-2">This image will be used as the default design pattern in the customization lab.</p>
                                             </div>
-                                        </div>
 
                                             <div className="space-y-3 bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
                                                 <div className="flex items-center justify-between">
@@ -879,17 +937,26 @@ export default function ProductsManager() {
                                                 <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">Upload the dieline file for this product. This is strictly for admin reference and internal use.</p>
                                                 <div className="space-y-2">
                                                     <div className="flex gap-4">
-                                                        <div className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 flex items-center gap-4">
+                                                        <div className="flex-1 bg-white border border-gray-100 rounded-2xl px-6 py-4 flex items-center gap-4">
                                                             {formData.dielineImg ? (
                                                                 <div className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden shrink-0 relative group">
                                                                     <img src={formData.dielineImg} className="w-full h-full object-cover" alt="Dieline" />
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setFormData({ ...formData, dielineImg: '' })}
-                                                                        className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                                                                    >
-                                                                        <Trash2 size={14} />
-                                                                    </button>
+                                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleDownload(formData.dielineImg, `${formData.name}_dieline`)}
+                                                                            className="p-1 bg-white text-gray-900 rounded-md hover:scale-105"
+                                                                        >
+                                                                            <Download size={12} />
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => setFormData({ ...formData, dielineImg: '' })}
+                                                                            className="p-1 bg-red-500 text-white rounded-md hover:scale-105"
+                                                                        >
+                                                                            <Trash2 size={12} />
+                                                                        </button>
+                                                                    </div>
                                                                 </div>
                                                             ) : (
                                                                 <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 border border-gray-100">
