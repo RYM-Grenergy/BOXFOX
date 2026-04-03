@@ -149,7 +149,7 @@ export default function CheckoutPage() {
                         productId: item.id,
                         name: item.name,
                         quantity: item.quantity,
-                        price: typeof item.price === 'number' ? item.price : parseFloat(item.price.replace(/[^0-9.]/g, '')),
+                        price: typeof item.price === 'number' ? item.price : parseFloat(String(item.price || 0).replace(/[^0-9.]/g, '')) || 0,
                         variant: item.variant,
                         image: item.img || item.image,
                         customDesign: item.customDesign
@@ -440,8 +440,8 @@ export default function CheckoutPage() {
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="text-right">
-                                            <span className="text-sm font-black text-gray-950">₹{(parseFloat(typeof item.price === 'number' ? item.price : item.price.replace(/[^0-9.]/g, '')) * item.quantity).toLocaleString('en-IN')}</span>
+                                        <div className="text-right shrink-0">
+                                            <span className="text-sm font-black text-gray-950">₹{(parseFloat(String(typeof item.price === 'number' ? item.price : item.price || 0).replace(/[^0-9.]/g, '')) * item.quantity).toLocaleString('en-IN')}</span>
                                         </div>
                                     </div>
                                 ))}
