@@ -15,7 +15,8 @@ function SignUpContent() {
         email: "",
         password: "",
         phone: "",
-        businessName: ""
+        businessName: "",
+        emailOptIn: false
     });
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -225,7 +226,28 @@ function SignUpContent() {
                                         </div>
                                     </div>
 
-                                    <div className="md:col-span-2 pt-10">
+                                    <div className="md:col-span-2 pt-2 pb-6">
+                                        <label className="flex items-start gap-4 cursor-pointer group/optin">
+                                            <div className="relative mt-1">
+                                                <input 
+                                                    required 
+                                                    type="checkbox" 
+                                                    name="emailOptIn"
+                                                    checked={formData.emailOptIn}
+                                                    onChange={(e) => setFormData({ ...formData, emailOptIn: e.target.checked })}
+                                                    className="peer absolute opacity-0 cursor-pointer w-0 h-0" 
+                                                />
+                                                <div className="w-5 h-5 rounded-md border-2 border-gray-100 group-hover/optin:border-emerald-500 transition-all peer-checked:bg-emerald-500 peer-checked:border-emerald-500 flex items-center justify-center text-white">
+                                                    <CheckCircle2 size={12} className="opacity-0 peer-checked:opacity-100 transition-opacity" />
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.05em] leading-relaxed select-none">
+                                                I agree to receive <span className="text-gray-950 font-black underline decoration-emerald-500/30">order updates and exclusive promotions</span> from BoxFox. <span className="text-emerald-500 font-black">*Required</span>
+                                            </span>
+                                        </label>
+                                    </div>
+
+                                    <div className="md:col-span-2">
                                         <button
                                             type="submit"
                                             disabled={isLoading}
