@@ -18,10 +18,14 @@ export async function POST(req) {
 
         await dbConnect();
 
-        const { name, email, password, phone, businessName } = await req.json();
+        const { name, email, password, phone, businessName, emailOptIn } = await req.json();
 
-        if (!name || !email || !password || !phone) {
-            return NextResponse.json({ error: 'Please provide all required fields (Name, Email, Password, Phone)' }, { status: 400 });
+        if (!name || !email || !password || !phone || emailOptIn === undefined) {
+            return NextResponse.json({ error: 'Please provide all required fields including email subscription consent' }, { status: 400 });
+        }
+
+        if (!emailOptIn) {
+            return NextResponse.json({ error: 'Please accept email notifications to continue' }, { status: 400 });
         }
 
         const userExists = await User.findOne({ email });
@@ -38,7 +42,8 @@ export async function POST(req) {
             email,
             password: hashedPassword,
             phone,
-            businessName
+            businessName,
+            emailOptIn
         });
 
         // Generate token for automatic login

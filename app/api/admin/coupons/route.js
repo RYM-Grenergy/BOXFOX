@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import dbConnect from "@/lib/mongodb";
 import Coupon from "@/models/Coupon";
+import User from "@/models/User";
+import { sendEmail, getCouponTemplate } from "@/lib/mail";
 
 export async function GET() {
     try {
@@ -17,6 +17,21 @@ export async function POST(req) {
         await dbConnect();
         const body = await req.json();
         const coupon = await Coupon.create(body);
+
+        // Find users who opted in and broadcast the coupon
+        const optedInUsers = await User.find({ emailOptIn: true }).limit(100).select("email");
+        const emails = optedInUsers.map(u => u.email);
+
+        if (emails.length > 0) {
+            // Sending as BCC array (supported by updated lib/mail.js)
+            await sendEmail({
+                to: process.env.EMAIL_USER, // To self
+                bcc: emails,
+                subject: `🎁 New BoxFox Coupon! Use code ${coupon.code}`,
+                html: getCouponTemplate(coupon)
+            });
+        }
+
         return NextResponse.json(coupon);
     } catch (error) {
         if (error.code === 11000) {

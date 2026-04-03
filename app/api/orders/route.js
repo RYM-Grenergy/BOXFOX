@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Order from '@/models/Order';
 import Coupon from '@/models/Coupon';
+import Product from '@/models/Product';
+import { 
+    sendEmail, 
+    getAdminOrderTemplate, 
+    getUserOrderTemplate, 
+    generateInvoicePDF,
+    getLowStockTemplate,
+    getStatusUpdateTemplate
+} from '@/lib/mail';
 
 export async function GET(req) {
     try {
@@ -40,12 +49,69 @@ export async function POST(req) {
             status: 'Pending'
         });
 
-        // If coupon was used, increment usage count
+        // 1. If coupon was used, increment usage count
         if (orderData.couponCode) {
             await Coupon.findOneAndUpdate(
                 { code: orderData.couponCode.toUpperCase() },
                 { $inc: { usageCount: 1 } }
             );
+        }
+
+        // 2. Decrement stock and check for exhaustion
+        if (orderData.items && orderData.items.length > 0) {
+            for (const item of orderData.items) {
+                if (item.productId) {
+                    const product = await Product.findOneAndUpdate(
+                        { $or: [{ _id: item.productId }, { wpId: item.productId }] },
+                        { $inc: { stock_quantity: -(item.quantity || 1) } },
+                        { new: true }
+                    );
+
+                    // Alert admin if stock is exhausted or low (< 5)
+                    if (product && (product.stock_quantity <= 5)) {
+                        await sendEmail({
+                            to: process.env.EMAIL_USER,
+                            subject: `Inventory Alert: ${product.name} is Low!`,
+                            html: getLowStockTemplate(product)
+                        });
+                    }
+                }
+            }
+        }
+
+        // 3. Send Order Emails
+        const emailCommonData = {
+            orderId: newOrder.orderId,
+            customerName: newOrder.customer?.name || 'Customer',
+            customerEmail: newOrder.customer?.email,
+            totalAmount: newOrder.total || 0,
+            status: newOrder.status,
+            items: newOrder.items || [],
+        };
+
+        // PDF Invoice Generation
+        const invoicePdf = generateInvoicePDF(emailCommonData);
+
+        // Notify Admin
+        await sendEmail({
+            to: process.env.EMAIL_USER,
+            subject: `🚀 New Order Received: ${newOrder.orderId}`,
+            html: getAdminOrderTemplate(emailCommonData)
+        });
+
+        // Notify User with Invoice
+        if (newOrder.customer?.email) {
+            await sendEmail({
+                to: newOrder.customer.email,
+                subject: `Order Confirmed: ${newOrder.orderId}`,
+                html: getUserOrderTemplate(emailCommonData),
+                attachments: [
+                    {
+                        filename: `Invoice-${newOrder.orderId}.pdf`,
+                        content: invoicePdf
+                    }
+                ]
+            });
         }
 
         return NextResponse.json({ success: true, orderId: newOrder.orderId });
@@ -60,9 +126,11 @@ export async function PATCH(req) {
         await dbConnect();
         const { id, status, labNotes } = await req.json();
 
-        // Find by orderId string or MongoDB _id safely
         const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(id);
         const query = isValidObjectId ? { $or: [{ orderId: id }, { _id: id }] } : { orderId: id };
+
+        const currentOrder = await Order.findOne(query);
+        const prevStatus = currentOrder?.status;
 
         let updateData = {};
         if (status !== undefined) updateData.status = status;
@@ -75,6 +143,14 @@ export async function PATCH(req) {
         );
 
         if (order) {
+            // Trigger status update email if it changed
+            if (status && status !== prevStatus && order.customer?.email) {
+                await sendEmail({
+                    to: order.customer.email,
+                    subject: `Update on Order ${order.orderId}: ${status}`,
+                    html: getStatusUpdateTemplate(order)
+                });
+            }
             return NextResponse.json({ success: true, order });
         }
         return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 });

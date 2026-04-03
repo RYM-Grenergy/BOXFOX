@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const UserSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
+    emailOptIn: { type: Boolean, default: true, required: true },
     password: { type: String },
     role: { type: String, enum: ['user', 'admin', 'staff_fulfillment'], default: 'user' },
     phone: { type: String },
