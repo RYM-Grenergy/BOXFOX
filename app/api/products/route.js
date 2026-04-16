@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
+import { getOrSetCache } from "@/lib/redis";
 
 export async function GET(req) {
   try {
@@ -31,105 +32,113 @@ export async function GET(req) {
       query.categories = category;
     }
 
-    // High Performance Fetch: Use projections to return only required fields for the UI
-    const projection = isAdmin ? {} : {
-      wpId: 1, name: 1, price: 1, minPrice: 1, maxPrice: 1,
-      images: 1, type: 1, stock_status: 1, dimensions: 1,
-      pacdoraId: 1, badge: 1, isFeatured: 1, categories: 1
-    };
+    // Build a unique cache key based on search parameters
+    // We only cache public requests (non-admin) to keep the DB load low for users
+    const cacheKey = `products:${isAdmin ? 'admin' : 'public'}:${category || 'all'}:${searchTerm}:${page}:${limit}`;
 
-    let cursor = Product.find(query, projection).sort({ createdAt: -1 });
+    const fetchProducts = async () => {
+      // High Performance Fetch: Use projections to return only required fields for the UI
+      const projection = isAdmin ? {} : {
+        wpId: 1, name: 1, price: 1, minPrice: 1, maxPrice: 1,
+        images: 1, type: 1, stock_status: 1, dimensions: 1,
+        pacdoraId: 1, badge: 1, isFeatured: 1, categories: 1
+      };
 
-    const products = await cursor
-      .skip(skip)
-      .limit(searchParams.get("all") === "true" ? 0 : limit)
-      .lean();
+      let cursor = Product.find(query, projection).sort({ createdAt: -1 });
 
-    // Transform into the sections structure or flat list for admin
-    if (isAdmin) {
-      const flatList = products.map((p) => {
+      const products = await cursor
+        .skip(skip)
+        .limit(searchParams.get("all") === "true" ? 0 : limit)
+        .lean();
+
+      // Transform into the sections structure or flat list for admin
+      if (isAdmin) {
+        return products.map((p) => {
+          const formattedPrice = p.minPrice
+            ? (p.maxPrice ? `₹${p.minPrice} - ₹${p.maxPrice}` : `₹${p.minPrice}`)
+            : (p.price ? (String(p.price).startsWith('₹') ? p.price : `₹${p.price}`) : "Price on Request");
+
+          return {
+            _id: p._id,
+            id: p.wpId,
+            name: p.name,
+            sku: p.sku || '',
+            category: (p.categories && p.categories.length > 0) ? (p.categories[p.categories.length - 1] || "Uncategorized") : "Uncategorized",
+            price: formattedPrice,
+            minPrice: p.minPrice,
+            maxPrice: p.maxPrice,
+            originalPrice: p.regular_price,
+            discount: p.sale_price ? "Sale" : null,
+            status: p.stock_status,
+            images: p.images,
+            img: p.images[0] || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
+            outOfStock: p.stock_status === "outofstock",
+            badge: p.badge || (p.isFeatured ? "Featured" : null),
+            hasVariants: p.type === "variable",
+            description: p.description || '',
+            short_description: p.short_description || '',
+            brand: p.brand || 'BoxFox',
+            minOrderQuantity: p.minOrderQuantity || 10,
+            tags: p.tags || [],
+            specifications: p.specifications || [],
+            dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' },
+            pacdoraId: p.pacdoraId,
+            patternImg: p.patternImg,
+            dielineImg: p.dielineImg
+          };
+        });
+      }
+
+      // For main site - Grouped by Category
+      const sectionsMap = {};
+
+      products.forEach((p) => {
+        const primaryCat = (p.categories && p.categories.length > 0) ? (p.categories[p.categories.length - 1] || "Packaging") : "Packaging";
+
+        if (!sectionsMap[primaryCat]) {
+          sectionsMap[primaryCat] = {
+            category: primaryCat,
+            tabs: ["All Items"],
+            items: [],
+          };
+        }
+
         const formattedPrice = p.minPrice
           ? (p.maxPrice ? `₹${p.minPrice} - ₹${p.maxPrice}` : `₹${p.minPrice}`)
           : (p.price ? (String(p.price).startsWith('₹') ? p.price : `₹${p.price}`) : "Price on Request");
 
-        return {
+        sectionsMap[primaryCat].items.push({
           _id: p._id,
           id: p.wpId,
           name: p.name,
-          sku: p.sku || '',
-          category: (p.categories && p.categories.length > 0) ? (p.categories[p.categories.length - 1] || "Uncategorized") : "Uncategorized",
           price: formattedPrice,
           minPrice: p.minPrice,
           maxPrice: p.maxPrice,
-          originalPrice: p.regular_price,
-          discount: p.sale_price ? "Sale" : null,
-          status: p.stock_status,
-          images: p.images,
-          img: p.images[0] || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
-          outOfStock: p.stock_status === "outofstock",
           badge: p.badge || (p.isFeatured ? "Featured" : null),
+          img: p.images[0] || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
+          images: p.images,
           hasVariants: p.type === "variable",
-          description: p.description || '',
-          short_description: p.short_description || '',
-          brand: p.brand || 'BoxFox',
-          minOrderQuantity: p.minOrderQuantity || 10,
-          tags: p.tags || [],
-          specifications: p.specifications || [],
+          outOfStock: p.stock_status === "outofstock",
           dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' },
-          pacdoraId: p.pacdoraId,
-          patternImg: p.patternImg,
-          dielineImg: p.dielineImg
-        };
+          categories: p.categories,
+          pacdoraId: p.pacdoraId
+        });
       });
-      return NextResponse.json(flatList);
-    }
 
-    // For main site - Grouped by Category
-    const sectionsMap = {};
+      return Object.values(sectionsMap)
+        .filter((s) => s.items.length > 0)
+        .map((s) => ({
+          ...s,
+          items: searchParams.get("all") === "true" ? s.items : s.items.slice(0, 8),
+        }));
+    };
 
-    products.forEach((p) => {
-      // Use the last category as it's usually the most specific one
-      const primaryCat = (p.categories && p.categories.length > 0) ? (p.categories[p.categories.length - 1] || "Packaging") : "Packaging";
+    // Use Redis Cache with 30-minute expiry (1800s)
+    // We stringify/parse because getOrSetCache handles JSON.stringify
+    const data = await getOrSetCache(cacheKey, fetchProducts, 1800);
 
-      if (!sectionsMap[primaryCat]) {
-        sectionsMap[primaryCat] = {
-          category: primaryCat,
-          tabs: ["All Items"],
-          items: [],
-        };
-      }
+    return NextResponse.json(data);
 
-      const formattedPrice = p.minPrice
-        ? (p.maxPrice ? `₹${p.minPrice} - ₹${p.maxPrice}` : `₹${p.minPrice}`)
-        : (p.price ? (String(p.price).startsWith('₹') ? p.price : `₹${p.price}`) : "Price on Request");
-
-      sectionsMap[primaryCat].items.push({
-        _id: p._id,
-        id: p.wpId,
-        name: p.name,
-        price: formattedPrice,
-        minPrice: p.minPrice,
-        maxPrice: p.maxPrice,
-        badge: p.badge || (p.isFeatured ? "Featured" : null),
-        img: p.images[0] || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
-        images: p.images,
-        hasVariants: p.type === "variable",
-        outOfStock: p.stock_status === "outofstock",
-        dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' },
-        categories: p.categories,
-        pacdoraId: p.pacdoraId
-      });
-    });
-
-    // Limit items per category for the homepage and convert to array
-    const sections = Object.values(sectionsMap)
-      .filter((s) => s.items.length > 0)
-      .map((s) => ({
-        ...s,
-        items: searchParams.get("all") === "true" ? s.items : s.items.slice(0, 8),
-      }));
-
-    return NextResponse.json(sections);
   } catch (e) {
     console.error("API Error:", e);
     // Return 200 with error data to avoid console '500' noise, 

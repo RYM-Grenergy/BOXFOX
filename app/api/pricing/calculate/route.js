@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import PricingFormula from '@/models/PricingFormula';
 import PricingEngine from '@/lib/pricingEngine';
+import { getOrSetCache } from '@/lib/redis';
 
 export async function POST(request) {
     try {
@@ -26,36 +27,54 @@ export async function POST(request) {
             );
         }
 
-        // Fetch pricing formula
-        const formula = await PricingFormula.findById(pricingFormulaId);
-        if (!formula || !formula.isActive) {
-            return NextResponse.json(
-                { error: 'Pricing formula not found or inactive' },
-                { status: 404 }
-            );
-        }
-
-        // Calculate price
-        const pricing = PricingEngine.calculatePrice(
+        // Build a unique cache key based on calculation parameters
+        // This ensures the exact same box configuration returns instantly from cache
+        const configHash = Buffer.from(JSON.stringify({
             productData,
-            formula,
-            {
-                quantity,
-                customizations,
-                finishingOptions,
-                isB2B,
-                applyCoupon: couponCode // In real app, fetch coupon details
+            pricingFormulaId,
+            quantity,
+            customizations,
+            finishingOptions,
+            isB2B,
+            couponCode
+        })).toString('base64');
+        const cacheKey = `pricing:calc:${configHash}`;
+
+        const calculateNow = async () => {
+            // Fetch pricing formula
+            const formula = await PricingFormula.findById(pricingFormulaId);
+            if (!formula || !formula.isActive) {
+                throw new Error('Pricing formula not found or inactive');
             }
-        );
+
+            // Calculate price
+            const result = PricingEngine.calculatePrice(
+                productData,
+                formula,
+                {
+                    quantity,
+                    customizations,
+                    finishingOptions,
+                    isB2B,
+                    applyCoupon: couponCode
+                }
+            );
+
+            return {
+                pricing: result,
+                formulaDetails: {
+                    id: formula._id,
+                    type: formula.pricingModel,
+                    productType: formula.productType
+                }
+            };
+        };
+
+        const result = await getOrSetCache(cacheKey, calculateNow, 3600); // Cache for 1 hour
 
         return NextResponse.json({
             success: true,
-            pricing,
-            formulaDetails: {
-                id: formula._id,
-                type: formula.pricingModel,
-                productType: formula.productType
-            }
+            ...result
         });
 
     } catch (error) {
