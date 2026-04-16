@@ -9,21 +9,33 @@ const banners = [
   {
     id: 1,
     type: "image",
-    image: "/luxury7.jpeg",
-    alt: "Luxury Custom Packaging - Premium Model 7",
+    image: "/luxury5.jpg.jpeg",
+    alt: "Premium Traditional Packaging - Red Luxury Style",
   },
   {
     id: 2,
     type: "image",
     image: "/luxury6.jpg.jpeg",
-    alt: "Luxury Custom Packaging - Premium Model 6",
+    alt: "Bespoke Jewelry Packaging - Elegant Black",
   },
   {
     id: 3,
     type: "image",
-    image: "/luxury5.jpg.jpeg",
-    alt: "Luxury Custom Packaging - Premium Model 5",
+    image: "/luxury7.jpeg",
+    alt: "Artisan Chocolate Packaging - White Gold Accent",
   },
+  {
+    id: 4,
+    type: "video",
+    src: "/hero_video_2.mp4",
+    alt: "Boxfox Premium Production Video",
+  },
+  {
+    id: 5,
+    type: "video",
+    src: "/banner/hero_video.mp4",
+    alt: "Boxfox Premium Hero Video",
+  }
 ];
 
 
@@ -72,7 +84,7 @@ export default function HeroBanner() {
 
     const timer = setInterval(() => {
       paginate(1);
-    }, 5000); // 5 second interval for a more premium experience
+    }, 2000); // 2 second interval for both mobile and desktop
     return () => clearInterval(timer);
   }, [isHovered, currentIndex, paginate]);
 

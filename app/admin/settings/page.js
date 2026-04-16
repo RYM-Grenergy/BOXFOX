@@ -10,8 +10,33 @@ export default function SettingsPage() {
     const [announcementLoading, setAnnouncementLoading] = React.useState(true);
     const [announcementSaving, setAnnouncementSaving] = React.useState(false);
     const [announcementMessage, setAnnouncementMessage] = React.useState('');
+    const [userRole, setUserRole] = React.useState(null);
+    const [authLoading, setAuthLoading] = React.useState(true);
+    const [securityData, setSecurityData] = React.useState({
+        currentPassword: '',
+        newEmail: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [securitySaving, setSecuritySaving] = React.useState(false);
+    const [securityMessage, setSecurityMessage] = React.useState({ text: '', type: '' });
 
     React.useEffect(() => {
+        const verifyAuth = async () => {
+            try {
+                const res = await fetch('/api/auth/me');
+                const data = await res.json();
+                if (res.ok && data.user) {
+                    setUserRole(data.user.role);
+                }
+            } catch (e) {
+                console.error("Auth verification failed:", e);
+            } finally {
+                setAuthLoading(false);
+            }
+        };
+        verifyAuth();
+
         const loadAnnouncement = async () => {
             setAnnouncementLoading(true);
             setAnnouncementMessage('');
@@ -59,7 +84,44 @@ export default function SettingsPage() {
             setAnnouncementSaving(false);
         }
     };
+    const saveSecuritySettings = async (e) => {
+        e.preventDefault();
+        setSecurityMessage({ text: '', type: '' });
 
+        if (securityData.newPassword && securityData.newPassword !== securityData.confirmPassword) {
+            setSecurityMessage({ text: 'New passwords do not match.', type: 'error' });
+            return;
+        }
+
+        if (!securityData.currentPassword) {
+            setSecurityMessage({ text: 'Standard verification required: Enter your current password.', type: 'error' });
+            return;
+        }
+
+        setSecuritySaving(true);
+        try {
+            const res = await fetch('/api/admin/security/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    currentPassword: securityData.currentPassword,
+                    newEmail: securityData.newEmail,
+                    newPassword: securityData.newPassword
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setSecurityMessage({ text: data.message || 'Security settings updated successfully.', type: 'success' });
+                setSecurityData({ currentPassword: '', newEmail: '', newPassword: '', confirmPassword: '' });
+            } else {
+                setSecurityMessage({ text: data.error || 'Failed to update security settings.', type: 'error' });
+            }
+        } catch {
+            setSecurityMessage({ text: 'Network error. Please try again.', type: 'error' });
+        } finally {
+            setSecuritySaving(false);
+        }
+    };
     const tabs = [
         { icon: <Globe size={18} />, label: 'General' },
         { icon: <Shield size={18} />, label: 'Security' },
@@ -185,25 +247,80 @@ export default function SettingsPage() {
                     <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm space-y-10">
                         <div>
                             <h2 className="text-xl font-black text-gray-950 mb-2">Admin Security</h2>
-                            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest leading-none">Manage your password and authentication</p>
+                            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest leading-none">Manage your console access and credentials</p>
                         </div>
 
-                        <div className="space-y-6">
-                            <div className="space-y-2 max-w-md">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Current Password</label>
-                                <input type="password" placeholder="••••••••" className="w-full bg-gray-50 border border-transparent rounded-2xl px-6 py-4 font-bold text-gray-950 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all" />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">New Password</label>
-                                    <input type="password" placeholder="••••••••" className="w-full bg-gray-50 border border-transparent rounded-2xl px-6 py-4 font-bold text-gray-950 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all" />
+                        <form onSubmit={saveSecuritySettings} className="space-y-10">
+                            <div className="space-y-6">
+                                <div className="space-y-2 max-w-md">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Current Password (Required)</label>
+                                    <input
+                                        type="password"
+                                        required
+                                        value={securityData.currentPassword}
+                                        onChange={(e) => setSecurityData({ ...securityData, currentPassword: e.target.value })}
+                                        placeholder="••••••••"
+                                        className="w-full bg-gray-50 border border-transparent rounded-2xl px-6 py-4 font-bold text-gray-950 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all"
+                                    />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Confirm New Password</label>
-                                    <input type="password" placeholder="••••••••" className="w-full bg-gray-50 border border-transparent rounded-2xl px-6 py-4 font-bold text-gray-950 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all" />
+
+                                <div className="w-full h-px bg-gray-100" />
+
+                                <div className="space-y-2 max-w-md">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Update Email</label>
+                                    <input
+                                        type="email"
+                                        value={securityData.newEmail}
+                                        onChange={(e) => setSecurityData({ ...securityData, newEmail: e.target.value })}
+                                        placeholder="Enter new administrator email"
+                                        className="w-full bg-gray-50 border border-transparent rounded-2xl px-6 py-4 font-bold text-gray-950 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">New Password (Optional)</label>
+                                        <input
+                                            type="password"
+                                            value={securityData.newPassword}
+                                            onChange={(e) => setSecurityData({ ...securityData, newPassword: e.target.value })}
+                                            placeholder="••••••••"
+                                            className="w-full bg-gray-50 border border-transparent rounded-2xl px-6 py-4 font-bold text-gray-950 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-2">Confirm New Password</label>
+                                        <input
+                                            type="password"
+                                            value={securityData.confirmPassword}
+                                            onChange={(e) => setSecurityData({ ...securityData, confirmPassword: e.target.value })}
+                                            placeholder="••••••••"
+                                            className="w-full bg-gray-50 border border-transparent rounded-2xl px-6 py-4 font-bold text-gray-950 focus:bg-white focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+
+                            <div className="pt-10 border-t border-gray-50 flex items-center justify-between">
+                                <div className="max-w-[300px]">
+                                    {securityMessage.text && (
+                                        <p className={`text-xs font-bold ${securityMessage.type === 'success' ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                            {securityMessage.text}
+                                        </p>
+                                    )}
+                                    {!securityMessage.text && (
+                                        <p className="text-xs font-bold text-gray-400 italic leading-snug">Updating your credentials will not log you out currently.</p>
+                                    )}
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={securitySaving}
+                                    className="px-10 py-4 bg-gray-950 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-gray-900/20 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                                >
+                                    {securitySaving ? 'Updating...' : 'Update Credentials'}
+                                </button>
+                            </div>
+                        </form>
 
                         <div className="pt-10 border-t border-gray-50 space-y-6">
                             <div className="flex items-center justify-between p-6 bg-emerald-50 rounded-3xl border border-emerald-100">
@@ -216,7 +333,7 @@ export default function SettingsPage() {
                                         <p className="text-[10px] font-bold text-gray-500 uppercase">Recommended for all admins</p>
                                     </div>
                                 </div>
-                                <button className="px-6 py-2 bg-gray-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all">Enable</button>
+                                <button className="px-6 py-2 bg-gray-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-800 transition-all cursor-not-allowed opacity-50">Coming Soon</button>
                             </div>
                         </div>
                     </div>
@@ -261,6 +378,28 @@ export default function SettingsPage() {
                 return null;
         }
     };
+
+    if (authLoading) return <div className="p-10 text-gray-400 font-bold animate-pulse">Verifying administrative access...</div>;
+
+    if (userRole !== 'admin') {
+        return (
+            <div className="bg-white p-20 rounded-[4rem] border border-gray-100 shadow-2xl shadow-gray-200/50 flex flex-col items-center text-center space-y-6">
+                <div className="w-20 h-20 bg-rose-50 rounded-3xl flex items-center justify-center text-rose-500 shadow-inner">
+                    <Shield size={40} />
+                </div>
+                <div className="space-y-2">
+                    <h1 className="text-3xl font-black text-gray-950 uppercase tracking-tighter">Access Restricted</h1>
+                    <p className="max-w-md text-gray-500 font-medium">You do not have sufficient permissions to view or modify system settings. Please contact the Super Admin for authorization.</p>
+                </div>
+                <button
+                    onClick={() => window.history.back()}
+                    className="px-10 py-4 bg-gray-950 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all active:scale-95"
+                >
+                    Return to Safety
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-10">

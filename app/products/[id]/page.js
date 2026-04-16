@@ -18,11 +18,14 @@ import {
 import Navbar from '@/app/components/Navbar';
 import { useCart } from '@/app/context/CartContext';
 import { useToast } from '@/app/context/ToastContext';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { calculateBoxPrice, MARKUP_TYPES } from '@/lib/boxfoxPricing';
+import { BOX_SPECIFICATIONS } from '@/lib/box-specifications';
 
 export default function ProductPage() {
     const params = useParams();
+    const router = useRouter();
     const { addToCart } = useCart();
     const { showToast } = useToast();
 
@@ -84,24 +87,36 @@ export default function ProductPage() {
     const images = product.images && product.images.length > 0 ? product.images : [product.img];
     const displayImage = images[activeImg];
 
-    // Dynamic Tiered Step Pricing
-    const basePrice = typeof product?.price === 'number' ? product.price : parseFloat(String(product?.price || 15).replace(/[^0-9.]/g, '')) || 15;
-    const minPrice = typeof product?.minPrice === 'number' ? product.minPrice : parseFloat(String(product?.minPrice || basePrice).replace(/[^0-9.]/g, '')) || basePrice;
-    const maxPrice = typeof product?.maxPrice === 'number' ? product.maxPrice : parseFloat(String(product?.maxPrice || basePrice).replace(/[^0-9.]/g, '')) || basePrice;
+    // ─── ACCURATE PRICING ENGINE ─────────────────────────────────────────────
+    const unit = product.dimensions?.unit || 'in';
+    const dimensions = {
+        l: product.dimensions?.length || 1,
+        w: product.dimensions?.width || 1,
+        h: product.dimensions?.height || 1
+    };
 
-    const diff = maxPrice - minPrice;
-    let unitPriceVal = maxPrice;
+    // Find a matching spec for manufacturing data
+    const selectedSpec = BOX_SPECIFICATIONS.find(s =>
+        s.l === dimensions.l &&
+        s.w === dimensions.w &&
+        s.h === dimensions.h &&
+        s.unit === unit
+    );
 
-    if (quantity >= 5000) unitPriceVal = minPrice;
-    else if (quantity >= 1000) unitPriceVal = maxPrice - (diff * 0.4651);
-    else if (quantity >= 500) unitPriceVal = maxPrice - (diff * 0.4205);
-    else if (quantity >= 100) unitPriceVal = maxPrice - (diff * 0.3364);
-    else if (quantity >= 50) unitPriceVal = maxPrice - (diff * 0.1682);
-    else if (quantity >= 30) unitPriceVal = maxPrice - (diff * 0.10);
-    else if (quantity >= 20) unitPriceVal = maxPrice - (diff * 0.05);
-    else unitPriceVal = maxPrice;
+    const pricingResult = calculateBoxPrice({
+        spec: selectedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
+        qty: quantity,
+        gsm: 300,
+        material: 'SBS',
+        brand: 'Normal',
+        colours: 'Four Colour',
+        lamination: 'Plain',
+        markupType: 'Retail',
+        dieCutting: true
+    });
 
-    const unitPrice = unitPriceVal.toFixed(2);
+    const unitPrice = pricingResult.finalPerUnit.toFixed(2);
+    const totalPrice = pricingResult.finalTotal.toLocaleString('en-IN');
 
     return (
         <div className="min-h-screen bg-white">
@@ -273,6 +288,13 @@ export default function ProductPage() {
                                         >
                                             <ShoppingCart size={18} className="group-hover:scale-110 transition-transform" /> Add to Basket
                                         </button>
+
+                                        <Link
+                                            href={`/customize?id=${product._id || product.id}&length=${dimensions.l}&width=${dimensions.w}&height=${dimensions.h}&unit=${unit}`}
+                                            className="w-full py-5 bg-white border-2 border-gray-100 text-gray-950 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:border-emerald-500 hover:text-emerald-600 transition-all flex items-center justify-center gap-3 group"
+                                        >
+                                            <Sparkles size={18} className="text-emerald-500 group-hover:rotate-12 transition-transform" /> Customize in Lab
+                                        </Link>
                                     </div>
                                 </div>
                             </div>
@@ -289,7 +311,7 @@ export default function ProductPage() {
                                     <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center"><ShieldCheck size={18} className="text-emerald-500" /></div>
                                     <div>
                                         <p className="text-[9px] font-black uppercase tracking-widest text-gray-950">Secure Payment</p>
-                                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">100% Encrypted</p>
+                                        <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">100% Secured</p>
                                     </div>
                                 </div>
                             </div>

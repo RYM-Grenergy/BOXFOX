@@ -50,6 +50,7 @@ import Script from "next/script";
 import Cropper from 'react-easy-crop';
 import { downloadDieLine } from "@/lib/dieline-generator";
 import { BOX_SPECIFICATIONS } from "@/lib/box-specifications";
+import { calculateBoxPrice, getBrandsForMaterial, getDefaultBrand, MATERIAL_RATES, LAM_RATES, COLOUR_FACTORS, MARKUP_TYPES, GSM_OPTIONS as ENGINE_GSM_OPTIONS } from "@/lib/boxfoxPricing";
 
 function CustomizeLabContent() {
   const router = useRouter();
@@ -79,41 +80,28 @@ function CustomizeLabContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   
   // Custom formula states
-  const [selectedGSM, setSelectedGSM] = useState("300 GSM");
+  const [selectedGSM, setSelectedGSM] = useState("300");
   const [selectedMaterial, setSelectedMaterial] = useState("SBS");
+  const [selectedBrand, setSelectedBrand] = useState("Normal");
   const [selectedFinish, setSelectedFinish] = useState("Plain");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSubCategory, setSelectedSubCategory] = useState("All");
   const [selectedPrintType, setSelectedPrintType] = useState("Four Colour");
+  const [selectedMarkup, setSelectedMarkup] = useState("Retail");
+  const [dieCutting, setDieCutting] = useState(true);
+  const [showBreakdown, setShowBreakdown] = useState(false);
 
   const [categories, setCategories] = useState(["All"]);
   const [subCategories, setSubCategories] = useState(["All"]);
   const [allSections, setAllSections] = useState([]);
 
-  const FINISH_OPTIONS = [
-    "Plain",
-    "Lamination Thermal",
-    "Lamination Normal Gloss",
-    "Lamination Normal Matt",
-    "Varnish",
-    "UV Hybrid",
-    "UV Flat",
-    "Spot UV",
-    "UV Crystal",
-  ];
+  const FINISH_OPTIONS = Object.keys(LAM_RATES);
 
-  const PRINT_OPTIONS = [
-    "Single Colour",
-    "Double Colour",
-    "Four Colour",
-    "Four + One Colour",
-    "Four + Two Colour",
-    "Four + Four Colour",
-    "Without Print",
-  ];
+  const PRINT_OPTIONS = Object.keys(COLOUR_FACTORS);
 
-  const GSM_OPTIONS = ["230 GSM", "250 GSM", "300 GSM", "350 GSM", "400 GSM"];
-  const MATERIAL_OPTIONS = ["SBS", "WhiteBack", "GreyBack", "Art Card", "Maplitho", "Custom Paper"];
+  const GSM_OPTIONS = ENGINE_GSM_OPTIONS.map(g => `${g} GSM`);
+  const MATERIAL_OPTIONS = Object.keys(MATERIAL_RATES);
+  const BRAND_OPTIONS = getBrandsForMaterial(selectedMaterial);
 
   // Fetch Categories from Product Backend
   useEffect(() => {
@@ -800,46 +788,38 @@ function CustomizeLabContent() {
     h: getInches(dimensions.h)
   };
 
-  const currentSA =
-    2 *
-    (dimInInches.l * dimInInches.w +
-      dimInInches.w * dimInInches.h +
-      dimInInches.h * dimInInches.l);
-  // Parse numeric base price
-  const priceText = product?.price || "150";
-  const basePrice = typeof priceText === "string" ? parseFloat(priceText.replace(/[^0-9.]/g, "")) || 150 : (priceText || 150);
+  const currentSA = 2 * (dimInInches.l * dimInInches.w + dimInInches.w * dimInInches.h + dimInInches.h * dimInInches.l);
 
-  // Apply User's Custom Practical Pricing Formula
-  const minPrice = typeof product?.minPrice === 'number' ? product.minPrice : parseFloat(String(product?.minPrice || basePrice).replace(/[^0-9.]/g, '')) || basePrice;
-  const maxPrice = typeof product?.maxPrice === 'number' ? product.maxPrice : parseFloat(String(product?.maxPrice || basePrice).replace(/[^0-9.]/g, '')) || basePrice;
+  // ─── REAL PRICING ENGINE (from BoxFox_price_analyses-) ─────────────────────
+  // Parse GSM number from the "300 GSM" format
+  const gsmNum = parseInt(String(selectedGSM).replace(/[^0-9]/g, '')) || 300;
 
-  const diff = maxPrice - minPrice;
-  let unitPriceVal = maxPrice;
+  // Calculate accurate price using the real engine
+  const pricingResult = (() => {
+    if (!product || !quantity || quantity <= 0) return null;
+    try {
+      return calculateBoxPrice({
+        spec: selectedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
+        qty: Math.max(10, parseInt(quantity) || 10),
+        gsm: gsmNum,
+        material: selectedMaterial,
+        brand: selectedBrand,
+        customRate: 75,
+        colours: selectedPrintType,
+        lamination: selectedFinish,
+        addon: 'Plain',
+        dieCutting: dieCutting,
+        markupType: selectedMarkup,
+        sides: 'One',
+      });
+    } catch (e) {
+      console.error('Pricing engine error:', e);
+      return null;
+    }
+  })();
 
-  if (quantity >= 5000) unitPriceVal = minPrice;
-  else if (quantity >= 1000) unitPriceVal = maxPrice - (diff * 0.4651);
-  else if (quantity >= 500) unitPriceVal = maxPrice - (diff * 0.4205);
-  else if (quantity >= 100) unitPriceVal = maxPrice - (diff * 0.3364);
-  else if (quantity >= 50) unitPriceVal = maxPrice - (diff * 0.1682);
-  else if (quantity >= 30) unitPriceVal = maxPrice - (diff * 0.10);
-  else if (quantity >= 20) unitPriceVal = maxPrice - (diff * 0.05);
-  else unitPriceVal = maxPrice;
-
-  // Enhance base logic with practical formulas from Excel customization
-  let addonPrice = 0;
-  // GSM
-  if (selectedGSM === "300 GSM") addonPrice += 2.5;
-  if (selectedGSM === "350 GSM") addonPrice += 4.5;
-  if (selectedGSM === "400 GSM") addonPrice += 6.5;
-
-  // Material
-  if (selectedMaterial === "Art Card") addonPrice += 2.0;
-  if (selectedMaterial === "Custom Paper") addonPrice += 5.0;
-
-  unitPriceVal += addonPrice;
-
-  const calculatedUnitPrice = product
-    ? (unitPriceVal * (currentSA / 288)).toFixed(2)
+  const calculatedUnitPrice = pricingResult
+    ? pricingResult.finalPerUnit.toFixed(2)
     : "0.00";
 
   // Auto-Sync background worker (Live Auto Share)
@@ -1446,10 +1426,13 @@ function CustomizeLabContent() {
               <h3 className="text-sm font-black text-gray-950 uppercase tracking-widest">Product Formulation</h3>
               <button
                 onClick={() => {
-                  setSelectedGSM("300 GSM");
+                  setSelectedGSM("300");
                   setSelectedMaterial("SBS");
+                  setSelectedBrand("Normal");
                   setSelectedFinish("Plain");
                   setSelectedPrintType("Four Colour");
+                  setSelectedMarkup("Retail");
+                  setDieCutting(true);
                   setSelectedCategory("All");
                   setSelectedSubCategory("All");
                   setQuantity(100);
@@ -1497,7 +1480,7 @@ function CustomizeLabContent() {
                   onChange={(e) => setSelectedGSM(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
                 >
-                  {GSM_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  {ENGINE_GSM_OPTIONS.map(g => <option key={g} value={g}>{g} GSM</option>)}
                 </select>
               </div>
 
@@ -1506,7 +1489,10 @@ function CustomizeLabContent() {
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Material</label>
                 <select
                   value={selectedMaterial}
-                  onChange={(e) => setSelectedMaterial(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedMaterial(e.target.value);
+                    setSelectedBrand(getDefaultBrand(e.target.value));
+                  }}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
                 >
                   {MATERIAL_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -1534,6 +1520,47 @@ function CustomizeLabContent() {
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
                 >
                   {PRINT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+
+              {/* Brand */}
+              {BRAND_OPTIONS.length > 1 && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Paper Brand</label>
+                  <select
+                    value={selectedBrand}
+                    onChange={(e) => setSelectedBrand(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                  >
+                    {BRAND_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+              )}
+
+              {/* Sale Type / Markup */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sale Type</label>
+                <select
+                  value={selectedMarkup}
+                  onChange={(e) => setSelectedMarkup(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  {Object.entries(MARKUP_TYPES).map(([k, v]) => (
+                    <option key={k} value={k}>{k} ({(v * 100).toFixed(0)}%)</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Die Cutting */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Die Cutting</label>
+                <select
+                  value={dieCutting ? 'yes' : 'no'}
+                  onChange={(e) => setDieCutting(e.target.value === 'yes')}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
                 </select>
               </div>
             </div>
@@ -2600,24 +2627,61 @@ function CustomizeLabContent() {
                 <div className="flex-1">
                   <h3 className="text-base sm:text-lg font-black text-gray-950">Custom Designed Box</h3>
                   <p className="text-xs text-emerald-600 font-bold uppercase tracking-widest mt-0.5">{dimensions.l}{unit} × {dimensions.w}{unit} × {dimensions.h}{unit}</p>
-                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-1.5">{selectedMaterial} • {selectedGSM}</p>
+                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-1.5">{selectedMaterial} {selectedBrand !== 'Custom' && selectedBrand !== 'Normal' ? selectedBrand : ''} • {gsmNum} GSM • {selectedFinish !== 'Plain' ? selectedFinish : 'No Lamination'} • {selectedPrintType}</p>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-2 bg-white rounded-lg p-3 border border-emerald-100">
                 <div className="text-center"><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Qty</p><p className="text-xl font-black text-emerald-600 mt-1">{quantity}</p></div>
-                <div className="border-l border-r border-gray-100 text-center"><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Price</p><p className="text-xl font-black text-emerald-600 mt-1">₹{calculatedUnitPrice}</p></div>
-                <div className="text-center"><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Total</p><p className="text-xl font-black text-emerald-600 mt-1">₹{(parseFloat(calculatedUnitPrice) * quantity).toLocaleString('en-IN')}</p></div>
+                <div className="border-l border-r border-gray-100 text-center"><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Per Unit</p><p className="text-xl font-black text-emerald-600 mt-1">₹{calculatedUnitPrice}</p></div>
+                <div className="text-center"><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Total</p><p className="text-xl font-black text-emerald-600 mt-1">₹{pricingResult ? pricingResult.finalTotal.toLocaleString('en-IN') : '0'}</p></div>
               </div>
+
+              {/* Detailed Cost Breakdown Toggle */}
+              {pricingResult && (
+                <div className="mt-2">
+                  <button
+                    onClick={() => setShowBreakdown(!showBreakdown)}
+                    className="w-full flex items-center justify-between px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all text-[9px] font-black uppercase tracking-widest text-emerald-700"
+                  >
+                    <span>View Cost Breakdown</span>
+                    <ChevronDown size={12} className={`transition-transform ${showBreakdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  {showBreakdown && (
+                    <div className="mt-2 bg-white border border-emerald-100 rounded-xl p-3 space-y-1.5 text-[10px]">
+                      <div className="flex justify-between"><span className="text-gray-500">Paper Cost (P2)</span><span className="font-black">₹{pricingResult.paperCost.toLocaleString('en-IN')}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-500">Printing (X2) — {selectedPrintType}</span><span className="font-black">₹{pricingResult.printCost.toLocaleString('en-IN')}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-500">Plate Cost</span><span className="font-black">₹{pricingResult.plateCost.toLocaleString('en-IN')}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-500">Fixed Charges (Design+Die)</span><span className="font-black">₹{pricingResult.fixedCharges.toLocaleString('en-IN')}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-500">Other Charges</span><span className="font-black">₹{pricingResult.otherCharges.toLocaleString('en-IN')}</span></div>
+                      <div className="border-t border-gray-100 pt-1.5 flex justify-between"><span className="text-gray-700 font-bold">Base/Unit (AG2)</span><span className="font-black">₹{pricingResult.basePerUnit.toFixed(4)}</span></div>
+                      {pricingResult.lamPerUnit > 0 && (
+                        <div className="flex justify-between"><span className="text-gray-500">Lamination/Unit — {selectedFinish}</span><span className="font-black">₹{pricingResult.lamPerUnit.toFixed(4)}</span></div>
+                      )}
+                      <div className="border-t border-gray-100 pt-1.5 flex justify-between"><span className="text-gray-700 font-bold">Subtotal/Unit</span><span className="font-black">₹{pricingResult.subtotalPerUnit.toFixed(4)}</span></div>
+                      <div className="flex justify-between text-amber-600"><span>Markup ({selectedMarkup} {(pricingResult.markup * 100).toFixed(0)}%)</span><span className="font-black">+₹{pricingResult.markupAmount.toFixed(4)}</span></div>
+                      <div className="border-t-2 border-emerald-200 pt-2 flex justify-between text-emerald-700"><span className="font-black">Final Price/Unit</span><span className="font-black text-sm">₹{pricingResult.finalPerUnit.toFixed(2)}</span></div>
+                      <div className="flex justify-between text-emerald-700"><span className="font-black">Order Total ({quantity} units)</span><span className="font-black text-sm">₹{pricingResult.finalTotal.toLocaleString('en-IN')}</span></div>
+                      {pricingResult.dieToolingCharge > 0 && (
+                        <div className="flex justify-between text-orange-600 bg-orange-50 -mx-3 px-3 py-1.5 rounded-b-xl"><span className="font-bold">Die Tooling (one-time, separate)</span><span className="font-black">₹{pricingResult.dieToolingCharge.toLocaleString('en-IN')}</span></div>
+                      )}
+                      <div className="pt-1 text-[8px] text-gray-400 text-center space-y-0.5">
+                        <p>Sheets: {pricingResult.sheetQty} | UPS: {pricingResult.ups} | Machine: {pricingResult.machine} | CC5: ₹{pricingResult.cc5}</p>
+                        {!selectedSpec && <p className="text-amber-500">⚠ No calibrated spec matched — using default sheet size. Select a standard size for accurate pricing.</p>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div className="bg-emerald-500 px-4 sm:px-6 md:px-8 py-5 sm:py-6 text-black flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
               <div className="text-center sm:text-left">
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-70">Est. Total Cost</p>
-                <h2 className="text-3xl sm:text-5xl font-black italic tracking-tighter mt-1">₹{(parseFloat(calculatedUnitPrice) * quantity).toLocaleString('en-IN')}</h2>
+                <h2 className="text-3xl sm:text-5xl font-black italic tracking-tighter mt-1">₹{pricingResult ? pricingResult.finalTotal.toLocaleString('en-IN') : '0'}</h2>
               </div>
               {!selectedSpec || typeof selectedSpec !== 'object' ? (
                 <button
                   onClick={() => {
-                    const msg = `Hi BoxFox! I've designed a custom box and would like a quote.\n\nDimensions: ${dimensions.l}${unit} x ${dimensions.w}${unit} x ${dimensions.h}${unit}\nQuantity: ${quantity}\nMaterial: ${selectedMaterial}\nGSM: ${selectedGSM}\n\nI have the design ready in the lab. Please help with the die-line and quote.`;
+                    const msg = `Hi BoxFox! I've designed a custom box and would like a quote.\n\nDimensions: ${dimensions.l}${unit} x ${dimensions.w}${unit} x ${dimensions.h}${unit}\nQuantity: ${quantity}\nMaterial: ${selectedMaterial}\nGSM: ${selectedGSM}\nEst. Unit Price: ₹${calculatedUnitPrice}\nEst. Total: ₹${pricingResult?.finalTotal.toLocaleString('en-IN')}\n\nI have the design ready in the lab. Please help with the die-line and quote.`;
                     window.open(`https://wa.me/918449339999?text=${encodeURIComponent(msg)}`, '_blank');
                     showToast("Redirecting to WhatsApp for custom calibration...");
                   }}

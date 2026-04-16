@@ -9,7 +9,6 @@ export const metadata = {
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
-import CustomCursor from "./components/CustomCursor";
 import SiteLoader from "./components/SiteLoader";
 import ClientLayout from "./components/ClientLayout";
 import WhatsAppButton from "./components/WhatsAppButton";
@@ -32,7 +31,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className="antialiased" suppressHydrationWarning>
         <SiteLoader />
-        <CustomCursor />
+
         {/* Modern, User-Friendly Storefront */}
         <ToastProvider>
           <AuthProvider>

@@ -1,6 +1,8 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from './ToastContext';
+import { calculateBoxPrice } from '@/lib/boxfoxPricing';
+import { BOX_SPECIFICATIONS } from '@/lib/box-specifications';
 
 const CartContext = createContext();
 
@@ -19,29 +21,51 @@ export function CartProvider({ children }) {
     }, [cart]);
 
     const calculateUnitPrice = (product, quantity) => {
-        // If this is a custom design box, we respect the price calculated in the Lab
+        // If this is a custom design box, we respect the price settings from the Lab
         if (product.customDesign) {
-            return typeof product.price === 'number' ? product.price : parseFloat(String(product.price).replace(/[^0-9.]/g, '')) || 0;
+            const pricingParams = {
+                spec: product.customDesign.specData || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
+                qty: quantity,
+                gsm: parseInt(product.customDesign.selectedGSM) || 300,
+                material: product.customDesign.selectedMaterial || 'SBS',
+                brand: 'Normal', // Default or could be stored in customDesign
+                colours: 'Four Colour', // Default or could be stored
+                lamination: product.customDesign.selectedFinish || 'Plain',
+                markupType: 'Retail',
+                dieCutting: true
+            };
+            const res = calculateBoxPrice(pricingParams);
+            return res.finalPerUnit;
         }
 
-        const basePrice = typeof product.price === 'number' ? product.price : parseFloat(String(product.price).replace(/[^0-9.]/g, '')) || 0;
-        const minPrice = typeof product.minPrice === 'number' ? product.minPrice : parseFloat(String(product.minPrice).replace(/[^0-9.]/g, '')) || basePrice;
-        const maxPrice = typeof product.maxPrice === 'number' ? product.maxPrice : parseFloat(String(product.maxPrice).replace(/[^0-9.]/g, '')) || basePrice;
+        // For regular products, try to match a manufacturing spec for accurate pricing
+        const unit = product.dimensions?.unit || 'in';
+        const dimensions = {
+            l: product.dimensions?.length || 1,
+            w: product.dimensions?.width || 1,
+            h: product.dimensions?.height || 1
+        };
 
-        // Pricing logic: Practical Tiered Step Pricing
-        const diff = maxPrice - minPrice;
-        let price = maxPrice;
+        const selectedSpec = BOX_SPECIFICATIONS.find(s =>
+            s.l === dimensions.l &&
+            s.w === dimensions.w &&
+            s.h === dimensions.h &&
+            s.unit === unit
+        );
 
-        if (quantity >= 5000) price = minPrice;
-        else if (quantity >= 1000) price = maxPrice - (diff * 0.4651);
-        else if (quantity >= 500) price = maxPrice - (diff * 0.4205);
-        else if (quantity >= 100) price = maxPrice - (diff * 0.3364);
-        else if (quantity >= 50) price = maxPrice - (diff * 0.1682);
-        else if (quantity >= 30) price = maxPrice - (diff * 0.10);
-        else if (quantity >= 20) price = maxPrice - (diff * 0.05);
-        else price = maxPrice;
+        const pricingResult = calculateBoxPrice({
+            spec: selectedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
+            qty: quantity,
+            gsm: 300,
+            material: 'SBS',
+            brand: 'Normal',
+            colours: 'Four Colour',
+            lamination: 'Plain',
+            markupType: 'Retail',
+            dieCutting: true
+        });
 
-        return parseFloat(price.toFixed(2));
+        return pricingResult.finalPerUnit;
     };
 
     const addToCart = (product, quantity) => {
