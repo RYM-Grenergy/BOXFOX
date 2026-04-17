@@ -67,8 +67,9 @@ export default function Navbar() {
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "Shop", href: "/shop" },
-    { label: "AI Customize", href: "/customize", isAI: true },
     { label: "B2B", href: "/b2b", isB2B: true },
+    { label: "AI Customization", href: "/customize", isAI: true },
+    { label: "Quality", href: "/quality" },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },
   ];
@@ -103,12 +104,12 @@ export default function Navbar() {
               <img
                 src="/BOXFOX-1.png"
                 alt="BOXFOX Logo"
-                className={`transition-all duration-500 object-contain ${isScrolled ? "h-5" : "h-6"}`}
+                className={`transition-all duration-500 object-contain ${isScrolled ? "h-4 sm:h-5" : "h-5 sm:h-6"}`}
               />
             </Link>
 
             {/* ── Nav Links — centered (desktop only) ── */}
-            <div className="hidden lg:flex items-center gap-0.5 xl:gap-1 absolute left-1/2 -translate-x-1/2">
+            <div className="hidden lg:flex items-center gap-0 xl:gap-0.5 absolute left-1/2 -translate-x-1/2 w-max max-w-[50%] xl:max-w-none px-2">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 const isAI = link.isAI;
@@ -118,17 +119,17 @@ export default function Navbar() {
                   <Link
                     key={link.label}
                     href={link.href}
-                    className={`relative px-3 xl:px-4 py-2 text-[10px] xl:text-[11px] font-black uppercase tracking-[0.16em] transition-all duration-300 group active:scale-95 rounded-xl flex items-center gap-1.5 ${isActive
+                    className={`relative px-2 xl:px-4 py-2 text-[9.5px] xl:text-[11px] font-black uppercase tracking-[0.16em] transition-all duration-300 group active:scale-95 rounded-xl flex items-center gap-1.5 ${isActive
                       ? "text-emerald-600"
                       : isAI
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 hover:-translate-y-0.5"
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/30 hover:-translate-y-0.5 ml-1 xl:ml-2"
                         : isB2B
-                          ? "bg-gray-950 text-white shadow-lg shadow-gray-900/10 hover:bg-emerald-600 hover:shadow-emerald-500/20 hover:-translate-y-0.5"
-                          : "text-gray-400 hover:text-gray-900"
+                          ? "bg-gray-950 text-white shadow-lg shadow-gray-900/5 hover:bg-emerald-600 hover:shadow-emerald-500/20 hover:-translate-y-0.5 ml-1"
+                          : "text-gray-400 hover:text-gray-950"
                       }`}
                   >
-                    {isAI && <Sparkles size={12} className="animate-pulse" />}
-                    {isB2B && <Briefcase size={11} />}
+                    {isAI && <Sparkles size={11} className="animate-pulse" />}
+                    {isB2B && <Briefcase size={10} />}
                     <span className="relative z-10">{link.label}</span>
                     
                     {!isAI && !isB2B && (
@@ -138,7 +139,7 @@ export default function Navbar() {
                     {isActive && !isAI && !isB2B && (
                       <motion.div
                         layoutId="nav-active"
-                        className="absolute inset-0 bg-emerald-500/10 rounded-lg z-0"
+                        className="absolute inset-0 bg-emerald-500/5 rounded-lg z-0"
                         transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
                       />
                     )}
@@ -330,7 +331,7 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 w-[280px] sm:w-[320px] h-full bg-white z-[160] lg:hidden p-8 sm:p-12 shadow-2xl flex flex-col justify-between pt-24 sm:pt-32"
+              className="fixed top-0 right-0 w-[280px] sm:w-[340px] md:w-[400px] h-full bg-white z-[160] lg:hidden p-6 sm:p-10 md:p-12 shadow-2xl flex flex-col justify-between pt-24 sm:pt-32"
             >
               <button
                 onClick={() => setMenuOpen(false)}
@@ -339,7 +340,7 @@ export default function Navbar() {
               >
                 <X size={24} className="text-gray-950" />
               </button>
-              <div className="flex flex-col gap-6 sm:gap-8">
+              <div className="flex flex-col gap-4 sm:gap-6 md:gap-8">
                 {navLinks.map((link, idx) => (
                   <motion.div
                     key={link.label}
@@ -349,12 +350,12 @@ export default function Navbar() {
                   >
                     <Link
                       href={link.href}
-                      className={`text-2xl sm:text-3xl font-black uppercase tracking-tighter flex items-center justify-between group py-2 px-4 rounded-2xl transition-all ${pathname === link.href
+                      className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter flex items-center justify-between group py-3 px-5 rounded-2xl transition-all ${pathname === link.href
                           ? "text-emerald-500 bg-emerald-50"
                           : link.isAI
-                            ? "text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/20"
+                            ? "text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/10"
                             : link.isB2B
-                              ? "text-white bg-gray-950 shadow-xl shadow-gray-900/10"
+                              ? "text-white bg-gray-950 shadow-xl shadow-gray-900/5"
                               : "text-gray-950 hover:bg-gray-50"
                         }`}
                       onClick={() => setMenuOpen(false)}

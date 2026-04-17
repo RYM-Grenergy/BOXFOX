@@ -1687,19 +1687,27 @@ function CustomizeLabContent() {
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
-                    className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3 flex flex-wrap gap-4"
+                    className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm space-y-4"
                   >
-                    <div className="flex flex-col">
-                      <span className="text-[7px] font-black text-emerald-400 uppercase">Ups</span>
-                      <span className="text-xs font-black text-emerald-700">{selectedSpec.ups} UPS</span>
+                    <div className="border-b border-gray-100 pb-2">
+                       <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-tight">
+                         {selectedSpec.subCategory} - {selectedSpec.spec.split('|')[0].trim()}
+                       </h4>
                     </div>
-                    <div className="flex flex-col border-l border-emerald-100 pl-4">
-                      <span className="text-[7px] font-black text-emerald-400 uppercase">Machine</span>
-                      <span className="text-xs font-black text-emerald-700">MOD_{selectedSpec.machine}</span>
-                    </div>
-                    <div className="flex flex-col border-l border-emerald-100 pl-4">
-                      <span className="text-[7px] font-black text-emerald-400 uppercase">Sheet Size</span>
-                      <span className="text-xs font-black text-emerald-700">{selectedSpec.sheetW}″ × {selectedSpec.sheetH}″</span>
+
+                    <div className="space-y-3">
+                      <div className="flex flex-col">
+                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Ups</span>
+                        <span className="text-xs font-black text-gray-950">{selectedSpec.ups} UPS</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Machine</span>
+                        <span className="text-xs font-black text-gray-950">MOD_{selectedSpec.machine}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Sheet Size</span>
+                        <span className="text-xs font-black text-gray-950">{selectedSpec.sheetW}″ × {selectedSpec.sheetH}″</span>
+                      </div>
                     </div>
                   </motion.div>
                 )}

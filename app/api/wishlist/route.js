@@ -24,7 +24,8 @@ export async function GET(req) {
         await dbConnect();
         const userId = await getUserIdFromRequest(req);
         if (!userId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            // For guest users, return empty wishlist instead of 401 Unauthorized
+            return NextResponse.json({ wishlist: [] }, { status: 200 });
         }
 
         const user = await User.findById(userId).populate({ path: 'wishlist', strictPopulate: false });
