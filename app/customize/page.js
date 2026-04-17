@@ -78,11 +78,11 @@ function CustomizeLabContent() {
   // Customization States
   const [dimensions, setDimensions] = useState({ l: 12, w: 8, h: 4 });
   const [isGenerating, setIsGenerating] = useState(false);
-  
+
   // Custom formula states
   const [selectedGSM, setSelectedGSM] = useState("300");
   const [selectedMaterial, setSelectedMaterial] = useState("SBS");
-  const [selectedBrand, setSelectedBrand] = useState("Normal");
+  const [selectedBrand, setSelectedBrand] = useState(() => getDefaultBrand("SBS"));
   const [selectedFinish, setSelectedFinish] = useState("Plain");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSubCategory, setSelectedSubCategory] = useState("All");
@@ -128,7 +128,7 @@ function CustomizeLabContent() {
       setSelectedSubCategory("All");
       return;
     }
-    
+
     const activeSection = allSections.find(s => s.category === selectedCategory);
     if (activeSection && activeSection.items) {
       // Extract all unique categories[0] or categories[1] from items
@@ -574,10 +574,10 @@ function CustomizeLabContent() {
     // Only auto-match if not explicitly in "custom_contact" mode
     if (selectedSpec === "custom_contact") return;
 
-    const match = BOX_SPECIFICATIONS.find(s => 
-      s.l === dimensions.l && 
-      s.w === dimensions.w && 
-      s.h === dimensions.h && 
+    const match = BOX_SPECIFICATIONS.find(s =>
+      s.l === dimensions.l &&
+      s.w === dimensions.w &&
+      s.h === dimensions.h &&
       s.unit === unit
     );
 
@@ -1537,31 +1537,20 @@ function CustomizeLabContent() {
                 </div>
               )}
 
-              {/* Sale Type / Markup */}
-              <div className="space-y-2">
+              {/* Sale Type / Markup - Fixed to 16% Retail as per request */}
+              <div className="space-y-2 opacity-50 pointer-events-none">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sale Type</label>
-                <select
-                  value={selectedMarkup}
-                  onChange={(e) => setSelectedMarkup(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  {Object.entries(MARKUP_TYPES).map(([k, v]) => (
-                    <option key={k} value={k}>{k} ({(v * 100).toFixed(0)}%)</option>
-                  ))}
-                </select>
+                <div className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950">
+                  Retail (16%)
+                </div>
               </div>
 
-              {/* Die Cutting */}
-              <div className="space-y-2">
+              {/* Die Cutting - Always Yes */}
+              <div className="space-y-2 opacity-50 pointer-events-none">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Die Cutting</label>
-                <select
-                  value={dieCutting ? 'yes' : 'no'}
-                  onChange={(e) => setDieCutting(e.target.value === 'yes')}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </select>
+                <div className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-emerald-600">
+                  Always Active
+                </div>
               </div>
             </div>
           </div>
@@ -1632,8 +1621,16 @@ function CustomizeLabContent() {
                         setDimensions({ l: selected.l, w: selected.w, h: selected.h });
                         setUnit(selected.unit);
                         setSelectedSpec(selected);
+                        
+                        // Intelligent Defaults based on Spec
                         if (selected.category !== "All") setSelectedCategory(selected.category);
                         if (selected.subCategory !== "All") setSelectedSubCategory(selected.subCategory);
+                        
+                        // Force specific material defaults if needed
+                        if (selected.category === "Bakery") {
+                           setSelectedMaterial("SBS");
+                           setSelectedBrand("ITC");
+                        }
                       } else {
                         setSelectedSpec(null);
                       }
@@ -1662,28 +1659,28 @@ function CustomizeLabContent() {
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-gray-900 border border-emerald-500/30 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden"
                   >
-                     <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl rounded-full" />
-                     <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-3">
-                           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center animate-pulse">
-                              <Shield size={16} className="text-white" />
-                           </div>
-                           <h4 className="text-[10px] font-black text-white uppercase tracking-widest leading-none italic">Structural_Request_Active</h4>
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl rounded-full" />
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center animate-pulse">
+                          <Shield size={16} className="text-white" />
                         </div>
-                        <p className="text-[11px] font-medium text-gray-400 leading-relaxed max-w-[280px]">
-                           Dimensions <span className="text-emerald-400 font-black">{dimensions.l}{unit} × {dimensions.w}{unit} × {dimensions.h}{unit}</span> require custom die-line calibration. Our engineering team can deploy this for you via WhatsApp.
-                        </p>
-                        <button
-                          onClick={() => {
-                            const msg = `Hi BoxFox Team! I need a custom box size that is not in your standard list.\nDimensions: ${dimensions.l}${unit} x ${dimensions.w}${unit} x ${dimensions.h}${unit}\nProduct: ${product?.name || 'Custom Box'}\nQuantity: ${quantity}\nCategory: ${selectedCategory}`;
-                            window.open(`https://wa.me/918449339999?text=${encodeURIComponent(msg)}`, '_blank');
-                          }}
-                          className="mt-4 w-full py-3 bg-emerald-500 text-white rounded-xl font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:bg-white hover:text-emerald-500 transition-all flex items-center justify-center gap-2"
-                        >
-                           <Zap size={12} className="fill-current" />
-                           Direct_WhatsApp_Forge
-                        </button>
-                     </div>
+                        <h4 className="text-[10px] font-black text-white uppercase tracking-widest leading-none italic">Structural_Request_Active</h4>
+                      </div>
+                      <p className="text-[11px] font-medium text-gray-400 leading-relaxed max-w-[280px]">
+                        Dimensions <span className="text-emerald-400 font-black">{dimensions.l}{unit} × {dimensions.w}{unit} × {dimensions.h}{unit}</span> require custom die-line calibration. Our engineering team can deploy this for you via WhatsApp.
+                      </p>
+                      <button
+                        onClick={() => {
+                          const msg = `Hi BoxFox Team! I need a custom box size that is not in your standard list.\nDimensions: ${dimensions.l}${unit} x ${dimensions.w}${unit} x ${dimensions.h}${unit}\nProduct: ${product?.name || 'Custom Box'}\nQuantity: ${quantity}\nCategory: ${selectedCategory}`;
+                          window.open(`https://wa.me/918449339999?text=${encodeURIComponent(msg)}`, '_blank');
+                        }}
+                        className="mt-4 w-full py-3 bg-emerald-500 text-white rounded-xl font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:bg-white hover:text-emerald-500 transition-all flex items-center justify-center gap-2"
+                      >
+                        <Zap size={12} className="fill-current" />
+                        Direct_WhatsApp_Forge
+                      </button>
+                    </div>
                   </motion.div>
                 )}
                 {selectedSpec && typeof selectedSpec === 'object' && (
@@ -2043,7 +2040,7 @@ function CustomizeLabContent() {
                         onClick={() => saveToVault('color', activeColor)}
                         className="p-1 px-3 bg-white border border-gray-200 text-gray-400 rounded-lg text-[8px] font-black uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-500 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
                       >
-                        <Star size={10} className="text-emerald-500" fill={brandVault.colors.includes(activeColor) ? "currentColor" : "none"} /> 
+                        <Star size={10} className="text-emerald-500" fill={brandVault.colors.includes(activeColor) ? "currentColor" : "none"} />
                         {brandVault.colors.includes(activeColor) ? "Identified" : "Secure Color"}
                       </button>
                     </div>

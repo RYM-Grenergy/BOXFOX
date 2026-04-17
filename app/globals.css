@@ -43,6 +43,17 @@
     margin: 0;
   }
 
+  /* Premium Custom Cursor Support */
+  @media (min-width: 768px) {
+    html, body {
+      cursor: none !important;
+    }
+    
+    a, button, [role="button"], input, select, textarea, [onClick], label, [draggable] {
+      cursor: none !important;
+    }
+  }
+
   h1,
   h2,
   h3,
