@@ -50,7 +50,8 @@ export default function ProductsManager() {
         width: 6.5,
         height: 2,
         unit: 'inch',
-        pacdoraId: ''
+        pacdoraId: '',
+        isActive: true
     });
 
     const fetchProducts = () => {
@@ -217,7 +218,8 @@ export default function ProductsManager() {
                         width: 6.5,
                         height: 2,
                         unit: 'inch',
-                        pacdoraId: ''
+                        pacdoraId: '',
+                        isActive: true
                     });
                 }, 1500);
             }
@@ -303,7 +305,8 @@ export default function ProductsManager() {
             width: product.dimensions?.width || 6.5,
             height: product.dimensions?.height || 2,
             unit: product.dimensions?.unit || 'inch',
-            pacdoraId: product.pacdoraId || ''
+            pacdoraId: product.pacdoraId || '',
+            isActive: product.isActive !== false
         });
         setIsModalOpen(true);
     };
@@ -332,7 +335,8 @@ export default function ProductsManager() {
             width: product.dimensions?.width || 6.5,
             height: product.dimensions?.height || 2,
             unit: product.dimensions?.unit || 'inch',
-            pacdoraId: product.pacdoraId || ''
+            pacdoraId: product.pacdoraId || '',
+            isActive: product.isActive !== false
         });
         setIsModalOpen(true);
     };
@@ -508,9 +512,9 @@ export default function ProductsManager() {
                                             })()}
                                         </td>
                                         <td className="px-8 py-5">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${product.outOfStock ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'
+                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${product.isActive === false ? 'bg-gray-100 text-gray-400' : (product.outOfStock ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600')
                                                 }`}>
-                                                {product.outOfStock ? 'Out of Stock' : 'Active'}
+                                                {product.isActive === false ? 'Inactive' : (product.outOfStock ? 'Out of Stock' : 'Active')}
                                             </span>
                                         </td>
                                         <td className="px-8 py-5">
@@ -640,6 +644,20 @@ export default function ProductsManager() {
                                                         className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
                                                     />
                                                 </div>
+                                            </div>
+
+                                            <div className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-sm font-black text-gray-950 uppercase tracking-tighter">Active Status</p>
+                                                    <p className="text-xs font-medium text-gray-400">When inactive, this product will be hidden from the store.</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                                                    className={`w-14 h-8 rounded-full transition-all duration-300 relative ${formData.isActive ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-gray-200'}`}
+                                                >
+                                                    <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-300 shadow-sm ${formData.isActive ? 'right-1' : 'left-1'}`} />
+                                                </button>
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-6">

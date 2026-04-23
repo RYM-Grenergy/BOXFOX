@@ -21,6 +21,10 @@ export async function GET(req) {
       parent_id: { $eq: 0 }, // Only top level
     };
 
+    if (!isAdmin) {
+      query.isActive = { $ne: false };
+    }
+
     if (searchTerm) {
       query.$or = [
         { name: { $regex: searchTerm, $options: 'i' } },
@@ -84,7 +88,8 @@ export async function GET(req) {
             dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' },
             pacdoraId: p.pacdoraId,
             patternImg: p.patternImg,
-            dielineImg: p.dielineImg
+            dielineImg: p.dielineImg,
+            isActive: p.isActive !== false
           };
         });
       }
@@ -233,7 +238,8 @@ export async function POST(req) {
         specifications: data.specifications,
         description: data.description,
         short_description: data.short_description,
-        pacdoraId: data.pacdoraId
+        pacdoraId: data.pacdoraId,
+        isActive: data.isActive !== undefined ? data.isActive : true
       }, { new: true });
       return NextResponse.json({ success: true, product: updatedProduct });
     }
@@ -263,7 +269,8 @@ export async function POST(req) {
       specifications: data.specifications,
       description: data.description,
       short_description: data.short_description,
-      pacdoraId: data.pacdoraId
+      pacdoraId: data.pacdoraId,
+      isActive: data.isActive !== undefined ? data.isActive : true
     });
     return NextResponse.json({ success: true, product });
   } catch (e) {

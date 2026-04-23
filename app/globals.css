@@ -45,11 +45,19 @@
 
   /* Premium Custom Cursor Support */
   @media (min-width: 768px) {
-    html, body {
+    html:not(:has(.admin-panel)), body:not(:has(.admin-panel)) {
       cursor: none !important;
     }
     
-    a, button, [role="button"], input, select, textarea, [onClick], label, [draggable] {
+    html:not(:has(.admin-panel)) a, 
+    html:not(:has(.admin-panel)) button, 
+    html:not(:has(.admin-panel)) [role="button"], 
+    html:not(:has(.admin-panel)) input, 
+    html:not(:has(.admin-panel)) select, 
+    html:not(:has(.admin-panel)) textarea, 
+    html:not(:has(.admin-panel)) [onClick], 
+    html:not(:has(.admin-panel)) label, 
+    html:not(:has(.admin-panel)) [draggable] {
       cursor: none !important;
     }
   }

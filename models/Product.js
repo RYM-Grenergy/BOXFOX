@@ -49,6 +49,7 @@ const productSchema = new mongoose.Schema({
 
     pacdoraId: String,
 
+    isActive: { type: Boolean, default: true },
     lastSynced: { type: Date, default: Date.now }
 }, {
     timestamps: true

@@ -94,7 +94,7 @@ export default function AdminLayout({ children }) {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
+        <div className="min-h-screen bg-gray-50 flex admin-panel">
             {/* Sidebar */}
             <aside
                 className={`fixed inset-y-0 left-0 z-50 bg-gray-950 text-white transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'}`}
