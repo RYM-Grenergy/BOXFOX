@@ -48,11 +48,12 @@ export default function Footer() {
               {[
                 { name: "Bakery Luxury", slug: "Bakery" },
                 { name: "Rigid Displays", slug: "Rigid" },
+                { name: "Gifts Premium", slug: "Gifts", href: "/gifts" },
                 { name: "Eco Corrugated", slug: "Corrugated" },
                 { name: "Custom Prints", slug: "Custom" }
               ].map((item) => (
                 <li key={item.name}>
-                  <Link href={`/shop?category=${item.slug}`} className="text-[12px] font-black text-gray-950 hover:text-emerald-600 transition-all uppercase tracking-wider">{item.name}</Link>
+                  <Link href={item.href || `/shop?category=${item.slug}`} className="text-[12px] font-black text-gray-950 hover:text-emerald-600 transition-all uppercase tracking-wider">{item.name}</Link>
                 </li>
               ))}
             </ul>
