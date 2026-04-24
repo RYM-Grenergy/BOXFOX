@@ -9,7 +9,9 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Clock,
-    MoreHorizontal
+    MoreHorizontal,
+    Layers,
+    Settings
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -113,6 +115,39 @@ export default function Dashboard() {
                         <h3 className="text-3xl font-black text-gray-950 tracking-tight">{stat.value}</h3>
                     </motion.div>
                 ))}
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Link href="/admin/lab-config" className="group">
+                    <div className="bg-emerald-500 p-8 rounded-[2.5rem] text-white flex items-center justify-between hover:scale-[1.02] transition-all shadow-lg shadow-emerald-500/20">
+                        <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 bg-white/20 rounded-3xl flex items-center justify-center backdrop-blur-md">
+                                <Layers size={32} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black uppercase tracking-tighter">Lab Config Center</h3>
+                                <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">Manage Categories & Sizes</p>
+                            </div>
+                        </div>
+                        <ArrowUpRight className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                </Link>
+                
+                <Link href="/admin/b2b" className="group">
+                    <div className="bg-gray-950 p-8 rounded-[2.5rem] text-white flex items-center justify-between hover:scale-[1.02] transition-all shadow-lg shadow-gray-950/20">
+                        <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center backdrop-blur-md">
+                                <Settings size={32} />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black uppercase tracking-tighter">B2B Core Ops</h3>
+                                <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest">Pricing & Config Tokens</p>
+                            </div>
+                        </div>
+                        <ArrowUpRight className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                </Link>
             </div>
 
             <div className="grid grid-cols-1 gap-8">

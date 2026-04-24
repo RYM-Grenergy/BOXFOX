@@ -114,7 +114,7 @@ export default function CartPage() {
                                         <div className="flex items-center gap-8 px-8 border-x border-gray-100 h-16">
                                             <div className="flex items-center bg-gray-50 rounded-xl p-1">
                                                 <button
-                                                    onClick={() => updateQuantity(item.id, Math.max(10, item.quantity - 10))}
+                                                    onClick={() => updateQuantity(item.id, item.quantity - (item.customDesign ? 100 : 10))}
                                                     className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-950"
                                                 >
                                                     <Minus size={14} />
@@ -122,12 +122,11 @@ export default function CartPage() {
                                                 <input
                                                     type="number"
                                                     value={item.quantity}
-                                                    onChange={(e) => updateQuantity(item.id, Math.max(10, parseInt(e.target.value) || 10))}
+                                                    onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 0)}
                                                     className="w-16 bg-transparent text-center font-black text-xs outline-none"
-                                                    min={10}
                                                 />
                                                 <button
-                                                    onClick={() => updateQuantity(item.id, item.quantity + 10)}
+                                                    onClick={() => updateQuantity(item.id, item.quantity + (item.customDesign ? 100 : 10))}
                                                     className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-950"
                                                 >
                                                     <Plus size={14} />
@@ -135,8 +134,8 @@ export default function CartPage() {
                                             </div>
                                         </div>
 
-                                        <div className="text-right min-w-[120px]">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Value</p>
+                                        <div className="text-right min-w-[140px]">
+                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Production Total</p>
                                             <h4 className="text-xl font-black text-gray-950 tracking-tighter">
                                                 ₹{(parseFloat(typeof item.price === 'number' ? item.price : item.price.replace(/[^0-9.]/g, '')) * item.quantity).toLocaleString('en-IN')}
                                             </h4>

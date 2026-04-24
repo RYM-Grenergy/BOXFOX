@@ -50,7 +50,7 @@ import Link from "next/link";
 import Script from "next/script";
 import Cropper from 'react-easy-crop';
 import { downloadDieLine } from "@/lib/dieline-generator";
-import { BOX_SPECIFICATIONS } from "@/lib/box-specifications";
+
 import { calculateBoxPrice, getBrandsForMaterial, getDefaultBrand, MATERIAL_RATES, LAM_RATES, COLOUR_FACTORS, MARKUP_TYPES, GSM_OPTIONS as ENGINE_GSM_OPTIONS } from "@/lib/boxfoxPricing";
 
 function CustomizeLabContent() {
@@ -73,7 +73,7 @@ function CustomizeLabContent() {
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(10);
+  const [quantity, setQuantity] = useState(500);
   const [viewMode, setViewMode] = useState("2D");
 
   // Customization States
@@ -83,7 +83,7 @@ function CustomizeLabContent() {
   // Custom formula states
   const [selectedGSM, setSelectedGSM] = useState("300");
   const [selectedMaterial, setSelectedMaterial] = useState("SBS");
-  const [selectedBrand, setSelectedBrand] = useState(() => getDefaultBrand("SBS"));
+  const [selectedBrand, setSelectedBrand] = useState("ITC");
   const [selectedFinish, setSelectedFinish] = useState("Plain");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSubCategory, setSelectedSubCategory] = useState("All");
@@ -92,61 +92,44 @@ function CustomizeLabContent() {
   const [dieCutting, setDieCutting] = useState(true);
   const [showBreakdown, setShowBreakdown] = useState(false);
 
-  const [categories, setCategories] = useState(["All"]);
-  const [subCategories, setSubCategories] = useState(["All"]);
-  const [allSections, setAllSections] = useState([]);
+  const [labConfig, setLabConfig] = useState({ hierarchies: [], specifications: [] });
+  const [categories, setCategories] = useState([]);
+  const [subCategories, setSubCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const res = await fetch('/api/lab/config');
+        const data = await res.json();
+        setLabConfig(data);
+
+        const cats = data.hierarchies.map(h => h.category);
+        setCategories(cats);
+
+        if (selectedCategory === "All" || !cats.includes(selectedCategory)) {
+          setSelectedCategory(cats[0] || "Food");
+        }
+      } catch (err) {
+        console.error("Failed to fetch lab config:", err);
+      }
+    };
+    fetchConfig();
+  }, []);
+
+  useEffect(() => {
+    const hierarchy = labConfig.hierarchies.find(h => h.category === selectedCategory);
+    const subs = hierarchy ? hierarchy.subCategories : [];
+    setSubCategories(subs);
+    if (!subs.includes(selectedSubCategory)) {
+      setSelectedSubCategory(subs[0] || "");
+    }
+  }, [selectedCategory, labConfig]);
 
   const FINISH_OPTIONS = Object.keys(LAM_RATES);
-
   const PRINT_OPTIONS = Object.keys(COLOUR_FACTORS);
-
   const GSM_OPTIONS = ENGINE_GSM_OPTIONS.map(g => `${g} GSM`);
   const MATERIAL_OPTIONS = Object.keys(MATERIAL_RATES);
   const BRAND_OPTIONS = getBrandsForMaterial(selectedMaterial);
-
-  // Fetch Categories from Product Backend
-  useEffect(() => {
-    const fetchCats = async () => {
-      try {
-        const res = await fetch('/api/products?all=true');
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setAllSections(data);
-          const cats = data.map(section => section.category);
-          setCategories(["All", ...new Set(cats)]);
-        }
-      } catch (e) {
-        console.error("Categories Fetch Error:", e);
-      }
-    };
-    fetchCats();
-  }, []);
-
-  // Sync Sub-Categories when Category changes
-  useEffect(() => {
-    if (selectedCategory === "All") {
-      setSubCategories(["All"]);
-      setSelectedSubCategory("All");
-      return;
-    }
-
-    const activeSection = allSections.find(s => s.category === selectedCategory);
-    if (activeSection && activeSection.items) {
-      // Extract all unique categories[0] or categories[1] from items
-      const subs = new Set();
-      activeSection.items.forEach(item => {
-        if (item.categories && item.categories.length > 0) {
-          // Take the second to last if exists, else the last
-          const sub = item.categories.length > 1 ? item.categories[item.categories.length - 2] : item.categories[0];
-          if (sub) subs.add(sub);
-        }
-      });
-      setSubCategories(["All", ...Array.from(subs)]);
-    } else {
-      setSubCategories(["All"]);
-    }
-    setSelectedSubCategory("All");
-  }, [selectedCategory, allSections]);
 
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
@@ -276,13 +259,23 @@ function CustomizeLabContent() {
     right: null,
   });
   const [logoSettings, setLogoSettings] = useState({
-    front: { scale: 30, x: 50, y: 50, rotate: 0 },
-    back: { scale: 30, x: 50, y: 50, rotate: 0 },
-    top: { scale: 30, x: 50, y: 50, rotate: 0 },
-    bottom: { scale: 30, x: 50, y: 50, rotate: 0 },
-    left: { scale: 30, x: 50, y: 50, rotate: 0 },
-    right: { scale: 30, x: 50, y: 50, rotate: 0 },
+    front: { scale: 1, x: 50, y: 50, rotation: 0 },
+    back: { scale: 1, x: 50, y: 50, rotation: 0 },
+    left: { scale: 1, x: 50, y: 50, rotation: 0 },
+    right: { scale: 1, x: 50, y: 50, rotation: 0 },
+    top: { scale: 1, x: 50, y: 50, rotation: 0 },
+    bottom: { scale: 1, x: 50, y: 50, rotation: 0 },
   });
+
+  const [labConfigs, setLabConfigs] = useState(null);
+
+  useEffect(() => {
+    // Fetch Lab configurations (pricing constants)
+    fetch('/api/admin/lab/config')
+      .then(res => res.json())
+      .then(data => setLabConfigs(data))
+      .catch(err => console.error("Failed to load lab configs, using defaults", err));
+  }, []);
 
   // Rolling Price State for GSAP
   const priceRef = useRef(null);
@@ -390,7 +383,7 @@ function CustomizeLabContent() {
 
         if (data && !data.error) {
           setProduct(data);
-          setQuantity(data.minOrderQuantity || 10);
+          setQuantity(data.minOrderQuantity || 500);
 
           // Sync dimensions if not already set by URL params
           if (!l && !w && !h && data.dimensions) {
@@ -576,16 +569,16 @@ function CustomizeLabContent() {
     }
   };
 
-  // Automatically match dimensions with BOX_SPECIFICATIONS
+  // Automatically match dimensions with Lab Specifications
   useEffect(() => {
     // Only auto-match if not explicitly in "custom_contact" mode
     if (selectedSpec === "custom_contact") return;
 
-    const match = BOX_SPECIFICATIONS.find(s =>
+    const match = labConfig.specifications.find(s =>
       s.l === dimensions.l &&
       s.w === dimensions.w &&
       s.h === dimensions.h &&
-      s.unit === unit
+      s.unit === (s.unit || 'mm') // Handle potential missing unit
     );
 
     if (match) {
@@ -593,7 +586,7 @@ function CustomizeLabContent() {
     } else {
       setSelectedSpec(null);
     }
-  }, [dimensions, unit]);
+  }, [dimensions, unit, labConfig.specifications]);
 
   const applyToAllFaces = () => {
     if (customMode === "texture") {
@@ -816,7 +809,7 @@ function CustomizeLabContent() {
         dieCutting: dieCutting,
         markupType: selectedMarkup,
         sides: 'One',
-      });
+      }, labConfigs);
     } catch (e) {
       console.error('Pricing engine error:', e);
       return null;
@@ -827,14 +820,19 @@ function CustomizeLabContent() {
     ? pricingResult.finalPerUnit.toFixed(2)
     : "0.00";
 
+  // Force minimum 500 if quantity is set lower
+  useEffect(() => {
+    if (quantity < 500) setQuantity(500);
+  }, [quantity]);
+
   // Rolling Number Animation for Price Tag
   useEffect(() => {
     if (pricingResult) {
       gsap.to({ val: displayPrice }, {
-        val: pricingResult.finalTotal,
+        val: pricingResult.grandTotal,
         duration: 0.5,
         ease: "power2.out",
-        onUpdate: function() {
+        onUpdate: function () {
           setDisplayPrice(this.targets()[0].val);
         }
       });
@@ -842,17 +840,17 @@ function CustomizeLabContent() {
         val: pricingResult.finalPerUnit,
         duration: 0.5,
         ease: "power2.out",
-        onUpdate: function() {
+        onUpdate: function () {
           setDisplayUnitPrice(this.targets()[0].val);
         }
       });
     }
-  }, [pricingResult?.finalTotal, pricingResult?.finalPerUnit]);
+  }, [pricingResult?.grandTotal, pricingResult?.finalPerUnit]);
 
   // Design Validation Logic
   const validateDesign = async () => {
     const issues = [];
-    
+
     // 1. Resolution Check (DPI)
     const checkResolution = (url, face) => {
       return new Promise((resolve) => {
@@ -1499,14 +1497,14 @@ function CustomizeLabContent() {
                 onClick={() => {
                   setSelectedGSM("300");
                   setSelectedMaterial("SBS");
-                  setSelectedBrand("Normal");
+                  setSelectedBrand("ITC");
                   setSelectedFinish("Plain");
                   setSelectedPrintType("Four Colour");
                   setSelectedMarkup("Retail");
                   setDieCutting(true);
                   setSelectedCategory("All");
                   setSelectedSubCategory("All");
-                  setQuantity(100);
+                  setQuantity(500);
                   setDimensions({ l: 12, w: 8, h: 4 });
                   setDesignName("Untitled Design");
                   if (typeof setUnit === "function") setUnit("in");
@@ -1561,12 +1559,26 @@ function CustomizeLabContent() {
                 <select
                   value={selectedMaterial}
                   onChange={(e) => {
-                    setSelectedMaterial(e.target.value);
-                    setSelectedBrand(getDefaultBrand(e.target.value));
+                    const mat = e.target.value;
+                    setSelectedMaterial(mat);
+                    const brands = getBrandsForMaterial(mat);
+                    setSelectedBrand(brands.includes("ITC") ? "ITC" : brands[0]);
                   }}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
                 >
                   {MATERIAL_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+
+              {/* Brand */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Brand</label>
+                <select
+                  value={selectedBrand}
+                  onChange={(e) => setSelectedBrand(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  {BRAND_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
 
@@ -1594,38 +1606,34 @@ function CustomizeLabContent() {
                 </select>
               </div>
 
-              {/* Brand */}
-              {BRAND_OPTIONS.length > 1 && (
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Paper Brand</label>
-                  <select
-                    value={selectedBrand}
-                    onChange={(e) => setSelectedBrand(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+              {/* Sale Type / Markup */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sale Type (Markup)</label>
+                <select
+                  value={selectedMarkup}
+                  onChange={(e) => setSelectedMarkup(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                >
+                  {Object.keys(MARKUP_TYPES).map(opt => <option key={opt} value={opt}>{opt} ({MARKUP_TYPES[opt] * 100}%)</option>)}
+                </select>
+              </div>
+
+              {/* Die Cutting Toggle */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Die Cutting Process</label>
+                <div className="flex items-center gap-4 h-11 bg-gray-50 border border-gray-200 rounded-xl px-4">
+                  <span className="text-xs font-bold text-gray-700 flex-1">{dieCutting ? "Enabled (Die-Cut)" : "Disabled (Straight Cut)"}</span>
+                  <div
+                    onClick={() => setDieCutting(!dieCutting)}
+                    className={`w-10 h-6 rounded-full transition-all cursor-pointer relative ${dieCutting ? "bg-emerald-500" : "bg-gray-300"}`}
                   >
-                    {BRAND_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
-              )}
-
-              {/* Sale Type / Markup - Fixed to 16% Retail as per request */}
-              <div className="space-y-2 opacity-50 pointer-events-none">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sale Type</label>
-                <div className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950">
-                  Retail (16%)
+                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${dieCutting ? "left-5" : "left-1"}`} />
+                  </div>
                 </div>
               </div>
 
-              {/* Die Cutting - Always Yes */}
-              <div className="space-y-2 opacity-50 pointer-events-none">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Die Cutting</label>
-                <div className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-emerald-600">
-                  Always Active
-                </div>
-              </div>
             </div>
           </div>
-
         </div>
 
         {/* CONTROL PANEL (RIGHT) */}
@@ -1687,10 +1695,10 @@ function CustomizeLabContent() {
                         return;
                       }
 
-                      const selected = BOX_SPECIFICATIONS.find(s => s.spec === val);
+                      const selected = labConfig.specifications.find(s => s.spec === val);
                       if (selected) {
                         setDimensions({ l: selected.l, w: selected.w, h: selected.h });
-                        setUnit(selected.unit);
+                        setUnit(selected.unit || "mm");
                         setSelectedSpec(selected);
 
                         // Intelligent Defaults based on Spec
@@ -1709,15 +1717,21 @@ function CustomizeLabContent() {
                     className="w-full bg-white border-2 border-emerald-100 hover:border-emerald-500 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-wider text-gray-950 outline-none transition-all cursor-pointer shadow-sm appearance-none"
                   >
                     <option value="">Select a calibrated size...</option>
-                    {Array.from(new Set(BOX_SPECIFICATIONS.map(s => s.category))).map(cat => (
-                      <optgroup key={cat} label={cat.toUpperCase()}>
-                        {BOX_SPECIFICATIONS.filter(s => s.category === cat).map((spec, idx) => (
-                          <option key={idx} value={spec.spec}>
-                            {spec.subCategory} - {spec.spec.split('|')[0].trim()}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
+                    {(() => {
+                      const filteredSpecs = labConfig.specifications.filter(s =>
+                        s.category === selectedCategory && s.subCategory === selectedSubCategory
+                      );
+
+                      if (filteredSpecs.length === 0) {
+                        return <option disabled>No standard sizes for this selection</option>;
+                      }
+
+                      return filteredSpecs.map((spec, idx) => (
+                        <option key={idx} value={spec.spec}>
+                          {spec.spec.split('|')[0].trim()}
+                        </option>
+                      ));
+                    })()}
                     <optgroup label="CAN'T FIND YOUR SIZE?">
                       <option value="custom_contact">REQUEST CUSTOM SIZE (WHATSAPP)</option>
                     </optgroup>
@@ -1758,27 +1772,13 @@ function CustomizeLabContent() {
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
-                    className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm space-y-4"
+                    className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-sm"
                   >
-                    <div className="border-b border-gray-100 pb-2">
-                      <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-tight">
-                        {selectedSpec.subCategory} - {selectedSpec.spec.split('|')[0].trim()}
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 size={14} className="text-emerald-500" />
+                      <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-tight">
+                        Standard Size Calibrated
                       </h4>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="flex flex-col">
-                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Ups</span>
-                        <span className="text-xs font-black text-gray-950">{selectedSpec.ups} UPS</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Machine</span>
-                        <span className="text-xs font-black text-gray-950">MOD_{selectedSpec.machine}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Sheet Size</span>
-                        <span className="text-xs font-black text-gray-950">{selectedSpec.sheetW}″ × {selectedSpec.sheetH}″</span>
-                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -2656,12 +2656,12 @@ function CustomizeLabContent() {
                     const raw = e.target.value;
                     if (raw === "") { setQuantity(""); return; }
                     let val = parseInt(raw, 10);
-                    if (isNaN(val)) val = 10;
+                    if (isNaN(val)) val = 500;
                     if (val > 5000) val = 5000;
                     setQuantity(val);
                   }}
                   onBlur={() => {
-                    if (!quantity || quantity < 10) setQuantity(10);
+                    if (!quantity || quantity < 500) setQuantity(500);
                   }}
                   className="w-20 h-8 bg-white border border-emerald-200 rounded-lg text-center font-black text-xs focus:border-emerald-500 outline-none"
                 />
@@ -2670,22 +2670,22 @@ function CustomizeLabContent() {
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => setQuantity(Math.max(10, (parseInt(quantity) || 10) - 50))}
+                onClick={() => setQuantity(Math.max(500, (parseInt(quantity) || 500) - 50))}
                 className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
               >
                 <Minus size={14} />
               </button>
               <input
                 type="range"
-                min="10"
+                min="500"
                 max="5000"
-                step="10"
-                value={quantity || 10}
+                step="50"
+                value={quantity || 500}
                 onChange={(e) => setQuantity(parseInt(e.target.value))}
                 className="flex-1 h-1 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
               />
               <button
-                onClick={() => setQuantity(Math.min(5000, (parseInt(quantity) || 10) + 50))}
+                onClick={() => setQuantity(Math.min(5000, (parseInt(quantity) || 500) + 50))}
                 className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
               >
                 <Plus size={14} />
@@ -2693,156 +2693,203 @@ function CustomizeLabContent() {
             </div>
           </div>
 
-          {/* Order Summary */}
-          <div className="bg-gradient-to-br from-emerald-50 to-white rounded-2xl sm:rounded-[2.5rem] md:rounded-[3.5rem] border-2 border-emerald-200 shadow-lg overflow-hidden">
-            <div className="bg-gradient-to-b from-emerald-500/5 to-transparent p-4 sm:p-6 md:p-8 border-b border-emerald-100 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                  <Box size={20} className="text-emerald-600" />
+          {/* Compact Small Card Order Summary */}
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+            <div className="p-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-gray-950 text-white px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-md">
+                    Live_Quote
+                  </div>
+                  <div className="flex items-center gap-1 text-emerald-500 animate-pulse">
+                    <Zap size={12} fill="currentColor" />
+                    <span className="text-[9px] font-black uppercase tracking-widest italic">Instant</span>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-base sm:text-lg font-black text-gray-950">Custom Designed Box</h3>
-                  <p className="text-xs text-emerald-600 font-bold uppercase tracking-widest mt-0.5">{dimensions.l}{unit} × {dimensions.w}{unit} × {dimensions.h}{unit}</p>
-                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-1.5">{selectedMaterial} {selectedBrand !== 'Custom' && selectedBrand !== 'Normal' ? selectedBrand : ''} • {gsmNum} GSM • {selectedFinish !== 'Plain' ? selectedFinish : 'No Lamination'} • {selectedPrintType}</p>
+                <div className="text-[8px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-1.5">
+                  <RotateCw size={10} className="animate-spin-slow" />
+                  Updates with every change
                 </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2 bg-white rounded-lg p-3 border border-emerald-100">
-                <div className="text-center"><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Qty</p><p className="text-xl font-black text-emerald-600 mt-1">{quantity}</p></div>
-                <div className="border-l border-r border-gray-100 text-center"><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Per Unit</p><p className="text-xl font-black text-emerald-600 mt-1">₹{calculatedUnitPrice}</p></div>
-                <div className="text-center"><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Total</p><p className="text-xl font-black text-emerald-600 mt-1">₹{pricingResult ? pricingResult.finalTotal.toLocaleString('en-IN') : '0'}</p></div>
               </div>
 
-              {/* Detailed Cost Breakdown Toggle */}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Per Unit</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-sm font-black text-gray-400">₹</span>
+                    <span className="text-2xl font-black tracking-tighter text-gray-950">
+                      {displayUnitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Final Total</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-sm font-black text-gray-400">₹</span>
+                    <span className="text-2xl font-black tracking-tighter text-emerald-600">
+                      {Math.round(displayPrice).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {pricingResult && (
-                <div className="mt-2">
+                <div className="space-y-3">
                   <button
                     onClick={() => setShowBreakdown(!showBreakdown)}
-                    className="w-full flex items-center justify-between px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-all text-[9px] font-black uppercase tracking-widest text-emerald-700"
+                    className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl transition-all text-[9px] font-black uppercase tracking-widest text-gray-500"
                   >
-                    <span>View Cost Breakdown</span>
+                    <span>Analyze Cost Breakdown</span>
                     <ChevronDown size={12} className={`transition-transform ${showBreakdown ? 'rotate-180' : ''}`} />
                   </button>
                   {showBreakdown && (
-                    <div className="mt-2 bg-white border border-emerald-100 rounded-xl p-3 space-y-1.5 text-[10px]">
-                      <div className="flex justify-between"><span className="text-gray-500">Paper Cost (P2)</span><span className="font-black">₹{pricingResult.paperCost.toLocaleString('en-IN')}</span></div>
-                      <div className="flex justify-between"><span className="text-gray-500">Printing (X2) — {selectedPrintType}</span><span className="font-black">₹{pricingResult.printCost.toLocaleString('en-IN')}</span></div>
-                      <div className="flex justify-between"><span className="text-gray-500">Plate Cost</span><span className="font-black">₹{pricingResult.plateCost.toLocaleString('en-IN')}</span></div>
-                      <div className="flex justify-between"><span className="text-gray-500">Fixed Charges (Design+Die)</span><span className="font-black">₹{pricingResult.fixedCharges.toLocaleString('en-IN')}</span></div>
-                      <div className="flex justify-between"><span className="text-gray-500">Other Charges</span><span className="font-black">₹{pricingResult.otherCharges.toLocaleString('en-IN')}</span></div>
-                      <div className="border-t border-gray-100 pt-1.5 flex justify-between"><span className="text-gray-700 font-bold">Base/Unit (AG2)</span><span className="font-black">₹{pricingResult.basePerUnit.toFixed(4)}</span></div>
-                      {pricingResult.lamPerUnit > 0 && (
-                        <div className="flex justify-between"><span className="text-gray-500">Lamination/Unit — {selectedFinish}</span><span className="font-black">₹{pricingResult.lamPerUnit.toFixed(4)}</span></div>
-                      )}
-                      <div className="border-t border-gray-100 pt-1.5 flex justify-between"><span className="text-gray-700 font-bold">Subtotal/Unit</span><span className="font-black">₹{pricingResult.subtotalPerUnit.toFixed(4)}</span></div>
-                      <div className="flex justify-between text-amber-600"><span>Markup ({selectedMarkup} {(pricingResult.markup * 100).toFixed(0)}%)</span><span className="font-black">+₹{pricingResult.markupAmount.toFixed(4)}</span></div>
-                      <div className="border-t-2 border-emerald-200 pt-2 flex justify-between text-emerald-700"><span className="font-black">Final Price/Unit</span><span className="font-black text-sm">₹{pricingResult.finalPerUnit.toFixed(2)}</span></div>
-                      <div className="flex justify-between text-emerald-700"><span className="font-black">Order Total ({quantity} units)</span><span className="font-black text-sm">₹{pricingResult.finalTotal.toLocaleString('en-IN')}</span></div>
-                      {pricingResult.dieToolingCharge > 0 && (
-                        <div className="flex justify-between text-orange-600 bg-orange-50 -mx-3 px-3 py-1.5 rounded-b-xl"><span className="font-bold">Die Tooling (one-time, separate)</span><span className="font-black">₹{pricingResult.dieToolingCharge.toLocaleString('en-IN')}</span></div>
-                      )}
-                      <div className="pt-1 text-[8px] text-gray-400 text-center space-y-0.5">
-                        <p>Sheets: {pricingResult.sheetQty} | UPS: {pricingResult.ups} | Machine: {pricingResult.machine} | CC5: ₹{pricingResult.cc5}</p>
-                        {!selectedSpec && <p className="text-amber-500">⚠ No calibrated spec matched — using default sheet size. Select a standard size for accurate pricing.</p>}
-                      </div>
-                    </div>
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm"
+                    >
+                      <table className="w-full text-[9px] border-collapse">
+                        <thead>
+                          <tr className="bg-gray-50 text-gray-500 uppercase font-black tracking-widest border-b border-gray-100">
+                            <th className="px-3 py-2 text-left">Component</th>
+                            <th className="px-3 py-2 text-right">Job Total</th>
+                            <th className="px-3 py-2 text-right">Unit</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50 font-bold text-gray-700">
+                          <tr>
+                            <td className="px-3 py-2">Printing (X2)</td>
+                            <td className="px-3 py-2 text-right">₹{pricingResult.printCost.toLocaleString('en-IN')}</td>
+                            <td className="px-3 py-2 text-right">₹{(pricingResult.printCost / quantity).toFixed(4)}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-3 py-2">Paper Cost (P2)</td>
+                            <td className="px-3 py-2 text-right">₹{pricingResult.paperCost.toLocaleString('en-IN')}</td>
+                            <td className="px-3 py-2 text-right">₹{(pricingResult.paperCost / quantity).toFixed(4)}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-3 py-2">Fixed Charges (AE2)</td>
+                            <td className="px-3 py-2 text-right">₹{pricingResult.fixedCharges.toLocaleString('en-IN')}</td>
+                            <td className="px-3 py-2 text-right">₹{(pricingResult.fixedCharges / quantity).toFixed(4)}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-3 py-2">Other Charges (AD2)</td>
+                            <td className="px-3 py-2 text-right">₹{pricingResult.otherCharges.toLocaleString('en-IN')}</td>
+                            <td className="px-3 py-2 text-right">₹{(pricingResult.otherCharges / quantity).toFixed(4)}</td>
+                          </tr>
+                          <tr className="bg-emerald-50/30 text-emerald-700">
+                            <td className="px-3 py-2 italic font-black">Base Per Unit (AG2)</td>
+                            <td className="px-3 py-2 text-right">₹{(pricingResult.basePerUnit * quantity).toLocaleString('en-IN')}</td>
+                            <td className="px-3 py-2 text-right">₹{pricingResult.basePerUnit.toFixed(4)}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-3 py-2">Lamination</td>
+                            <td className="px-3 py-2 text-right">₹{(pricingResult.lamPerUnit * quantity).toLocaleString('en-IN')}</td>
+                            <td className="px-3 py-2 text-right">₹{pricingResult.lamPerUnit.toFixed(4)}</td>
+                          </tr>
+                          <tr className="bg-gray-100 text-gray-900 border-t border-gray-200">
+                            <td className="px-3 py-2 font-black uppercase">Subtotal (Base)</td>
+                            <td className="px-3 py-2 text-right">₹{(pricingResult.subtotalPerUnit * quantity).toLocaleString('en-IN')}</td>
+                            <td className="px-3 py-2 text-right">₹{pricingResult.subtotalPerUnit.toFixed(4)}</td>
+                          </tr>
+                          <tr className="text-emerald-600">
+                            <td className="px-3 py-2 font-black">Markup ({selectedMarkup} {Math.round(pricingResult.markup * 100)}%)</td>
+                            <td className="px-3 py-2 text-right">₹{(pricingResult.markupAmount * quantity).toLocaleString('en-IN')}</td>
+                            <td className="px-3 py-2 text-right">₹{pricingResult.markupAmount.toFixed(4)}</td>
+                          </tr>
+                          <tr className="bg-gray-950 text-white">
+                            <td className="px-3 py-2 font-black uppercase tracking-wider">Boxes Total</td>
+                            <td className="px-3 py-2 text-right">₹{pricingResult.finalTotal.toLocaleString('en-IN')}</td>
+                            <td className="px-3 py-2 text-right">₹{pricingResult.finalPerUnit.toFixed(4)}</td>
+                          </tr>
+                          {pricingResult.dieToolingCharge > 0 && (
+                            <tr className="bg-amber-50 text-amber-700">
+                              <td className="px-3 py-2 font-black italic">Die Tooling (One-time)</td>
+                              <td className="px-3 py-2 text-right font-black">₹{pricingResult.dieToolingCharge.toLocaleString('en-IN')}</td>
+                              <td className="px-3 py-2 text-right text-[8px] font-black uppercase">Job Charge</td>
+                            </tr>
+                          )}
+                          <tr className="bg-emerald-600 text-white border-t border-white/20">
+                            <td className="px-3 py-2 font-black uppercase tracking-[0.1em]">Final Grand Total</td>
+                            <td className="px-3 py-2 text-right text-[12px] font-black">₹{pricingResult.grandTotal.toLocaleString('en-IN')}</td>
+                            <td className="px-3 py-2 text-right">-</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </motion.div>
                   )}
                 </div>
               )}
-            </div>
-            <div className="bg-emerald-500 px-4 sm:px-6 md:px-8 py-5 sm:py-6 text-black flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
-              <div className="text-center sm:text-left">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-70">Est. Total Cost</p>
-                <h2 className="text-3xl sm:text-5xl font-black italic tracking-tighter mt-1">₹{pricingResult ? pricingResult.finalTotal.toLocaleString('en-IN') : '0'}</h2>
-              </div>
-              {!selectedSpec || typeof selectedSpec !== 'object' ? (
-                <button
-                  onClick={() => {
-                    const msg = `Hi BoxFox! I've designed a custom box and would like a quote.\n\nDimensions: ${dimensions.l}${unit} x ${dimensions.w}${unit} x ${dimensions.h}${unit}\nQuantity: ${quantity}\nMaterial: ${selectedMaterial}\nGSM: ${selectedGSM}\nEst. Unit Price: ₹${calculatedUnitPrice}\nEst. Total: ₹${pricingResult?.finalTotal.toLocaleString('en-IN')}\n\nI have the design ready in the lab. Please help with the die-line and quote.`;
-                    window.open(`https://wa.me/918449339999?text=${encodeURIComponent(msg)}`, '_blank');
-                    showToast("Redirecting to WhatsApp for custom calibration...");
-                  }}
-                  className="w-full sm:w-auto py-4 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 bg-gray-900 text-white rounded-xl sm:rounded-2xl md:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-[0.3em] sm:tracking-[0.4em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-emerald-500 transition-all shadow-xl active:scale-95 group shrink-0"
-                >
-                  <Zap size={20} className="text-emerald-400 group-hover:scale-110 transition-transform" />
-                  Request_Custom_Quote
-                </button>
-              ) : (
-                <button
-                  disabled={isAddingToCart}
-                  onClick={async () => {
-                    if (isAddingToCart) return;
 
-                    // Design Validation Step
-                    const isValid = await validateDesign();
-                    if (!isValid) return;
-
-                    setIsAddingToCart(true);
-
-                    try {
-                      const uploadedBoxTextures = { ...boxTextures };
-                      const faces = Object.keys(uploadedBoxTextures);
-                      for (let face of faces) {
-                        const texture = uploadedBoxTextures[face];
-                        if (texture && texture.startsWith("data:image")) {
-                          try {
+              <div className="pt-2">
+                {!selectedSpec || typeof selectedSpec !== 'object' ? (
+                  <button
+                    onClick={() => {
+                      const msg = `Hi BoxFox! I've designed a custom box and would like a quote.\n\nDimensions: ${dimensions.l}${unit} x ${dimensions.w}${unit} x ${dimensions.h}${unit}\nQuantity: ${quantity}\nMaterial: ${selectedMaterial}\nGSM: ${selectedGSM}\nEst. Unit Price: ₹${calculatedUnitPrice}\nEst. Total: ₹${pricingResult?.finalTotal.toLocaleString('en-IN')}\n\nI have the design ready in the lab. Please help with the die-line and quote.`;
+                      window.open(`https://wa.me/918449339999?text=${encodeURIComponent(msg)}`, '_blank');
+                    }}
+                    className="w-full py-5 bg-emerald-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/20 active:scale-95 group"
+                  >
+                    <Zap size={16} className="text-white group-hover:scale-110 transition-transform" />
+                    Request_Quote
+                  </button>
+                ) : (
+                  <button
+                    disabled={isAddingToCart}
+                    onClick={async () => {
+                      if (isAddingToCart) return;
+                      const isValid = await validateDesign();
+                      if (!isValid) return;
+                      setIsAddingToCart(true);
+                      try {
+                        const uploadedBoxTextures = { ...boxTextures };
+                        const faces = Object.keys(uploadedBoxTextures);
+                        for (let face of faces) {
+                          const texture = uploadedBoxTextures[face];
+                          if (texture && texture.startsWith("data:image")) {
                             const res = await fetch("/api/upload", {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({ image: texture })
                             });
                             const data = await res.json();
-                            if (data.url) {
-                              uploadedBoxTextures[face] = data.url;
-                            }
-                          } catch (err) {
-                            console.error(`Failed to upload texture for ${face}:`, err);
+                            if (data.url) uploadedBoxTextures[face] = data.url;
                           }
                         }
+                        const userName = user?.name || user?.username || "Guest";
+                        const customizedProduct = {
+                          ...product,
+                          id: `${product.id}-${Date.now()}`,
+                          name: `${userName}_customize ${dimensions.l}x${dimensions.w}x${dimensions.h}`,
+                          img: uploadedBoxTextures.front || uploadedBoxTextures.top || Object.values(uploadedBoxTextures).find(t => t) || product.img,
+                          price: calculatedUnitPrice,
+                          customDesign: {
+                            textures: uploadedBoxTextures,
+                            colors: boxColors,
+                            textureSettings: textureSettings,
+                            text: customText,
+                            textStyle: boxTextStyle,
+                            textColor: boxTextColor,
+                            textSettings: boxTextSettings,
+                            dimensions: dimensions,
+                            unit: unit,
+                            selectedGSM: selectedGSM,
+                            selectedMaterial: selectedMaterial,
+                            specData: selectedSpec
+                          }
+                        };
+                        addToCart(customizedProduct, quantity);
+                      } finally {
+                        setIsAddingToCart(false);
                       }
-
-                      const userName = user?.name || user?.username || "Guest";
-                      const customName = `${userName}_customize ${dimensions.l}x${dimensions.w}x${dimensions.h}`;
-                      const customImg = uploadedBoxTextures.front || uploadedBoxTextures.top || Object.values(uploadedBoxTextures).find(t => t) || product.img || product.images?.[0];
-
-                      const customizedProduct = {
-                        ...product,
-                        id: `${product.id}-${Date.now()}`,
-                        name: customName,
-                        img: customImg,
-                        price: calculatedUnitPrice,
-                        customDesign: {
-                          textures: uploadedBoxTextures,
-                          colors: boxColors,
-                          textureSettings: textureSettings,
-                          text: customText,
-                          textStyle: boxTextStyle,
-                          textColor: boxTextColor,
-                          textSettings: boxTextSettings,
-                          dimensions: dimensions,
-                          unit: unit,
-                          selectedGSM: selectedGSM,
-                          selectedMaterial: selectedMaterial,
-                          specData: selectedSpec // Store the calibrated spec info
-                        }
-                      };
-                      addToCart(customizedProduct, quantity);
-                    } finally {
-                      setIsAddingToCart(false);
-                    }
-                  }}
-                  className="w-full sm:w-auto py-4 sm:h-16 md:h-20 px-6 sm:px-8 md:px-12 bg-black text-white rounded-xl sm:rounded-2xl md:rounded-[2rem] font-black uppercase text-[10px] sm:text-xs tracking-[0.3em] sm:tracking-[0.4em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-white hover:text-black transition-all shadow-xl active:scale-95 group shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isAddingToCart ? (
-                    <RefreshCw size={20} className="animate-spin shrink-0" />
-                  ) : (
-                    <ShoppingCart
-                      size={20}
-                      className="group-hover:scale-110 transition-transform"
-                    />
-                  )}
-                  {isAddingToCart ? "Deploying..." : "Add_to_Basket"}
-                </button>
-              )}
+                    }}
+                    className="w-full py-5 bg-gray-950 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-emerald-500 transition-all shadow-xl active:scale-95 group disabled:opacity-50"
+                  >
+                    {isAddingToCart ? <RotateCw size={16} className="animate-spin" /> : <ShoppingCart size={16} className="group-hover:scale-110 transition-transform" />}
+                    {isAddingToCart ? "Deploying..." : "Add_to_Basket"}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
           {/* Share Toast Notification */}
@@ -2948,51 +2995,7 @@ function CustomizeLabContent() {
         </div>
       </main>
 
-      {/* Floating Price Tag (Brutalist Style) */}
-      <motion.div
-        initial={{ x: 100, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        className="fixed bottom-10 right-10 z-[500] hidden lg:block"
-      >
-        <div className="bg-emerald-500 border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 min-w-[240px] transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
-          <div className="flex justify-between items-start mb-4">
-            <div className="bg-black text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest">
-              Live_Quote
-            </div>
-            <div className="flex items-center gap-1 text-black/50">
-              <Zap size={14} fill="currentColor" />
-              <span className="text-[10px] font-black uppercase tracking-widest italic">Instant</span>
-            </div>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <p className="text-[9px] font-black text-black/60 uppercase tracking-[0.2em] mb-1">Per Unit</p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-xl font-black">₹</span>
-                <span className="text-3xl font-black tracking-tighter">
-                  {displayUnitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-              </div>
-            </div>
-            
-            <div className="pt-4 border-t-2 border-black/10">
-              <p className="text-[9px] font-black text-black/60 uppercase tracking-[0.2em] mb-1">Total ({quantity} units)</p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-black">₹</span>
-                <span className="text-5xl font-black tracking-tighter">
-                  {Math.round(displayPrice).toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-black/40">
-            <RefreshCw size={10} className="animate-spin-slow" />
-            <span>Updates with every change</span>
-          </div>
-        </div>
-      </motion.div>
+      {/* Floating Price Tag removed in favor of Small Card in flow */}
 
       {/* Mobile Experience Warning */}
       <AnimatePresence>

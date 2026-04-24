@@ -1,0 +1,95 @@
+import { NextResponse } from 'next/server';
+import dbConnect from "@/lib/mongodb";
+import LabHierarchy from "@/models/LabHierarchy";
+import LabSpecification from "@/models/LabSpecification";
+
+const initialSpecifications = [
+  // BAKERY
+  { category: "Bakery", subCategory: "Brownie 1", spec: "89*89*38 mm | 3.5*3.5*1.5 inch", ups: 6, machine: "2029", sheetW: 19.5, sheetH: 23, l: 89, w: 89, h: 38, unit: "mm" },
+  { category: "Bakery", subCategory: "Brownie 2", spec: "180*70*35 mm | 7*2.75*1.4 inch", ups: 4, machine: "2029", sheetW: 19, sheetH: 20, l: 180, w: 70, h: 35, unit: "mm", window: 1, designing: 100, pasting: 0, leafing: 0, dieRate: 300 },
+  { category: "Bakery", subCategory: "Brownie 4", spec: "165*125*40 mm | 5*1.5*6.5 inch", ups: 1, machine: "1926", sheetW: 18, sheetH: 23, l: 165, w: 125, h: 40, unit: "mm", designing: 100, pasting: 0.1, dieRate: 300 },
+  { category: "Bakery", subCategory: "Brownie 6", spec: "230*125*50 mm | 5*2*9 inch", ups: 2, machine: "2029", sheetW: 18, sheetH: 28, l: 230, w: 125, h: 50, unit: "mm", designing: 100, pasting: 0, dieRate: 300 },
+  { category: "Bakery", subCategory: "Brownie 9", spec: "200*200*50 mm | 7.8*7.8*2 inch TB", ups: 1, machine: "2029", sheetW: 21, sheetH: 36, l: 200, w: 200, h: 50, unit: "mm", designing: 100, pasting: 0, dieRate: 300 },
+  { category: "Bakery", subCategory: "Burger", spec: "120*120*50 mm | 4.7*4.7*2 inch", ups: 1, machine: "1926", sheetW: 11.5, sheetH: 19.5, l: 120, w: 120, h: 50, unit: "mm", designing: 100, pasting: 0.24, dieRate: 300 },
+  { category: "Bakery", subCategory: "Cake Box", spec: "0.5 Kg 178*178*102 mm | 7*7*4 inch", ups: 1, machine: "1926", sheetW: 13, sheetH: 23, l: 178, w: 178, h: 102, unit: "mm", designing: 100, window: 1.5, dieRate: 300 },
+  { category: "Bakery", subCategory: "Cake Box", spec: "1Kg 9*9*6 inch", ups: 1, machine: "2840", sheetW: 20.75, sheetH: 31.5, l: 9, w: 9, h: 6, unit: "in", designing: 100, dieRate: 300 },
+  { category: "Bakery", subCategory: "Cake Box", spec: "0.5Kg 203*203*127 mm | 8*8*5 inch", ups: 1, machine: "2029", sheetW: 20, sheetH: 28, l: 203, w: 203, h: 127, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Bakery", subCategory: "Cake Box", spec: "1Kg 254*254*127 mm | 10*10*5 inch", ups: 1, machine: "2840", sheetW: 20.75, sheetH: 31.5, l: 254, w: 254, h: 127, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Bakery", subCategory: "Cake Box", spec: "2Kg 305*304*127 mm | 12*12*5 inch", ups: 1, machine: "2840", sheetW: 23, sheetH: 36, l: 305, w: 304, h: 127, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Bakery", subCategory: "Cake Box", spec: "1Kg 8*8*6 inch Bottom", ups: 1, machine: "1926", sheetW: 18, sheetH: 21, l: 8, w: 8, h: 6, unit: "in", designing: 100, dieRate: 300 },
+  { category: "Bakery", subCategory: "Tall Box", spec: "8*8*10 inch", ups: 1, machine: "2840", sheetW: 30, sheetH: 43, l: 8, w: 8, h: 10, unit: "in", designing: 100, window: 2, pasting: 1, dieRate: 300 },
+  { category: "Bakery", subCategory: "Tall Box", spec: "10*10*10 inch", ups: 1, machine: "2840", sheetW: 32, sheetH: 47, l: 10, w: 10, h: 10, unit: "in", designing: 100, window: 2, pasting: 1, dieRate: 300 },
+  { category: "Bakery", subCategory: "Tall Box", spec: "12*12*12 inch", ups: 1, machine: "2840", sheetW: 38, sheetH: 55, l: 12, w: 12, h: 12, unit: "in", designing: 100, window: 2, pasting: 1, dieRate: 300 },
+  { category: "Bakery", subCategory: "Cakesicles", spec: "50*30*90 mm | 2*1.2*3.5 inch", ups: 9, machine: "1926", sheetW: 18, sheetH: 21, l: 50, w: 30, h: 90, unit: "mm", designing: 100, window: 1, pasting: 0.1, dieRate: 300 },
+  { category: "Bakery", subCategory: "Carry Bag", spec: "203*203*203 mm | 8*8*8 inch", ups: 1, machine: "1926", sheetW: 18, sheetH: 25, l: 203, w: 203, h: 203, unit: "mm", designing: 100, window: 4, dieRate: 300 },
+  { category: "Bakery", subCategory: "Carry Bag", spec: "228*102*280 mm | 9*4*11 inch", ups: 1, machine: "2029", sheetW: 19, sheetH: 28, l: 228, w: 102, h: 280, unit: "mm", designing: 100, window: 4, pasting: 0.1, dieRate: 300 },
+  { category: "Bakery", subCategory: "Carry Bag", spec: "268*268*203 mm | 10.5*10.5*8 inch", ups: 1, machine: "2840", sheetW: 22, sheetH: 28, l: 268, w: 268, h: 203, unit: "mm", designing: 100, window: 4, dieRate: 300 },
+  { category: "Bakery", subCategory: "Chocolate 12", spec: "250*80*40 mm", ups: 2, machine: "1926", sheetW: 18, sheetH: 23, l: 250, w: 80, h: 40, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Bakery", subCategory: "Macaron 10", spec: "185*115*50 mm", ups: 1, machine: "2029", sheetW: 18, sheetH: 28, l: 185, w: 115, h: 50, unit: "mm", designing: 100, pasting: 0.1, dieRate: 300 },
+  { category: "Bakery", subCategory: "Pastry", spec: "100*120*60 mm", ups: 2, machine: "2029", sheetW: 19.5, sheetH: 23, l: 100, w: 120, h: 60, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Bakery", subCategory: "Pizaa", spec: "104*104*27 mm | 4.1*4.1*1.5 inch", ups: 4, machine: "2029", sheetW: 15, sheetH: 28, l: 104, w: 104, h: 27, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Bakery", subCategory: "Pizaa", spec: "155*155*38 mm | 6*6*1.5 inch", ups: 3, machine: "2029", sheetW: 22, sheetH: 28, l: 155, w: 155, h: 38, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Bakery", subCategory: "Pizaa", spec: "230*230*38 mm | 8.9*8.9*1.5 inch", ups: 3, machine: "2840", sheetW: 24, sheetH: 36, l: 230, w: 230, h: 38, unit: "mm", designing: 100, dieRate: 300 },
+
+  // FOOD
+  { category: "Food", subCategory: "Wrap", spec: "15*74*217 mm", ups: 4, machine: "1926", sheetW: 18, sheetH: 23, l: 15, w: 74, h: 217, unit: "mm", designing: 100, pasting: 0.1, dieRate: 300 },
+  { category: "Food", subCategory: "Dry Fruit", spec: "125*65*225 mm", ups: 2, machine: "1926", sheetW: 18, sheetH: 24, l: 125, w: 65, h: 225, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Food", subCategory: "Burger Box", spec: "125*125*53 mm | 5*5*2 inch", ups: 3, machine: "2029", sheetW: 20, sheetH: 28, l: 125, w: 125, h: 53, unit: "mm", designing: 100, pasting: 1, dieRate: 300 },
+  { category: "Food", subCategory: "South Indian", spec: "Dosa 406*152*51 mm | 16*6*2 inch", ups: 1, machine: "1926", sheetW: 18, sheetH: 21, l: 406, w: 152, h: 51, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Food", subCategory: "Pizza", spec: "175*175*38 mm | 6.9*6.9*1.5 inch", ups: 3, machine: "2840", sheetW: 22, sheetH: 30, l: 175, w: 175, h: 38, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Food", subCategory: "Pizza", spec: "254*254*38mm | 10*10*1.5 inch", ups: 3, machine: "2840", sheetW: 28, sheetH: 40, l: 254, w: 254, h: 38, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Food", subCategory: "Pizza", spec: "307*307*38 mm | 12*12*1.5 inch", ups: 1, machine: "2840", sheetW: 32, sheetH: 16, l: 307, w: 307, h: 38, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Food", subCategory: "Meal Box", spec: "208*130*47 mm | 8.2*5.1*1.8 inch", ups: 2, machine: "1926", sheetW: 15, sheetH: 25, l: 208, w: 130, h: 47, unit: "mm", designing: 100, pasting: 1, dieRate: 300 },
+  { category: "Food", subCategory: "Dates", spec: "210*148*40 mm | 8.3*5.8*1.6 inch", ups: 1, machine: "1926", sheetW: 18, sheetH: 23, l: 210, w: 148, h: 40, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Food", subCategory: "Dates", spec: "Tray 220*150*40 mm | 8.5*6*1.5 inch", ups: 1, machine: "1926", sheetW: 15.75, sheetH: 20.75, l: 220, w: 150, h: 40, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Food", subCategory: "Coffee", spec: "100*64*235 mm | 4*2.5*9.25 inch", ups: 2, machine: "2029", sheetW: 20, sheetH: 28, l: 100, w: 64, h: 235, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Food", subCategory: "Sugar Drop", spec: "85*40*105 mm", ups: 4, machine: "1926", sheetW: 18, sheetH: 23, l: 85, w: 40, h: 105, unit: "mm", designing: 100, pasting: 0.15, dieRate: 300 },
+  { category: "Food", subCategory: "Roll", spec: "280*280*76 mm | 11*11*3 inch", ups: 2, machine: "2029", sheetW: 19, sheetH: 26, l: 280, w: 280, h: 76, unit: "mm", designing: 100, dieRate: 300 },
+  { category: "Food", subCategory: "Colour", spec: "140*51*90 mm | 5.5*3.5*2 inch", ups: 3, machine: "1926", sheetW: 18, sheetH: 23, l: 140, w: 51, h: 90, unit: "mm", designing: 100, pasting: 0.1, dieRate: 300 },
+];
+
+const initialHierarchies = [
+  {
+    category: "Food",
+    subCategories: ["Pizza Box", "Burger Box", "Hamper Box", "Wrap", "Dry Fruit", "South Indian", "Pizza", "Meal Box", "Dates", "Coffee", "Sugar Drop", "Roll", "Colour"]
+  },
+  {
+    category: "Bakery",
+    subCategories: [
+      "Cake Box", 
+      "Cupcake Cake Box", 
+      "Pastery", 
+      "Macaron", 
+      "Chocolate", 
+      "Macaron and Brownie", 
+      "Cupcake", 
+      "Cupcake and Bento", 
+      "Brownie",
+      "Tall Box",
+      "Cakesicles",
+      "Carry Bag",
+      "Chocolate 12",
+      "Macaron 10",
+      "Pastry",
+      "Pizaa"
+    ]
+  }
+];
+
+export async function POST(req) {
+    try {
+        await dbConnect();
+        
+        // Clean up
+        await LabHierarchy.deleteMany({});
+        await LabSpecification.deleteMany({});
+        
+        // Insert
+        await LabHierarchy.insertMany(initialHierarchies);
+        await LabSpecification.insertMany(initialSpecifications);
+        
+        return NextResponse.json({ success: true, message: "Lab data seeded successfully" });
+    } catch (error) {
+        return NextResponse.json({ error: "Failed to seed lab data" }, { status: 500 });
+    }
+}

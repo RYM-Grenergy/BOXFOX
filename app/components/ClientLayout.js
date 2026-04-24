@@ -10,7 +10,12 @@ export default function ClientLayout({ children }) {
     const isAdminPage = pathname.startsWith('/admin');
 
     if (isAdminPage) {
-        return <>{children}</>;
+        return (
+            <>
+                <CustomCursor />
+                {children}
+            </>
+        );
     }
 
     return (

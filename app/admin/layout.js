@@ -18,7 +18,9 @@ import {
     MessageSquare,
     Ticket,
     Shield,
-    TrendingUp
+    TrendingUp,
+    Layers,
+    Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -70,6 +72,7 @@ export default function AdminLayout({ children }) {
         { label: 'Customers', icon: <Users size={20} />, href: '/admin/customers', roles: ['admin'] },
         { label: 'Staff Roles', icon: <Shield size={20} />, href: '/admin/staff', roles: ['admin'] },
         { label: 'Analytics', icon: <BarChart3 size={20} />, href: '/admin/analytics', roles: ['admin'] },
+        { label: 'Lab Config', icon: <Layers size={20} />, href: '/admin/lab-config', roles: ['admin'] },
         { label: 'Settings', icon: <Settings size={20} />, href: '/admin/settings', roles: ['admin'] },
     ].filter(item => !user || item.roles.includes(user.role));
 

@@ -20,22 +20,26 @@ export function CartProvider({ children }) {
         localStorage.setItem('boxfox_cart', JSON.stringify(cart));
     }, [cart]);
 
-    const calculateUnitPrice = (product, quantity) => {
+    const calculateItemPricing = (product, quantity) => {
         // If this is a custom design box, we respect the price settings from the Lab
         if (product.customDesign) {
             const pricingParams = {
                 spec: product.customDesign.specData || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
-                qty: quantity,
+                qty: Math.max(500, quantity),
                 gsm: parseInt(product.customDesign.selectedGSM) || 300,
                 material: product.customDesign.selectedMaterial || 'SBS',
-                brand: 'Normal', // Default or could be stored in customDesign
-                colours: 'Four Colour', // Default or could be stored
+                brand: product.customDesign.selectedBrand || 'Normal',
+                colours: product.customDesign.selectedPrinting || 'Four Colour',
                 lamination: product.customDesign.selectedFinish || 'Plain',
-                markupType: 'Retail',
-                dieCutting: true
+                markupType: product.customDesign.selectedMarkup || 'Retail',
+                dieCutting: product.customDesign.dieCutting !== false
             };
             const res = calculateBoxPrice(pricingParams);
-            return res.finalPerUnit;
+            return {
+                unitPrice: res.finalPerUnit,
+                oneTimeCharge: res.dieToolingCharge || 0,
+                breakdown: res // Store full breakdown for B2B transparency
+            };
         }
 
         // For regular products, try to match a manufacturing spec for accurate pricing
@@ -65,29 +69,43 @@ export function CartProvider({ children }) {
             dieCutting: true
         });
 
-        return pricingResult.finalPerUnit;
+        return {
+            unitPrice: pricingResult.finalPerUnit,
+            oneTimeCharge: 0,
+            breakdown: pricingResult
+        };
     };
 
     const addToCart = (product, quantity) => {
         let isUpdate = false;
         setCart(prev => {
             const existing = prev.find(item => item.id === product.id);
+            const minQty = product.customDesign ? 500 : 10;
+            const finalQty = Math.max(minQty, quantity);
+
             if (existing) {
                 isUpdate = true;
                 const newQuantity = existing.quantity + Math.max(0, quantity);
+                const pricing = calculateItemPricing(existing, newQuantity);
                 return prev.map(item => item.id === product.id
                     ? {
                         ...item,
                         quantity: newQuantity,
-                        price: calculateUnitPrice(item, newQuantity)
+                        price: pricing.unitPrice,
+                        oneTimeCharge: pricing.oneTimeCharge,
+                        breakdown: pricing.breakdown
                     }
                     : item
                 );
             }
+            
+            const pricing = calculateItemPricing(product, finalQty);
             return [...prev, {
                 ...product,
-                quantity,
-                price: calculateUnitPrice(product, quantity)
+                quantity: finalQty,
+                price: pricing.unitPrice,
+                oneTimeCharge: pricing.oneTimeCharge,
+                breakdown: pricing.breakdown
             }];
         });
 
@@ -96,13 +114,17 @@ export function CartProvider({ children }) {
     };
 
     const updateQuantity = (id, quantity) => {
-        const validQuantity = Math.max(10, Math.floor(quantity));
         setCart(prev => prev.map(item => {
             if (item.id === id) {
+                const minQty = item.customDesign ? 500 : 10;
+                const validQuantity = Math.max(minQty, Math.floor(quantity));
+                const pricing = calculateItemPricing(item, validQuantity);
                 return {
                     ...item,
                     quantity: validQuantity,
-                    price: calculateUnitPrice(item, validQuantity)
+                    price: pricing.unitPrice,
+                    oneTimeCharge: pricing.oneTimeCharge,
+                    breakdown: pricing.breakdown
                 };
             }
             return item;

@@ -56,19 +56,26 @@ export async function POST(req) {
             );
         }
 
-        // 2. Decrement stock and check for exhaustion
+        // 2. Decrement stock for standard retail products
         if (orderData.items && orderData.items.length > 0) {
             for (const item of orderData.items) {
-                if (item.productId) {
-                    const isVObjectId = /^[0-9a-fA-F]{24}$/.test(item.productId);
-                    const productQuery = isVObjectId 
-                        ? { $or: [{ _id: item.productId }, { wpId: item.productId }] }
-                        : { wpId: item.productId };
+                // Skip stock decrement for custom lab items (they have string IDs like "123-456")
+                const isVObjectId = /^[0-9a-fA-F]{24}$/.test(item.productId);
+                const isNumeric = item.productId && !isNaN(Number(item.productId));
 
-                    await Product.findOneAndUpdate(
-                        productQuery,
-                        { $inc: { stock_quantity: -(item.quantity || 1) } }
-                    );
+                if (item.productId && (isVObjectId || isNumeric)) {
+                    try {
+                        const productQuery = isVObjectId 
+                            ? { $or: [{ _id: item.productId }, { wpId: isNumeric ? Number(item.productId) : undefined }] }
+                            : { wpId: Number(item.productId) };
+
+                        await Product.findOneAndUpdate(
+                            productQuery,
+                            { $inc: { stock_quantity: -(item.quantity || 1) } }
+                        );
+                    } catch (err) {
+                        console.error(`Failed to update stock for product ${item.productId}:`, err.message);
+                    }
                 }
             }
         }
