@@ -2737,9 +2737,16 @@ function CustomizeLabContent() {
                           </tr>
                           <tr>
                             <td className="px-3 py-2">Fixed Charges (AE2)</td>
-                            <td className="px-3 py-2 text-right">₹{pricingResult.fixedCharges.toLocaleString('en-IN')}</td>
-                            <td className="px-3 py-2 text-right">₹{(pricingResult.fixedCharges / quantity).toFixed(4)}</td>
+                            <td className="px-3 py-2 text-right">₹{(pricingResult.fixedCharges - (pricingResult.dieCost || 0)).toLocaleString('en-IN')}</td>
+                            <td className="px-3 py-2 text-right">₹{((pricingResult.fixedCharges - (pricingResult.dieCost || 0)) / quantity).toFixed(4)}</td>
                           </tr>
+                          {pricingResult.dieCost > 0 && (
+                            <tr>
+                              <td className="px-3 py-2 text-amber-600 font-bold italic">Die-Cutting (Engine)</td>
+                              <td className="px-3 py-2 text-right text-amber-600">₹{pricingResult.dieCost.toLocaleString('en-IN')}</td>
+                              <td className="px-3 py-2 text-right text-amber-600">₹{(pricingResult.dieCost / quantity).toFixed(4)}</td>
+                            </tr>
+                          )}
                           <tr>
                             <td className="px-3 py-2">Other Charges (AD2)</td>
                             <td className="px-3 py-2 text-right">₹{pricingResult.otherCharges.toLocaleString('en-IN')}</td>
@@ -2770,13 +2777,7 @@ function CustomizeLabContent() {
                             <td className="px-3 py-2 text-right">₹{pricingResult.finalTotal.toLocaleString('en-IN')}</td>
                             <td className="px-3 py-2 text-right">₹{pricingResult.finalPerUnit.toFixed(4)}</td>
                           </tr>
-                          {pricingResult.dieToolingCharge > 0 && (
-                            <tr className="bg-amber-50 text-amber-700">
-                              <td className="px-3 py-2 font-black italic">Die Tooling (One-time)</td>
-                              <td className="px-3 py-2 text-right font-black">₹{pricingResult.dieToolingCharge.toLocaleString('en-IN')}</td>
-                              <td className="px-3 py-2 text-right text-[8px] font-black uppercase">Job Charge</td>
-                            </tr>
-                          )}
+
                           <tr className="bg-emerald-600 text-white border-t border-white/20">
                             <td className="px-3 py-2 font-black uppercase tracking-[0.1em]">Final Grand Total</td>
                             <td className="px-3 py-2 text-right text-[12px] font-black">₹{pricingResult.grandTotal.toLocaleString('en-IN')}</td>
