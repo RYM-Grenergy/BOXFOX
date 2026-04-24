@@ -1525,6 +1525,7 @@ function CustomizeLabContent() {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
                 >
+                  <option value="All">All Categories</option>
                   {categories.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
@@ -1537,6 +1538,7 @@ function CustomizeLabContent() {
                   onChange={(e) => setSelectedSubCategory(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
                 >
+                  <option value="All">All Sub-Categories</option>
                   {subCategories.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
@@ -1682,12 +1684,14 @@ function CustomizeLabContent() {
                   >
                     <option value="">Select a calibrated size...</option>
                     {(() => {
-                      const filteredSpecs = labConfig.specifications.filter(s =>
-                        s.category === selectedCategory && s.subCategory === selectedSubCategory
-                      );
+                      const filteredSpecs = labConfig.specifications.filter(s => {
+                        const catMatch = selectedCategory === "All" || s.category?.trim().toLowerCase() === selectedCategory?.trim().toLowerCase();
+                        const subMatch = selectedSubCategory === "All" || s.subCategory?.trim().toLowerCase() === selectedSubCategory?.trim().toLowerCase();
+                        return catMatch && subMatch;
+                      });
 
                       if (filteredSpecs.length === 0) {
-                        return <option disabled>No standard sizes for this selection</option>;
+                        return <option disabled>No standard sizes for {selectedSubCategory || 'this selection'}</option>;
                       }
 
                       return filteredSpecs.map((spec, idx) => (
