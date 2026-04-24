@@ -45,6 +45,7 @@ import { useCart } from "@/app/context/CartContext";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
+import gsap from "gsap";
 import Link from "next/link";
 import Script from "next/script";
 import Cropper from 'react-easy-crop';
@@ -282,6 +283,12 @@ function CustomizeLabContent() {
     left: { scale: 30, x: 50, y: 50, rotate: 0 },
     right: { scale: 30, x: 50, y: 50, rotate: 0 },
   });
+
+  // Rolling Price State for GSAP
+  const priceRef = useRef(null);
+  const unitPriceRef = useRef(null);
+  const [displayPrice, setDisplayPrice] = useState(0);
+  const [displayUnitPrice, setDisplayUnitPrice] = useState(0);
 
   // Rotation State
   const [rotate, setRotate] = useState({ x: -20, y: 45 });
@@ -790,8 +797,6 @@ function CustomizeLabContent() {
 
   const currentSA = 2 * (dimInInches.l * dimInInches.w + dimInInches.w * dimInInches.h + dimInInches.h * dimInInches.l);
 
-  // ─── REAL PRICING ENGINE (from BoxFox_price_analyses-) ─────────────────────
-  // Parse GSM number from the "300 GSM" format
   const gsmNum = parseInt(String(selectedGSM).replace(/[^0-9]/g, '')) || 300;
 
   // Calculate accurate price using the real engine
@@ -821,6 +826,72 @@ function CustomizeLabContent() {
   const calculatedUnitPrice = pricingResult
     ? pricingResult.finalPerUnit.toFixed(2)
     : "0.00";
+
+  // Rolling Number Animation for Price Tag
+  useEffect(() => {
+    if (pricingResult) {
+      gsap.to({ val: displayPrice }, {
+        val: pricingResult.finalTotal,
+        duration: 0.5,
+        ease: "power2.out",
+        onUpdate: function() {
+          setDisplayPrice(this.targets()[0].val);
+        }
+      });
+      gsap.to({ val: displayUnitPrice }, {
+        val: pricingResult.finalPerUnit,
+        duration: 0.5,
+        ease: "power2.out",
+        onUpdate: function() {
+          setDisplayUnitPrice(this.targets()[0].val);
+        }
+      });
+    }
+  }, [pricingResult?.finalTotal, pricingResult?.finalPerUnit]);
+
+  // Design Validation Logic
+  const validateDesign = async () => {
+    const issues = [];
+    
+    // 1. Resolution Check (DPI)
+    const checkResolution = (url, face) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          // If the image is smaller than 800px on any side, it might be low quality for a box
+          if (img.naturalWidth < 800 || img.naturalHeight < 800) {
+            issues.push({ type: 'warning', message: `Low resolution image on ${face} face. May appear blurry.` });
+          }
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = url;
+      });
+    };
+
+    // 2. Bleed Zone Check (Logo too close to edge)
+    const checkBleed = (settings, face) => {
+      const margin = 10; // 10% from edge is safe zone
+      if (settings.x < margin || settings.x > (100 - margin) || settings.y < margin || settings.y > (100 - margin)) {
+        issues.push({ type: 'warning', message: `Logo on ${face} is too close to the cutting edge (Bleed Zone).` });
+      }
+    };
+
+    // Run Checks
+    const textures = Object.entries(boxTextures).filter(([_, url]) => url);
+    await Promise.all(textures.map(([face, url]) => checkResolution(url, face)));
+
+    Object.entries(boxLogos).forEach(([face, url]) => {
+      if (url) checkBleed(logoSettings[face], face);
+    });
+
+    if (issues.length > 0) {
+      // Show first issue as toast, return false to indicate check failed (or just warned)
+      issues.forEach(issue => showToast(issue.message, "warning"));
+      // For now, we just warn but allow adding to cart. In a strict mode, we'd return false.
+    }
+    return true;
+  };
 
   // Auto-Sync background worker (Live Auto Share)
   useEffect(() => {
@@ -1621,15 +1692,15 @@ function CustomizeLabContent() {
                         setDimensions({ l: selected.l, w: selected.w, h: selected.h });
                         setUnit(selected.unit);
                         setSelectedSpec(selected);
-                        
+
                         // Intelligent Defaults based on Spec
                         if (selected.category !== "All") setSelectedCategory(selected.category);
                         if (selected.subCategory !== "All") setSelectedSubCategory(selected.subCategory);
-                        
+
                         // Force specific material defaults if needed
                         if (selected.category === "Bakery") {
-                           setSelectedMaterial("SBS");
-                           setSelectedBrand("ITC");
+                          setSelectedMaterial("SBS");
+                          setSelectedBrand("ITC");
                         }
                       } else {
                         setSelectedSpec(null);
@@ -1690,9 +1761,9 @@ function CustomizeLabContent() {
                     className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm space-y-4"
                   >
                     <div className="border-b border-gray-100 pb-2">
-                       <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-tight">
-                         {selectedSpec.subCategory} - {selectedSpec.spec.split('|')[0].trim()}
-                       </h4>
+                      <h4 className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-tight">
+                        {selectedSpec.subCategory} - {selectedSpec.spec.split('|')[0].trim()}
+                      </h4>
                     </div>
 
                     <div className="space-y-3">
@@ -2700,6 +2771,11 @@ function CustomizeLabContent() {
                   disabled={isAddingToCart}
                   onClick={async () => {
                     if (isAddingToCart) return;
+
+                    // Design Validation Step
+                    const isValid = await validateDesign();
+                    if (!isValid) return;
+
                     setIsAddingToCart(true);
 
                     try {
@@ -2871,6 +2947,52 @@ function CustomizeLabContent() {
           </AnimatePresence>
         </div>
       </main>
+
+      {/* Floating Price Tag (Brutalist Style) */}
+      <motion.div
+        initial={{ x: 100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        className="fixed bottom-10 right-10 z-[500] hidden lg:block"
+      >
+        <div className="bg-emerald-500 border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 min-w-[240px] transform hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
+          <div className="flex justify-between items-start mb-4">
+            <div className="bg-black text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest">
+              Live_Quote
+            </div>
+            <div className="flex items-center gap-1 text-black/50">
+              <Zap size={14} fill="currentColor" />
+              <span className="text-[10px] font-black uppercase tracking-widest italic">Instant</span>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <p className="text-[9px] font-black text-black/60 uppercase tracking-[0.2em] mb-1">Per Unit</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-xl font-black">₹</span>
+                <span className="text-3xl font-black tracking-tighter">
+                  {displayUnitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t-2 border-black/10">
+              <p className="text-[9px] font-black text-black/60 uppercase tracking-[0.2em] mb-1">Total ({quantity} units)</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black">₹</span>
+                <span className="text-5xl font-black tracking-tighter">
+                  {Math.round(displayPrice).toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-black/40">
+            <RefreshCw size={10} className="animate-spin-slow" />
+            <span>Updates with every change</span>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Mobile Experience Warning */}
       <AnimatePresence>
