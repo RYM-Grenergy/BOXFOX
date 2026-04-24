@@ -89,7 +89,6 @@ function CustomizeLabContent() {
   const [selectedSubCategory, setSelectedSubCategory] = useState("All");
   const [selectedPrintType, setSelectedPrintType] = useState("Four Colour");
   const [selectedMarkup, setSelectedMarkup] = useState("Retail");
-  const [selectedAddon, setSelectedAddon] = useState("Plain");
   const [dieCutting, setDieCutting] = useState(true);
   const [showBreakdown, setShowBreakdown] = useState(false);
 
@@ -806,7 +805,7 @@ function CustomizeLabContent() {
         customRate: 75,
         colours: selectedPrintType,
         lamination: selectedFinish,
-        addon: selectedAddon,
+        addon: 'Plain',
         dieCutting: dieCutting,
         markupType: selectedMarkup,
         sides: 'One',
@@ -1505,7 +1504,6 @@ function CustomizeLabContent() {
                   setDieCutting(true);
                   setSelectedCategory("All");
                   setSelectedSubCategory("All");
-                  setSelectedAddon("Plain");
                   setQuantity(500);
                   setDimensions({ l: 12, w: 8, h: 4 });
                   setDesignName("Untitled Design");
@@ -1600,17 +1598,7 @@ function CustomizeLabContent() {
               </div>
 
 
-              {/* Add-on */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Special Add-on</label>
-                <select
-                  value={selectedAddon}
-                  onChange={(e) => setSelectedAddon(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  {ADDONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
+
 
             </div>
           </div>
@@ -2776,13 +2764,6 @@ function CustomizeLabContent() {
                             <td className="px-3 py-2 text-right">₹{pricingResult.breakdown.lamination.toLocaleString('en-IN')}</td>
                             <td className="px-3 py-2 text-right">₹{pricingResult.lamPerUnit.toFixed(4)}</td>
                           </tr>
-                          {pricingResult.addonPerUnit > 0 && (
-                            <tr>
-                              <td className="px-3 py-2">Add-on Charge</td>
-                              <td className="px-3 py-2 text-right">₹{pricingResult.breakdown.addon.toLocaleString('en-IN')}</td>
-                              <td className="px-3 py-2 text-right">₹{pricingResult.addonPerUnit.toFixed(4)}</td>
-                            </tr>
-                          )}
                           <tr className="bg-gray-100 text-gray-900 border-t border-gray-200">
                             <td className="px-3 py-2 font-black uppercase">Subtotal (Base)</td>
                             <td className="px-3 py-2 text-right">₹{(pricingResult.subtotalPerUnit * quantity).toLocaleString('en-IN')}</td>
@@ -2865,7 +2846,6 @@ function CustomizeLabContent() {
                             unit: unit,
                             selectedGSM: selectedGSM,
                             selectedMaterial: selectedMaterial,
-                            selectedAddon: selectedAddon,
                             selectedFinish: selectedFinish,
                             specData: selectedSpec
                           }
