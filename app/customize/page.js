@@ -1570,17 +1570,6 @@ function CustomizeLabContent() {
                 </select>
               </div>
 
-              {/* Brand */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Brand</label>
-                <select
-                  value={selectedBrand}
-                  onChange={(e) => setSelectedBrand(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  {BRAND_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
 
               {/* Finish */}
               <div className="space-y-2">
@@ -1606,31 +1595,6 @@ function CustomizeLabContent() {
                 </select>
               </div>
 
-              {/* Sale Type / Markup */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sale Type (Markup)</label>
-                <select
-                  value={selectedMarkup}
-                  onChange={(e) => setSelectedMarkup(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  {Object.keys(MARKUP_TYPES).map(opt => <option key={opt} value={opt}>{opt} ({MARKUP_TYPES[opt] * 100}%)</option>)}
-                </select>
-              </div>
-
-              {/* Die Cutting Toggle */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Die Cutting Process</label>
-                <div className="flex items-center gap-4 h-11 bg-gray-50 border border-gray-200 rounded-xl px-4">
-                  <span className="text-xs font-bold text-gray-700 flex-1">{dieCutting ? "Enabled (Die-Cut)" : "Disabled (Straight Cut)"}</span>
-                  <div
-                    onClick={() => setDieCutting(!dieCutting)}
-                    className={`w-10 h-6 rounded-full transition-all cursor-pointer relative ${dieCutting ? "bg-emerald-500" : "bg-gray-300"}`}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${dieCutting ? "left-5" : "left-1"}`} />
-                  </div>
-                </div>
-              </div>
 
             </div>
           </div>
