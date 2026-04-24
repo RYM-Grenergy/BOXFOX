@@ -13,7 +13,8 @@ import {
     UploadCloud,
     Loader2,
     Copy,
-    Download
+    Download,
+    Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -51,7 +52,8 @@ export default function ProductsManager() {
         height: '',
         unit: 'inch',
         pacdoraId: '',
-        isActive: true
+        isActive: true,
+        isFeatured: false
     });
 
     const fetchProducts = () => {
@@ -306,7 +308,8 @@ export default function ProductsManager() {
             height: product.dimensions?.height || '',
             unit: product.dimensions?.unit || 'inch',
             pacdoraId: product.pacdoraId || '',
-            isActive: product.isActive !== false
+            isActive: product.isActive !== false,
+            isFeatured: product.isFeatured || false
         });
         setIsModalOpen(true);
     };
@@ -336,9 +339,28 @@ export default function ProductsManager() {
             height: product.dimensions?.height || '',
             unit: product.dimensions?.unit || 'inch',
             pacdoraId: product.pacdoraId || '',
-            isActive: product.isActive !== false
+            isActive: product.isActive !== false,
+            isFeatured: false
         });
         setIsModalOpen(true);
+    };
+
+    const handleToggleFeatured = async (product) => {
+        try {
+            const res = await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...product,
+                    isFeatured: !product.isFeatured
+                })
+            });
+            if (res.ok) {
+                fetchProducts();
+            }
+        } catch (err) {
+            console.error("Failed to toggle featured status", err);
+        }
     };
 
     const formatDimensions = (dim) => {
@@ -373,7 +395,12 @@ export default function ProductsManager() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-gray-950 tracking-tighter">Product Inventory</h1>
+                    <h1 className="text-4xl font-black text-gray-950 tracking-tighter flex items-center gap-4">
+                        Product Inventory
+                        <span className="text-sm bg-gray-100 px-4 py-2 rounded-2xl text-gray-400 font-black">
+                            {flatProducts.length}
+                        </span>
+                    </h1>
                     <p className="text-gray-400 font-medium tracking-tight">Manage your real-time packaging catalog synced with the backend.</p>
                 </div>
                 <div className="flex gap-3">
@@ -450,20 +477,26 @@ export default function ProductsManager() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-gray-50/50">
-                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Product</th>
+                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Product</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">SKU</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Category</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Price Range</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Size</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Status</th>
-                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Actions</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                                 {flatProducts.map((product) => (
                                     <tr key={product.id} className="hover:bg-gray-50/50 transition-colors group">
-                                        <td className="px-8 py-5">
+                                         <td className="px-8 py-5">
                                             <div className="flex items-center gap-4">
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); handleToggleFeatured(product); }}
+                                                    className={`shrink-0 transition-all ${product.isFeatured ? 'text-amber-400 scale-125' : 'text-gray-200 hover:text-gray-400'}`}
+                                                >
+                                                    <Star size={18} fill={product.isFeatured ? "currentColor" : "none"} />
+                                                </button>
                                                 <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
                                                     <img src={product.img} alt="" className="w-full h-full object-cover" />
                                                 </div>
@@ -480,8 +513,8 @@ export default function ProductsManager() {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-5">
-                                            <span className="text-[11px] font-black text-gray-950 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
+                                         <td className="px-8 py-5">
+                                            <span className="text-[11px] font-black text-gray-950 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm whitespace-nowrap block w-fit">
                                                 {product.sku || 'PENDING'}
                                             </span>
                                         </td>
@@ -646,59 +679,58 @@ export default function ProductsManager() {
                                                 </div>
                                             </div>
 
-                                            <div className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-sm font-black text-gray-950 uppercase tracking-tighter">Active Status</p>
-                                                    <p className="text-xs font-medium text-gray-400">When inactive, this product will be hidden from the store.</p>
+                                             <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-[2rem] border border-gray-100">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm font-black text-gray-950 uppercase tracking-tighter">Active Status</p>
+                                                        <p className="text-[10px] font-medium text-gray-400">Visibility in store</p>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                                                        className={`w-12 h-6 rounded-full transition-all duration-300 relative ${formData.isActive ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-gray-200'}`}
+                                                    >
+                                                        <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all duration-300 shadow-sm ${formData.isActive ? 'right-0.5' : 'left-0.5'}`} />
+                                                    </button>
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
-                                                    className={`w-14 h-8 rounded-full transition-all duration-300 relative ${formData.isActive ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-gray-200'}`}
-                                                >
-                                                    <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-300 shadow-sm ${formData.isActive ? 'right-1' : 'left-1'}`} />
-                                                </button>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-6">
-                                                <div className="space-y-2">
-                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Min Price</label>
-                                                    <input
-                                                        required
-                                                        value={formData.minPrice}
-                                                        onChange={e => setFormData({ ...formData, minPrice: e.target.value })}
-                                                        placeholder="₹12.00"
-                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Max Price (Optional)</label>
-                                                    <input
-                                                        value={formData.maxPrice}
-                                                        onChange={e => setFormData({ ...formData, maxPrice: e.target.value })}
-                                                        placeholder="₹25.00"
-                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
-                                                    />
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-sm font-black text-gray-950 uppercase tracking-tighter">Featured</p>
+                                                        <p className="text-[10px] font-medium text-gray-400">Show in Best Sellers</p>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, isFeatured: !formData.isFeatured })}
+                                                        className={`w-12 h-6 rounded-full transition-all duration-300 relative ${formData.isFeatured ? 'bg-amber-400 shadow-lg shadow-amber-500/20' : 'bg-gray-200'}`}
+                                                    >
+                                                        <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all duration-300 shadow-sm ${formData.isFeatured ? 'right-0.5' : 'left-0.5'}`} />
+                                                    </button>
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-6">
-                                                <div className="space-y-2">
-                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Brand</label>
-                                                    <input
-                                                        value={formData.brand}
-                                                        onChange={e => setFormData({ ...formData, brand: e.target.value })}
-                                                        placeholder="e.g. BoxFox"
-                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
-                                                    />
-                                                </div>
+                                             <div className="grid grid-cols-2 gap-6">
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-black uppercase tracking-widest text-gray-400">Min Order Qty</label>
                                                     <input
                                                         type="number"
+                                                        min="0"
                                                         value={formData.minOrderQuantity}
-                                                        onChange={e => setFormData({ ...formData, minOrderQuantity: e.target.value })}
+                                                        onChange={e => {
+                                                            const val = e.target.value;
+                                                            if (val === '' || Number(val) >= 0) {
+                                                                setFormData({ ...formData, minOrderQuantity: val });
+                                                            }
+                                                        }}
                                                         placeholder="100"
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Badge (Optional)</label>
+                                                    <input
+                                                        value={formData.badge}
+                                                        onChange={e => setFormData({ ...formData, badge: e.target.value })}
+                                                        placeholder="e.g. New"
                                                         className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
                                                     />
                                                 </div>

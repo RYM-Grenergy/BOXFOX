@@ -227,9 +227,9 @@ export async function POST(req) {
         categories: [data.category],
         type: data.hasVariants ? "variable" : "simple",
         dimensions: {
-          length: data.length !== undefined ? parseFloat(data.length) : undefined,
-          width: data.width !== undefined ? parseFloat(data.width) : undefined,
-          height: data.height !== undefined ? parseFloat(data.height) : undefined,
+          length: (data.length && !isNaN(parseFloat(data.length))) ? parseFloat(data.length) : 0,
+          width: (data.width && !isNaN(parseFloat(data.width))) ? parseFloat(data.width) : 0,
+          height: (data.height && !isNaN(parseFloat(data.height))) ? parseFloat(data.height) : 0,
           unit: data.unit || 'inch'
         },
         brand: data.brand,
@@ -258,9 +258,9 @@ export async function POST(req) {
       categories: [data.category],
       type: data.hasVariants ? "variable" : "simple",
       dimensions: {
-        length: data.length !== undefined ? parseFloat(data.length) : undefined,
-        width: data.width !== undefined ? parseFloat(data.width) : undefined,
-        height: data.height !== undefined ? parseFloat(data.height) : undefined,
+        length: (data.length && !isNaN(parseFloat(data.length))) ? parseFloat(data.length) : 0,
+        width: (data.width && !isNaN(parseFloat(data.width))) ? parseFloat(data.width) : 0,
+        height: (data.height && !isNaN(parseFloat(data.height))) ? parseFloat(data.height) : 0,
         unit: data.unit || 'inch'
       },
       brand: data.brand || 'BoxFox',

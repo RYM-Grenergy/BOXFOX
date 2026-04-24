@@ -50,6 +50,7 @@ import Link from "next/link";
 import Script from "next/script";
 import Cropper from 'react-easy-crop';
 import { downloadDieLine } from "@/lib/dieline-generator";
+import { BOX_SPECIFICATIONS, findClosestSpec } from "@/lib/box-specifications";
 
 import { calculateBoxPrice, getBrandsForMaterial, getDefaultBrand, MATERIAL_RATES, LAM_RATES, COLOUR_FACTORS, MARKUP_TYPES, GSM_OPTIONS as ENGINE_GSM_OPTIONS } from "@/lib/boxfoxPricing";
 
@@ -584,9 +585,29 @@ function CustomizeLabContent() {
     if (match) {
       setSelectedSpec(match);
     } else {
-      setSelectedSpec(null);
+      // If no exact match, find the closest specification to estimate manufacturing cost (ups/machine)
+      const closest = findClosestSpec(dimensions.l, dimensions.w, dimensions.h, selectedCategory);
+      setSelectedSpec(closest);
     }
-  }, [dimensions, unit, labConfig.specifications]);
+  }, [dimensions, unit, labConfig.specifications, selectedCategory]);
+
+  // Auto-reset dimensions and other specs when subcategory (Product) changes
+  useEffect(() => {
+    if (!selectedSubCategory || !labConfig.specifications.length) return;
+    
+    // Find a reference spec for this new product to set default dimensions
+    const refSpec = labConfig.specifications.find(s => 
+      s.category === selectedCategory && 
+      s.subCategory === selectedSubCategory
+    );
+
+    if (refSpec) {
+      setDimensions({ l: refSpec.l, w: refSpec.w, h: refSpec.h });
+      setUnit(refSpec.unit || 'mm');
+      // Also reset material/brand/GSM to match the reference spec if possible
+      if (refSpec.gsm) setSelectedGSM(String(refSpec.gsm));
+    }
+  }, [selectedSubCategory, selectedCategory]);
 
   const applyToAllFaces = () => {
     if (customMode === "texture") {
@@ -2735,18 +2756,12 @@ function CustomizeLabContent() {
                             <td className="px-3 py-2 text-right">₹{pricingResult.paperCost.toLocaleString('en-IN')}</td>
                             <td className="px-3 py-2 text-right">₹{(pricingResult.paperCost / quantity).toFixed(4)}</td>
                           </tr>
-                          <tr>
+                           <tr>
                             <td className="px-3 py-2">Fixed Charges (AE2)</td>
-                            <td className="px-3 py-2 text-right">₹{(pricingResult.fixedCharges - (pricingResult.dieCost || 0)).toLocaleString('en-IN')}</td>
-                            <td className="px-3 py-2 text-right">₹{((pricingResult.fixedCharges - (pricingResult.dieCost || 0)) / quantity).toFixed(4)}</td>
+                            <td className="px-3 py-2 text-right">₹{pricingResult.fixedCharges.toLocaleString('en-IN')}</td>
+                            <td className="px-3 py-2 text-right">₹{(pricingResult.fixedCharges / quantity).toFixed(4)}</td>
                           </tr>
-                          {pricingResult.dieCost > 0 && (
-                            <tr>
-                              <td className="px-3 py-2 text-amber-600 font-bold italic">Die-Cutting (Engine)</td>
-                              <td className="px-3 py-2 text-right text-amber-600">₹{pricingResult.dieCost.toLocaleString('en-IN')}</td>
-                              <td className="px-3 py-2 text-right text-amber-600">₹{(pricingResult.dieCost / quantity).toFixed(4)}</td>
-                            </tr>
-                          )}
+                          {/* Die Run Cost is now accounted for in AE2 and AD2 logic per reference sheet */}
                           <tr>
                             <td className="px-3 py-2">Other Charges (AD2)</td>
                             <td className="px-3 py-2 text-right">₹{pricingResult.otherCharges.toLocaleString('en-IN')}</td>
