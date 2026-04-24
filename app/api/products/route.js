@@ -85,7 +85,7 @@ export async function GET(req) {
             minOrderQuantity: p.minOrderQuantity || 10,
             tags: p.tags || [],
             specifications: p.specifications || [],
-            dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' },
+            dimensions: p.dimensions,
             pacdoraId: p.pacdoraId,
             patternImg: p.patternImg,
             dielineImg: p.dielineImg,
@@ -124,7 +124,7 @@ export async function GET(req) {
           images: p.images,
           hasVariants: p.type === "variable",
           outOfStock: p.stock_status === "outofstock",
-          dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' },
+          dimensions: p.dimensions,
           categories: p.categories,
           pacdoraId: p.pacdoraId
         });
@@ -227,9 +227,9 @@ export async function POST(req) {
         categories: [data.category],
         type: data.hasVariants ? "variable" : "simple",
         dimensions: {
-          length: parseFloat(data.length) || 8.5,
-          width: parseFloat(data.width) || 6.5,
-          height: parseFloat(data.height) || 2,
+          length: data.length !== undefined ? parseFloat(data.length) : undefined,
+          width: data.width !== undefined ? parseFloat(data.width) : undefined,
+          height: data.height !== undefined ? parseFloat(data.height) : undefined,
           unit: data.unit || 'inch'
         },
         brand: data.brand,
@@ -258,9 +258,9 @@ export async function POST(req) {
       categories: [data.category],
       type: data.hasVariants ? "variable" : "simple",
       dimensions: {
-        length: parseFloat(data.length) || 8.5,
-        width: parseFloat(data.width) || 6.5,
-        height: parseFloat(data.height) || 2,
+        length: data.length !== undefined ? parseFloat(data.length) : undefined,
+        width: data.width !== undefined ? parseFloat(data.width) : undefined,
+        height: data.height !== undefined ? parseFloat(data.height) : undefined,
         unit: data.unit || 'inch'
       },
       brand: data.brand || 'BoxFox',
