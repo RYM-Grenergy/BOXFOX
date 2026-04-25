@@ -512,7 +512,7 @@ export default function CheckoutPage() {
                                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                                         <span className="text-[8px] font-black uppercase text-emerald-500/70">QTY: {item.quantity}</span>
                                                         <div className="w-1 h-1 bg-white/20 rounded-full" />
-                                                        <span className="text-[8px] font-black uppercase text-white/40 truncate">REF_{item.id?.slice(-6)}</span>
+                                                        <span className="text-[8px] font-black uppercase text-white/40 truncate">REF_{String(item.id || '').slice(-6)}</span>
                                                     </div>
                                                 </div>
                                                 <div className="text-right shrink-0">

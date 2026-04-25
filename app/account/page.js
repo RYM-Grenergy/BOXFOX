@@ -389,8 +389,8 @@ function AccountManagementContent() {
                 {selectedOrder && renderOrderDetail(selectedOrder)}
             </AnimatePresence>
 
-            <main className="max-w-7xl mx-auto px-8 lg:px-16 pt-32 pb-20">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <main className="max-w-7xl mx-auto px-6 lg:px-16 pt-24 sm:pt-32 pb-20">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-12">
                     <div>
                         <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-gray-950 mb-3">
                             Brand_Vault <span className="text-emerald-500">.01</span>
@@ -411,9 +411,9 @@ function AccountManagementContent() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-                    {/* Sidebar - Responsive Navigation */}
-                    <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-32 z-40">
-                        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-2 shadow-xl shadow-gray-200/50 border border-gray-100/50 flex lg:flex-col overflow-x-auto lg:overflow-visible no-scrollbar gap-1">
+                    {/* Sidebar - Desktop Sticky Navigation / Mobile Launcher (Hidden when tab active) */}
+                    <div className={`lg:col-span-3 space-y-4 lg:sticky lg:top-32 z-40 ${activeTab !== 'dashboard' ? 'hidden lg:block' : 'block'}`}>
+                        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-2 shadow-xl shadow-gray-200/50 border border-gray-100/50 grid grid-cols-2 lg:flex lg:flex-col gap-2">
                             {[
                                 { id: "dashboard", label: "Overview", icon: Settings },
                                 { id: "orders", label: "Manifests", icon: Package },
@@ -427,12 +427,12 @@ function AccountManagementContent() {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shrink-0 lg:w-full ${activeTab === tab.id ? 'bg-gray-950 text-white shadow-xl shadow-gray-200' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-950'}`}
+                                    className={`flex flex-col lg:flex-row items-center lg:items-center gap-2 lg:gap-3 px-4 lg:px-6 py-5 lg:py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${activeTab === tab.id ? 'bg-gray-950 text-white shadow-xl shadow-gray-200' : 'text-gray-400 bg-gray-50/50 lg:bg-transparent hover:bg-gray-50 hover:text-gray-950'}`}
                                 >
-                                    <tab.icon size={16} />
+                                    <tab.icon size={18} className={activeTab === tab.id ? 'text-emerald-500' : ''} />
                                     <span>{tab.label}</span>
                                     {tab.badge > 0 && (
-                                        <span className={`ml-auto w-5 h-5 rounded-full flex items-center justify-center text-[8px] ${activeTab === tab.id ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'}`}>{tab.badge}</span>
+                                        <span className={`ml-auto hidden lg:flex w-5 h-5 rounded-full items-center justify-center text-[8px] ${activeTab === tab.id ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'}`}>{tab.badge}</span>
                                     )}
                                 </button>
                             ))}
@@ -441,16 +441,24 @@ function AccountManagementContent() {
                             
                             <button
                                 onClick={handleLogout}
-                                className="flex items-center gap-3 px-6 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-red-400 hover:bg-red-50 hover:text-red-600 transition-all shrink-0 lg:w-full"
+                                className="flex flex-col lg:flex-row items-center lg:items-center gap-2 lg:gap-3 px-4 lg:px-6 py-5 lg:py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-red-400 bg-red-50/50 lg:bg-transparent hover:bg-red-50 hover:text-red-600 transition-all col-span-2 lg:col-span-1 border border-red-100/50 lg:border-none"
                             >
-                                <LogOut size={16} />
+                                <LogOut size={18} />
                                 <span>Termination</span>
                             </button>
                         </div>
                     </div>
 
                     {/* Main Content Area */}
-                    <div className="lg:col-span-9">
+                    <div className={`lg:col-span-9 ${activeTab === 'dashboard' ? 'hidden lg:block' : 'block'}`}>
+                        {activeTab !== 'dashboard' && (
+                            <button 
+                                onClick={() => setActiveTab('dashboard')}
+                                className="lg:hidden flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 mb-6 bg-white px-4 py-2 rounded-full border border-gray-100 w-fit"
+                            >
+                                <ChevronRight size={14} className="rotate-180" /> Back to Overview
+                            </button>
+                        )}
                         <AnimatePresence mode="wait">
                             {activeTab === 'dashboard' && (
                                 <motion.div
@@ -468,7 +476,7 @@ function AccountManagementContent() {
                                             From your account dashboard you can view your <button onClick={() => setActiveTab('orders')} className="text-emerald-600 font-bold hover:underline">recent orders</button>, manage your <button onClick={() => setActiveTab('addresses')} className="text-emerald-600 font-bold hover:underline">shipping addresses</button>, and <button onClick={() => setActiveTab('details')} className="text-emerald-600 font-bold hover:underline">edit your password and account details</button>.
                                         </p>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                                        <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                                             <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 flex items-center gap-6 group hover:bg-white hover:shadow-xl transition-all cursor-pointer" onClick={() => setActiveTab('orders')}>
                                                 <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm"><Package size={20} /></div>
                                                 <span className="text-sm font-black uppercase tracking-widest text-gray-950">Recent Orders</span>
@@ -801,7 +809,7 @@ function AccountManagementContent() {
                                                 <div
                                                     key={order._id}
                                                     onClick={() => setSelectedOrder(order)}
-                                                    className="p-8 rounded-[2.5rem] border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-2xl hover:shadow-gray-200/50 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
+                                                    className="p-6 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-gray-100 bg-gray-50/50 hover:bg-white hover:shadow-2xl hover:shadow-gray-200/50 hover:-translate-y-1 transition-all cursor-pointer group relative overflow-hidden"
                                                 >
                                                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl -translate-y-16 translate-x-16"></div>
                                                     
