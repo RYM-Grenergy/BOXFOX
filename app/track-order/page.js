@@ -71,7 +71,6 @@ export default function TrackOrderPage() {
 
     return (
         <div className="min-h-screen bg-white">
-            <Navbar />
 
             <main className="max-w-4xl mx-auto px-6 pt-32 pb-24">
                 <div className="text-center space-y-4 mb-16">

@@ -77,8 +77,6 @@ export default function QualityPage() {
 
   return (
     <main className="bg-white min-h-screen">
-      <Navbar />
-
       {/* Hero Section - The Science of Structure */}
       <section className="relative pt-32 pb-16 lg:pt-56 lg:pb-40 overflow-hidden">
         <div className="absolute top-0 right-0 w-2/3 h-full bg-emerald-50/40 -skew-x-12 translate-x-1/3 -z-10" />
@@ -318,7 +316,6 @@ export default function QualityPage() {
         </div>
       </section>
 
-      <Footer />
     </main>
   );
 }

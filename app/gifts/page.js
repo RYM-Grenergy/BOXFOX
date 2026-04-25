@@ -70,7 +70,6 @@ const gifts = [
 export default function GiftsPage() {
   return (
     <div className="min-h-screen bg-white selection:bg-emerald-500 selection:text-white pb-20">
-      <Navbar />
 
       {/* Hero Section - Clean & High Impact */}
       <section className="pt-44 pb-20 px-6 lg:px-14">

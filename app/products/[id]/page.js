@@ -120,7 +120,6 @@ export default function ProductPage() {
 
     return (
         <div className="min-h-screen bg-white">
-            <Navbar />
 
             <main className="pt-32 pb-8 px-4 md:px-8">
                 <div className="max-w-[1400px] mx-auto">

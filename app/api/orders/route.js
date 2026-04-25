@@ -44,6 +44,7 @@ export async function POST(req) {
 
         const newOrder = await Order.create({
             ...orderData,
+            total: Math.round((orderData.total || 0) * 100) / 100, // Round to 2 decimal places
             orderId,
             status: 'Pending'
         });

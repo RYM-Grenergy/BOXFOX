@@ -384,7 +384,6 @@ function AccountManagementContent() {
 
     return (
         <div className="min-h-screen bg-gray-50/50 text-gray-950">
-            <Navbar />
             <AnimatePresence>
                 {selectedOrder && renderOrderDetail(selectedOrder)}
             </AnimatePresence>

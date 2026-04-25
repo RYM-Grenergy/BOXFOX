@@ -59,7 +59,6 @@ export default function CartPage() {
 
     return (
         <div className="min-h-screen bg-white">
-            <Navbar />
 
             <main className="pt-32 pb-24 px-6 lg:px-12 max-w-[1600px] mx-auto">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">

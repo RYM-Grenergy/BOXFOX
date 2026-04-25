@@ -234,7 +234,6 @@ export default function CheckoutPage() {
 
     return (
         <div className="min-h-screen bg-white">
-            <Navbar />
             <main className="pt-28 md:pt-36 pb-24 px-4 sm:px-8 lg:px-16 max-w-[1700px] mx-auto">
                 {/* Dynamic Hero Header */}
                 <header className="relative mb-12 md:mb-20">

@@ -1,8 +1,5 @@
 "use client";
 import React from 'react';
-import Navbar from "../components/Navbar";
-import { motion } from "framer-motion";
-import Link from 'next/link';
 import { ShieldCheck, Truck, Recycle, Award, CheckCircle2, Sparkles, Target, Users, TrendingUp, History, User } from "lucide-react";
 
 export default function AboutPage() {
@@ -30,8 +27,6 @@ export default function AboutPage() {
 
     return (
         <div className="min-h-screen bg-white text-gray-950 font-sans selection:bg-emerald-500 selection:text-white">
-            <Navbar />
-
             <main className="pt-20 lg:pt-24">                {/* Hero Section */}
                 <section className="relative px-6 lg:px-12 py-10 sm:py-16 md:py-16 lg:py-24 overflow-hidden">
                     <div className="absolute top-0 right-0 w-[200px] md:w-[500px] h-[200px] md:h-[500px] bg-emerald-50/50 blur-[80px] md:blur-[120px] rounded-full -mr-12 -mt-12 md:-mr-24 md:-mt-24 pointer-events-none" />
