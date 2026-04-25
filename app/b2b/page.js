@@ -27,8 +27,14 @@ export default function B2BPage() {
         requirements: ""
     });
 
+    const [isMobile, setIsMobile] = useState(false);
+
     useEffect(() => {
         fetchConfigs();
+        setIsMobile(window.innerWidth < 640);
+        const handleResize = () => setIsMobile(window.innerWidth < 640);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     const fetchConfigs = async () => {
@@ -171,7 +177,7 @@ export default function B2BPage() {
                 {/* Form */}
                 <section className="px-6 lg:px-12 bg-gray-50 py-20 sm:py-32 md:py-40 border-y border-gray-100 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-10 sm:p-20 opacity-[0.02] sm:opacity-[0.03] pointer-events-none">
-                        <Package size={window?.innerWidth < 640 ? 200 : 400} />
+                        <Package size={isMobile ? 200 : 400} />
                     </div>
                     
                     <div className="max-w-5xl mx-auto text-center space-y-12 sm:space-y-16 relative z-10">
