@@ -132,37 +132,8 @@ export default function ProductPage() {
                                 animate={{ opacity: 1, scale: 1 }}
                                 className="relative aspect-square rounded-[2rem] overflow-hidden bg-gray-50 border border-gray-950/10 shadow-xl"
                             >
-                                {viewMode === '3D' ? (
-                                    <iframe
-                                        src={product.pacdoraId?.includes('http')
-                                            ? (product.pacdoraId.includes('?') ? `${product.pacdoraId}&embed=1` : `${product.pacdoraId}?embed=1`)
-                                            : `https://www.pacdora.com/share?id=${product.pacdoraId}&mode=3d&embed=1`
-                                        }
-                                        className="w-full h-full border-none bg-gray-50"
-                                        allow="accelerometer; gyroscope; vr; xr-spatial-tracking"
-                                        allowFullScreen
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center p-8 md:p-16 text-center">
-                                        <img src={displayImage} className="max-w-full max-h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-700" />
-                                    </div>
-                                )}
-
-                                <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center bg-white/95 backdrop-blur-xl p-1 rounded-2xl border border-gray-950/10 shadow-2xl">
-                                    <button
-                                        onClick={() => setViewMode('2D')}
-                                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === '2D' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-400 hover:text-gray-950'}`}
-                                    >
-                                        Gallery
-                                    </button>
-                                    {product.pacdoraId && (
-                                        <button
-                                            onClick={() => setViewMode('3D')}
-                                            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === '3D' ? 'bg-indigo-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-950'}`}
-                                        >
-                                            3D Mode
-                                        </button>
-                                    )}
+                                <div className="w-full h-full flex items-center justify-center p-8 md:p-16 text-center">
+                                    <img src={displayImage} className="max-w-full max-h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-700" />
                                 </div>
                             </motion.div>
 
@@ -181,21 +152,6 @@ export default function ProductPage() {
                                         </div>
                                     </button>
                                 ))}
-
-                                {product.pacdoraId && (
-                                    <button
-                                        onClick={() => setViewMode('3D')}
-                                        className={`relative w-24 h-24 rounded-2xl transition-all duration-300 shrink-0 ${viewMode === '3D'
-                                            ? 'ring-2 ring-indigo-600 ring-offset-4 ring-offset-white scale-95 shadow-lg'
-                                            : 'opacity-60 hover:opacity-100 hover:scale-105 bg-gray-50 border-2 border-dashed border-gray-200'
-                                            }`}
-                                    >
-                                        <div className="w-full h-full rounded-2xl overflow-hidden flex flex-col items-center justify-center gap-1 p-2">
-                                            <RefreshCw size={18} className="text-indigo-600" />
-                                            <span className="text-[8px] font-black uppercase tracking-widest text-indigo-600">3D Mode</span>
-                                        </div>
-                                    </button>
-                                )}
                             </div>
                         </div>
 

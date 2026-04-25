@@ -169,11 +169,6 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
               {badge}
             </span>
           )}
-          {pacdoraId && (
-            <span className="bg-emerald-500 text-white text-[7px] sm:text-[9px] font-black px-2 sm:px-4 py-1 sm:py-2 rounded-full shadow-lg uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
-              <Plus size={8} /> 3D READY
-            </span>
-          )}
         </div>
 
         <button

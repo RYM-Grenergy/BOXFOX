@@ -64,9 +64,9 @@ export default function Footer() {
             <h4 className="text-[10px] font-black text-emerald-600 tracking-[0.3em] uppercase">Support</h4>
             <ul className="space-y-3">
               {[
+                { name: "Track Order", href: "/track-order" },
                 { name: "Shipping Policy", href: "/shipping" },
                 { name: "Domestic Shipping", href: "/domestic-shipping" },
-                { name: "International Shipping", href: "/international-shipping" },
                 { name: "Return & Exchange", href: "/exchange" }
               ].map((item) => (
                 <li key={item.name}>

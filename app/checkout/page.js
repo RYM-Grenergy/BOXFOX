@@ -235,271 +235,359 @@ export default function CheckoutPage() {
     return (
         <div className="min-h-screen bg-white">
             <Navbar />
-            <main className="pt-32 pb-24 px-6 lg:px-12 max-w-[1600px] mx-auto">
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12 lg:mb-16 border-b border-gray-100 pb-12 lg:pb-16">
-                    <div>
-                        <h1 className="text-5xl md:text-7xl lg:text-9xl font-black text-gray-950 tracking-tighter uppercase leading-[0.8]">Confirm<br /><span className="text-emerald-500">Shipping.</span></h1>
-                    </div>
-                    <div className="flex bg-gray-50 p-2 rounded-2xl border border-gray-100 self-start">
-                        <div className="px-4 lg:px-6 py-2 lg:py-3 flex items-center gap-2">
-                            <ShieldCheck size={16} className="text-emerald-500" />
-                            <span className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-gray-950 whitespace-nowrap">Bank-Grade Security</span>
+            <main className="pt-28 md:pt-36 pb-24 px-4 sm:px-8 lg:px-16 max-w-[1700px] mx-auto">
+                {/* Dynamic Hero Header */}
+                <header className="relative mb-12 md:mb-20">
+                    <div className="absolute -left-12 top-0 w-24 h-24 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none" />
+                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-gray-100 pb-10">
+                        <motion.div 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="space-y-4"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-[2px] bg-emerald-500" />
+                                <span className="text-emerald-600 text-[10px] font-black uppercase tracking-[0.4em]">Checkout_Protocol_v2.1</span>
+                            </div>
+                            <h1 className="text-5xl sm:text-7xl lg:text-9xl font-black text-gray-950 tracking-tighter uppercase leading-[0.8] mb-2">
+                                Confirm<br /><span className="text-emerald-500 italic">Shipping.</span>
+                            </h1>
+                        </motion.div>
+
+                        <div className="flex flex-wrap gap-4">
+                            <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 px-5 py-3 rounded-2xl shadow-sm">
+                                <Lock size={14} className="text-emerald-500" />
+                                <div className="flex flex-col">
+                                    <span className="text-[8px] font-black uppercase text-gray-400 tracking-widest leading-none mb-1">Security_Status</span>
+                                    <span className="text-[10px] font-black text-gray-950 uppercase tracking-tighter">SSL_256_Encrypted</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-100 px-5 py-3 rounded-2xl shadow-sm">
+                                <Truck size={14} className="text-emerald-600" />
+                                <div className="flex flex-col">
+                                    <span className="text-[8px] font-black uppercase text-emerald-600/50 tracking-widest leading-none mb-1">Transit_Priority</span>
+                                    <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tighter">Express_Delivery</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </header>
 
                 {paymentError && (
-                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8 p-6 bg-red-50 border border-red-100 rounded-[2rem] flex items-center gap-4">
-                        <div className="w-10 h-10 bg-red-500 text-white rounded-xl flex items-center justify-center shrink-0">
-                            <Lock size={20} />
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }} 
+                        animate={{ opacity: 1, scale: 1 }} 
+                        className="mb-12 p-6 bg-red-50 border border-red-200 rounded-[2.5rem] flex items-center gap-6 shadow-xl shadow-red-500/5"
+                    >
+                        <div className="w-14 h-14 bg-red-500 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-red-500/20">
+                            <Lock size={24} strokeWidth={2.5} />
                         </div>
-                        <p className="text-[10px] font-black uppercase text-red-600 tracking-widest">{paymentError}</p>
+                        <div>
+                            <p className="text-[10px] font-black uppercase text-red-400 tracking-widest mb-1 italic">Security_Alert</p>
+                            <p className="text-sm font-bold text-red-950">{paymentError}</p>
+                        </div>
                     </motion.div>
                 )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 xl:gap-24">
+                    {/* Main Form Area */}
                     <div className="lg:col-span-7 space-y-16">
-                        {/* Stepper */}
-                        <div className="flex items-center gap-2 lg:gap-4 overflow-x-auto pb-4 lg:pb-0 no-scrollbar">
-                            {[1, 2].map(i => (
-                                <React.Fragment key={i}>
-                                    <div className={`flex items-center gap-2 lg:gap-4 group cursor-pointer shrink-0`} onClick={() => setStep(i)}>
-                                        <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl flex items-center justify-center text-xs font-black transition-all ${step >= i ? 'bg-gray-950 text-white shadow-xl' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
-                                            {i}
+                        {/* Process Pipeline (Stepper) */}
+                        <div className="flex items-center gap-4 sm:gap-6 bg-gray-50/50 p-4 rounded-[2.5rem] border border-gray-100 overflow-x-auto no-scrollbar">
+                            {[
+                                { id: 1, label: 'Identity', icon: <Package size={14} /> },
+                                { id: 2, label: 'Logistics', icon: <Truck size={14} /> }
+                            ].map((s, i) => (
+                                <React.Fragment key={s.id}>
+                                    <button 
+                                        onClick={() => setStep(s.id)}
+                                        className="flex items-center gap-4 group shrink-0"
+                                    >
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 ${
+                                            step >= s.id 
+                                            ? 'bg-gray-950 text-white shadow-xl shadow-gray-900/20 rotate-0' 
+                                            : 'bg-white text-gray-400 border border-gray-100 group-hover:border-emerald-500 group-hover:text-emerald-500'
+                                        }`}>
+                                            {s.id}
                                         </div>
-                                        <span className={`text-[9px] lg:text-[10px] font-black uppercase tracking-widest ${step >= i ? 'text-gray-950' : 'text-gray-400'}`}>
-                                            {i === 1 ? 'Personal' : 'Shipping'}
-                                        </span>
-                                    </div>
-                                    {i === 1 && <div className="h-px w-8 lg:w-12 bg-gray-100 shrink-0" />}
+                                        <div className="flex flex-col text-left">
+                                            <span className={`text-[8px] font-black uppercase tracking-[0.2em] mb-0.5 ${step >= s.id ? 'text-emerald-500' : 'text-gray-300'}`}>Phase_0{s.id}</span>
+                                            <span className={`text-[11px] font-black uppercase tracking-widest ${step >= s.id ? 'text-gray-950' : 'text-gray-400'}`}>{s.label}</span>
+                                        </div>
+                                    </button>
+                                    {i === 0 && <div className="h-px w-12 bg-gray-200 shrink-0" />}
                                 </React.Fragment>
                             ))}
                         </div>
 
-                        {step === 1 ? (
-                            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-10">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
-                                    <div className="space-y-4">
-                                        <label className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Recipient Name</label>
-                                        <input
-                                            name="name" value={formData.name || ''} onChange={handleFormChange}
-                                            placeholder="Enter Your Name"
-                                            className="w-full bg-gray-50 border border-transparent rounded-[1.25rem] lg:rounded-[1.5rem] px-6 lg:px-8 py-5 lg:py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all uppercase tracking-widest"
-                                        />
-                                    </div>
-                                    <div className="space-y-4">
-                                        <label className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Contact Email</label>
-                                        <input
-                                            type="email" name="email" value={formData.email || ''} onChange={handleFormChange}
-                                            placeholder="Enter Your Email"
-                                            className="w-full bg-gray-50 border border-transparent rounded-[1.25rem] lg:rounded-[1.5rem] px-6 lg:px-8 py-5 lg:py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
-                                        />
-                                    </div>
-                                    <div className="space-y-4 md:col-span-2">
-                                        <label className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Encrypted Phone</label>
-                                        <input
-                                            name="phone" value={formData.phone || ''} onChange={handleFormChange}
-                                            placeholder="Enter Your Phone Number"
-                                            className="w-full bg-gray-50 border border-transparent rounded-[1.25rem] lg:rounded-[1.5rem] px-6 lg:px-8 py-5 lg:py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
-                                        />
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => setStep(2)}
-                                    disabled={!formData.name || !formData.email || !formData.phone}
-                                    className="w-full py-5 lg:py-6 bg-gray-950 text-white rounded-[1.5rem] lg:rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] lg:tracking-[0.4em] hover:bg-emerald-500 transition-all disabled:opacity-30 shadow-2xl shadow-gray-200 active:scale-[0.98]"
+                        <AnimatePresence mode="wait">
+                            {step === 1 ? (
+                                <motion.div 
+                                    key="step1"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    className="space-y-12"
                                 >
-                                    Define Shipping address
-                                </button>
-                            </motion.div>
-                        ) : (
-                            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-3 group">
+                                            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4 group-focus-within:text-emerald-500 transition-colors">
+                                                <div className="w-1.5 h-1.5 bg-current rounded-full" /> Full Name
+                                            </label>
+                                            <input
+                                                name="name" value={formData.name || ''} onChange={handleFormChange}
+                                                placeholder="AUTHORIZED PERSONNEL ONLY"
+                                                className="w-full bg-gray-50 border border-gray-100 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-emerald-500 hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest placeholder:text-gray-300"
+                                            />
+                                        </div>
+                                        <div className="space-y-3 group">
+                                            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4 group-focus-within:text-emerald-500 transition-colors">
+                                                <div className="w-1.5 h-1.5 bg-current rounded-full" /> Digital ID (Email)
+                                            </label>
+                                            <input
+                                                type="email" name="email" value={formData.email || ''} onChange={handleFormChange}
+                                                placeholder="SYSTEM_ACCESS@NODE.COM"
+                                                className="w-full bg-gray-50 border border-gray-100 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-emerald-500 hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest placeholder:text-gray-300"
+                                            />
+                                        </div>
+                                        <div className="space-y-3 group md:col-span-2">
+                                            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4 group-focus-within:text-emerald-500 transition-colors">
+                                                <div className="w-1.5 h-1.5 bg-current rounded-full" /> Mobile Terminal (Phone)
+                                            </label>
+                                            <input
+                                                name="phone" value={formData.phone || ''} onChange={handleFormChange}
+                                                placeholder="+91 [000-000-0000]"
+                                                className="w-full bg-gray-50 border border-gray-100 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-emerald-500 hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest placeholder:text-gray-300"
+                                            />
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setStep(2)}
+                                        disabled={!formData.name || !formData.email || !formData.phone}
+                                        className="group relative w-full py-8 bg-gray-950 text-white rounded-[2.5rem] font-black text-[10px] uppercase tracking-[0.4em] overflow-hidden transition-all hover:bg-emerald-600 disabled:opacity-30 disabled:pointer-events-none active:scale-[0.98]"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <span className="relative z-10 flex items-center justify-center gap-4">
+                                            Initialize Logistics Protocol <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
+                                        </span>
+                                    </button>
+                                </motion.div>
+                            ) : (
+                                <motion.div 
+                                    key="step2"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    className="space-y-12"
+                                >
+                                    {savedAddresses.length > 0 && (
+                                        <div className="space-y-6">
+                                            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 ml-4">Stored_Coordinates</p>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {savedAddresses.map((addr, idx) => (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => handleSelectSavedAddress(addr, idx)}
+                                                        className={`group p-8 rounded-[2.5rem] border text-left transition-all relative overflow-hidden ${
+                                                            selectedAddressIndex === idx 
+                                                            ? 'bg-gray-950 border-gray-950 text-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)]' 
+                                                            : 'bg-gray-50 border-gray-100 hover:border-emerald-200 hover:bg-white'
+                                                        }`}
+                                                    >
+                                                        <div className={`absolute top-0 right-0 w-24 h-24 blur-3xl rounded-full transition-opacity ${selectedAddressIndex === idx ? 'bg-emerald-500/20 opacity-100' : 'bg-emerald-500/10 opacity-0 group-hover:opacity-100'}`} />
+                                                        <div className="relative z-10">
+                                                            <div className="flex items-center justify-between mb-4">
+                                                                <span className={`text-[8px] font-black uppercase tracking-widest ${selectedAddressIndex === idx ? 'text-emerald-400' : 'text-gray-400'}`}>Node_LOC_{idx + 1}</span>
+                                                                {selectedAddressIndex === idx && <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,1)]" />}
+                                                            </div>
+                                                            <p className="text-xs font-black uppercase tracking-tighter line-clamp-2 leading-relaxed">
+                                                                {addr.street}, {addr.city},<br />{addr.state} {addr.zipCode}
+                                                            </p>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
 
-                                {savedAddresses.length > 0 && (
-                                    <div className="space-y-6">
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 italic">Saved Shipping Addresses</p>
-                                        <div className="grid grid-cols-1 gap-4">
-                                            {savedAddresses.map((addr, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    onClick={() => handleSelectSavedAddress(addr, idx)}
-                                                    className={`p-6 rounded-[1.5rem] border text-left transition-all ${selectedAddressIndex === idx ? 'bg-gray-950 border-gray-950 text-white shadow-xl translate-x-4' : 'bg-gray-50 border-gray-100 hover:border-gray-300 hover:bg-white'}`}
+                                    <div className="bg-gray-50/50 p-8 md:p-12 rounded-[3.5rem] border border-gray-100 space-y-10">
+                                        <div className="space-y-4 group">
+                                            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 group-focus-within:text-emerald-500 transition-colors">Street Mapping</label>
+                                            <input
+                                                name="shippingAddress.street" value={formData.shippingAddress.street || ''} onChange={handleFormChange}
+                                                placeholder="Primary Street Access"
+                                                className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest"
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div className="space-y-4 group">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Sector / City</label>
+                                                <input
+                                                    name="shippingAddress.city" value={formData.shippingAddress.city || ''} onChange={handleFormChange}
+                                                    placeholder="City"
+                                                    className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest"
+                                                />
+                                            </div>
+                                            <div className="space-y-4 group">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Region Code (ZIP)</label>
+                                                <input
+                                                    name="shippingAddress.zipCode" value={formData.shippingAddress.zipCode || ''} onChange={handleFormChange}
+                                                    placeholder="000 000"
+                                                    className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all tracking-widest"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4 group">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Zone Select (Country)</label>
+                                            <div className="relative">
+                                                <select
+                                                    name="shippingAddress.country" value={formData.shippingAddress.country || 'India'} onChange={handleFormChange}
+                                                    className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase appearance-none cursor-pointer"
                                                 >
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Address Node #{idx + 1}</span>
-                                                        {selectedAddressIndex === idx && <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />}
-                                                    </div>
-                                                    <p className="text-sm font-bold line-clamp-1">
-                                                        {addr.street}, {addr.city}, {addr.state} {addr.zipCode}
-                                                    </p>
-                                                </button>
-                                            ))}
+                                                    <option value="India">IND - India</option>
+                                                    <option value="United States">USA - United States</option>
+                                                    <option value="United Kingdom">GBR - United Kingdom</option>
+                                                    <option value="UAE">ARE - UAE</option>
+                                                </select>
+                                                <ChevronLeft className="absolute right-8 top-1/2 -translate-y-1/2 rotate-[270deg] text-gray-400 pointer-events-none" size={16} />
+                                            </div>
                                         </div>
                                     </div>
-                                )}
 
-                                <div className="space-y-8">
-                                    <div className="space-y-4">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Street Address</label>
-                                        <input
-                                            name="shippingAddress.street" value={formData.shippingAddress.street || ''} onChange={handleFormChange}
-                                            placeholder="House number and street name"
-                                            className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-bold text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
-                                        />
+                                    <div className="flex flex-col sm:flex-row gap-6">
+                                        <button
+                                            onClick={() => setStep(1)}
+                                            className="sm:flex-1 py-6 bg-gray-100 text-gray-950 rounded-[2rem] font-black text-[10px] uppercase tracking-[0.3em] hover:bg-gray-200 transition-all active:scale-[0.98]"
+                                        >
+                                            Previous_Phase
+                                        </button>
+                                        <button
+                                            disabled={isSubmitting || !formData.shippingAddress.street || !formData.shippingAddress.city}
+                                            onClick={placeOrder}
+                                            className="group relative sm:flex-[2] py-8 bg-emerald-500 text-white rounded-[2.5rem] font-black text-[10px] uppercase tracking-[0.4em] overflow-hidden transition-all hover:bg-gray-950 disabled:opacity-30 active:scale-[0.98] shadow-2xl shadow-emerald-500/20"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <span className="relative z-10 flex items-center justify-center gap-4">
+                                                {isSubmitting ? 'Authenticating...' : 'Authorize_Manifest'} <CreditCard size={16} className="group-hover:rotate-12 transition-transform" />
+                                            </span>
+                                        </button>
                                     </div>
-                                    <div className="space-y-4">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Apartment, suite, etc. (optional)</label>
-                                        <input
-                                            name="shippingAddress.apartment" value={formData.shippingAddress.apartment || ''} onChange={handleFormChange}
-                                            placeholder="Apartment, suite, unit, etc."
-                                            className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-bold text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-8">
-                                        <div className="space-y-4">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Town / City</label>
-                                            <input
-                                                name="shippingAddress.city" value={formData.shippingAddress.city || ''} onChange={handleFormChange}
-                                                placeholder="City"
-                                                className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all uppercase"
-                                            />
-                                        </div>
-                                        <div className="space-y-4">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">State / Province</label>
-                                            <input
-                                                name="shippingAddress.state" value={formData.shippingAddress.state || ''} onChange={handleFormChange}
-                                                placeholder="State"
-                                                className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all uppercase"
-                                            />
-                                        </div>
-                                        <div className="space-y-4">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">ZIP / Postcode</label>
-                                            <input
-                                                name="shippingAddress.zipCode" value={formData.shippingAddress.zipCode || ''} onChange={handleFormChange}
-                                                placeholder="ZIP Code"
-                                                className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
-                                            />
-                                        </div>
-                                        <div className="space-y-4">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Country / Region</label>
-                                            <select
-                                                name="shippingAddress.country" value={formData.shippingAddress.country || 'India'} onChange={handleFormChange}
-                                                className="w-full bg-gray-50 border border-transparent rounded-[1.5rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all uppercase appearance-none"
-                                            >
-                                                <option value="India">India</option>
-                                                <option value="United States">United States</option>
-                                                <option value="United Kingdom">United Kingdom</option>
-                                                <option value="Canada">Canada</option>
-                                                <option value="UAE">UAE</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col sm:flex-row gap-4 lg:gap-6">
-                                    <button
-                                        onClick={() => setStep(1)}
-                                        className="sm:flex-1 py-5 lg:py-6 bg-gray-100 text-gray-950 rounded-[1.5rem] lg:rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all"
-                                    >
-                                        Back
-                                    </button>
-                                    <button
-                                        disabled={isSubmitting || !formData.shippingAddress.street || !formData.shippingAddress.city}
-                                        onClick={placeOrder}
-                                        className="sm:flex-[2] py-5 lg:py-6 bg-emerald-500 text-white rounded-[1.5rem] lg:rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] lg:tracking-[0.4em] hover:bg-gray-950 transition-all shadow-2xl shadow-emerald-500/10 active:scale-[0.98]"
-                                    >
-                                        {isSubmitting ? 'SECURING...' : 'Authorize Transaction'}
-                                    </button>
-                                </div>
-                            </motion.div>
-                        )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
 
-                    {/* Summary Section */}
+                    {/* Industrial Order Manifest (Summary) */}
                     <div className="lg:col-span-5">
-                        <div className="bg-gray-50 rounded-[3.5rem] p-12 sticky top-32 border border-gray-100 shadow-sm">
-                            <h3 className="text-3xl font-black text-gray-950 tracking-tighter uppercase mb-10 pb-10 border-b border-gray-200">Inventory Review.</h3>
-
-                            <div className="space-y-8 mb-12 max-h-[450px] overflow-y-auto pr-4 custom-scrollbar">
-                                {cart.map(item => (
-                                    <div key={item.id} className="flex gap-8 items-center group">
-                                        <div className="w-20 h-20 bg-white rounded-3xl overflow-hidden shrink-0 border border-gray-100 p-2 group-hover:scale-105 transition-transform duration-500">
-                                            <img src={item.customDesign?.textures?.front || item.customDesign?.textures?.top || Object.values(item.customDesign?.textures || {}).find(t => t) || item.img || item.image} className="w-full h-full object-contain" alt="" />
+                        <div className="sticky top-32">
+                            <div className="bg-gray-950 rounded-[3.5rem] p-8 md:p-12 text-white shadow-2xl shadow-gray-950/20 overflow-hidden relative">
+                                {/* Decorative Industrial Elements */}
+                                <div className="absolute top-0 right-0 w-full h-full opacity-[0.03] pointer-events-none select-none overflow-hidden">
+                                    {[...Array(20)].map((_, i) => (
+                                        <div key={i} className="whitespace-nowrap text-[8px] font-mono leading-none tracking-tighter uppercase">
+                                            BOXFOX_LOGISTICS_MANIFEST_ID_00{i}_CONFIDENTIAL_REPORT_SCANNED_OK_STATUS_READY
                                         </div>
-                                        <div className="flex-1">
-                                            <h4 className="text-[11px] font-black text-gray-950 uppercase line-clamp-2 tracking-tight group-hover:text-emerald-500 transition-colors">{item.name}</h4>
-                                            <div className="flex items-center gap-3 mt-2">
-                                                <span className="text-[9px] font-black uppercase text-gray-400">Node ID: {item.id}</span>
-                                                <div className="w-1 h-1 bg-gray-200 rounded-full" />
-                                                <span className="text-[9px] font-black uppercase text-gray-950">QTY: {item.quantity}</span>
-                                            </div>
-                                            {item.customDesign && (
-                                                <div className="mt-2 flex flex-wrap gap-2">
-                                                    <span className="text-[7px] font-black px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded uppercase tracking-widest">{item.customDesign.selectedGSM || "350 GSM"}</span>
-                                                    <span className="text-[7px] font-black px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded uppercase tracking-widest">{item.customDesign.selectedMaterial || "SBS"}</span>
-                                                    <span className="text-[7px] font-black px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded uppercase tracking-widest">{item.customDesign.printingOpt || "No Printing"}</span>
+                                    ))}
+                                </div>
+
+                                <div className="relative z-10">
+                                    <div className="flex items-center justify-between mb-10 pb-8 border-b border-white/10">
+                                        <h3 className="text-3xl font-black tracking-tighter uppercase italic">Manifest.</h3>
+                                        <div className="px-3 py-1 bg-emerald-500 text-[8px] font-black uppercase tracking-widest rounded-lg animate-pulse">Live_Sync</div>
+                                    </div>
+
+                                    {/* Cart Items List */}
+                                    <div className="space-y-8 mb-12 max-h-[40vh] overflow-y-auto pr-4 custom-scrollbar-white">
+                                        {cart.map(item => (
+                                            <div key={item.id} className="flex gap-6 items-center group">
+                                                <div className="w-20 h-20 bg-white/5 rounded-3xl overflow-hidden shrink-0 border border-white/10 p-2 group-hover:border-emerald-500/50 transition-all duration-500">
+                                                    <img 
+                                                        src={item.customDesign?.textures?.front || item.customDesign?.textures?.top || Object.values(item.customDesign?.textures || {}).find(t => t) || item.img || item.image} 
+                                                        className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-700" 
+                                                        alt="" 
+                                                    />
                                                 </div>
-                                            )}
-                                        </div>
-                                        <div className="text-right shrink-0">
-                                            <span className="text-sm font-black text-gray-950">₹{(parseFloat(String(typeof item.price === 'number' ? item.price : item.price || 0).replace(/[^0-9.]/g, '')) * item.quantity).toLocaleString('en-IN')}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="space-y-4 mb-10 pt-10 border-t border-gray-200">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 italic">Have a Gift Card / Promo Code?</p>
-                                <div className="flex gap-4">
-                                    <input
-                                        type="text"
-                                        placeholder="Vault Protocol"
-                                        value={couponInput}
-                                        onChange={(e) => setCouponInput(e.target.value)}
-                                        className="flex-1 bg-white border border-gray-100 rounded-2xl px-6 py-4 text-[10px] font-black tracking-[0.2em] outline-none focus:border-emerald-500 transition-all uppercase placeholder:italic"
-                                    />
-                                    <button
-                                        onClick={applyCoupon}
-                                        disabled={isValidating || !couponInput}
-                                        className="px-8 bg-gray-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all disabled:opacity-30 active:scale-95"
-                                    >
-                                        {isValidating ? '...' : 'Verify'}
-                                    </button>
-                                </div>
-                                {couponError && <p className="text-[9px] font-bold text-red-500 uppercase tracking-widest ml-4">{couponError}</p>}
-                                {appliedCoupon && (
-                                    <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 p-4 rounded-2xl">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center text-white">
-                                                <CheckCircle2 size={16} />
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="text-[10px] font-black text-white uppercase truncate tracking-tight mb-1">{item.name}</h4>
+                                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                        <span className="text-[8px] font-black uppercase text-emerald-500/70">QTY: {item.quantity}</span>
+                                                        <div className="w-1 h-1 bg-white/20 rounded-full" />
+                                                        <span className="text-[8px] font-black uppercase text-white/40 truncate">REF_{item.id?.slice(-6)}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right shrink-0">
+                                                    <span className="text-xs font-black text-white">₹{(parseFloat(String(typeof item.price === 'number' ? item.price : item.price || 0).replace(/[^0-9.]/g, '')) * item.quantity).toLocaleString('en-IN')}</span>
+                                                </div>
                                             </div>
-                                            <span className="text-[10px] font-black uppercase text-emerald-700 tracking-widest">{appliedCoupon.code} Applied</span>
-                                        </div>
-                                        <button onClick={() => setAppliedCoupon(null)} className="text-[9px] font-black text-gray-400 hover:text-red-500 uppercase tracking-widest">Remove</button>
+                                        ))}
                                     </div>
-                                )}
-                            </div>
 
-                            <div className="space-y-5 pt-10 border-t border-gray-200">
-                                <div className="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                                    <span>Sub-Total</span>
-                                    <span className="text-gray-950">₹{cartTotal.toLocaleString('en-IN')}</span>
-                                </div>
-                                {appliedCoupon && (
-                                    <div className="flex items-center justify-between text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">
-                                        <span>Vault Discount</span>
-                                        <span className="font-black">- ₹{appliedCoupon.discount.toLocaleString('en-IN')}</span>
+                                    {/* Promo Code Input */}
+                                    <div className="space-y-4 mb-10 p-6 bg-white/5 rounded-[2rem] border border-white/5">
+                                        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 ml-2">Access_Vault_Key</p>
+                                        <div className="flex gap-3">
+                                            <input
+                                                type="text"
+                                                placeholder="ENTER_CODE"
+                                                value={couponInput}
+                                                onChange={(e) => setCouponInput(e.target.value)}
+                                                className="flex-1 bg-black/40 border border-white/10 rounded-2xl px-6 py-4 text-[10px] font-black tracking-[0.2em] outline-none focus:border-emerald-500 transition-all uppercase placeholder:text-white/10"
+                                            />
+                                            <button
+                                                onClick={applyCoupon}
+                                                disabled={isValidating || !couponInput}
+                                                className="px-8 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all disabled:opacity-30 active:scale-95 shadow-lg shadow-emerald-500/20"
+                                            >
+                                                {isValidating ? '...' : 'Unlock'}
+                                            </button>
+                                        </div>
+                                        {couponError && <p className="text-[8px] font-bold text-red-400 uppercase tracking-widest ml-4">{couponError}</p>}
+                                        {appliedCoupon && (
+                                            <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-2xl">
+                                                <div className="flex items-center gap-3">
+                                                    <CheckCircle2 size={14} className="text-emerald-500" />
+                                                    <span className="text-[9px] font-black uppercase text-emerald-500 tracking-widest">{appliedCoupon.code}_VERIFIED</span>
+                                                </div>
+                                                <button onClick={() => setAppliedCoupon(null)} className="text-[8px] font-black text-white/30 hover:text-red-400 uppercase tracking-widest">WIPE</button>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                                <div className="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                                    <span>Eco-Shipment</span>
-                                    <span className="text-emerald-500 font-black italic">Free</span>
-                                </div>
-                                <div className="pt-4 lg:pt-8 flex items-end justify-between">
-                                    <div>
-                                        <p className="text-[9px] lg:text-[10px] font-black uppercase text-emerald-500 mb-1 tracking-widest">Total Valuation</p>
-                                        <h2 className="text-4xl lg:text-5xl font-black text-gray-950 tracking-tighter leading-none">₹{finalTotal.toLocaleString('en-IN')}</h2>
+
+                                    {/* Financial Data Grid */}
+                                    <div className="space-y-4 pt-8 border-t border-white/10">
+                                        <div className="flex items-center justify-between text-[9px] font-black text-white/40 uppercase tracking-[0.3em]">
+                                            <span>Base_Valuation</span>
+                                            <span className="text-white">₹{cartTotal.toLocaleString('en-IN')}</span>
+                                        </div>
+                                        {appliedCoupon && (
+                                            <div className="flex items-center justify-between text-[9px] font-black text-emerald-500 uppercase tracking-[0.3em]">
+                                                <span>Vault_Reduction</span>
+                                                <span className="font-black">- ₹{appliedCoupon.discount.toLocaleString('en-IN')}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center justify-between text-[9px] font-black text-white/40 uppercase tracking-[0.3em]">
+                                            <span>Global_Transit</span>
+                                            <span className="text-emerald-500 font-black italic">WAVIED_FOC</span>
+                                        </div>
+                                        
+                                        <div className="pt-8 flex items-end justify-between">
+                                            <div className="space-y-1">
+                                                <p className="text-[10px] font-black uppercase text-emerald-500 tracking-[0.4em]">Final_Authorized_Total</p>
+                                                <h2 className="text-5xl md:text-6xl font-black text-white tracking-tighter leading-none italic">
+                                                    ₹{finalTotal.toLocaleString('en-IN')}
+                                                </h2>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                            </div>
+                            
+                            {/* Trust Badge Footer */}
+                            <div className="mt-8 flex items-center justify-center gap-6 opacity-30 grayscale">
+                                <ShieldCheck size={24} />
+                                <Package size={24} />
+                                <CreditCard size={24} />
+                                <CheckCircle2 size={24} />
                             </div>
                         </div>
                     </div>

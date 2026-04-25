@@ -390,110 +390,67 @@ function AccountManagementContent() {
             </AnimatePresence>
 
             <main className="max-w-7xl mx-auto px-8 lg:px-16 pt-32 pb-20">
-                <div className="mb-12">
-                    <h1 className="text-4xl font-black uppercase tracking-tighter text-gray-950 mb-2">
-                        My Account
-                    </h1>
-                    <p className="text-gray-500 font-medium tracking-wide uppercase text-sm">
-                        Manage your profile & settings
-                    </p>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+                    <div>
+                        <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-gray-950 mb-3">
+                            Brand_Vault <span className="text-emerald-500">.01</span>
+                        </h1>
+                        <p className="text-gray-400 font-bold tracking-[0.2em] uppercase text-[10px] sm:text-xs flex items-center gap-2">
+                            <Box size={14} className="text-emerald-500" /> Secure Account Management & Assets
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white border border-gray-100 p-2 rounded-2xl shadow-sm">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 font-black">
+                            {user?.name?.charAt(0)}
+                        </div>
+                        <div className="pr-4">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-950 leading-none">{user?.name}</p>
+                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Status: Authorized</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    {/* Sidebar */}
-                    <div className="lg:col-span-1 space-y-4">
-                        <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100 flex flex-col gap-2">
-                            <button
-                                onClick={() => setActiveTab("dashboard")}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'dashboard' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}`}
-                            >
-                                <Settings size={18} />
-                                Dashboard
-                            </button>
-
-                            <button
-                                onClick={() => setActiveTab("orders")}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'orders' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}`}
-                            >
-                                <Package size={18} />
-                                Orders
-                            </button>
-
-                            <button
-                                onClick={() => setActiveTab("addresses")}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'addresses' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}`}
-                            >
-                                <MapPin size={18} />
-                                Addresses
-                            </button>
-
-                            <button
-                                onClick={() => setActiveTab("details")}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'details' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}`}
-                            >
-                                <UserIcon size={18} />
-                                Account Details
-                            </button>
-
-                            <button
-                                onClick={() => setActiveTab("wishlist")}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'wishlist' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}`}
-                            >
-                                <Heart size={18} />
-                                Wishlist
-                            </button>
-
-                            <button
-                                onClick={() => setActiveTab("designs")}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'designs' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}`}
-                            >
-                                <Layers size={18} />
-                                Saved Designs
-                                {savedDesigns.length > 0 && (
-                                    <span className="ml-auto text-[9px] font-black bg-emerald-500 text-white rounded-full w-5 h-5 flex items-center justify-center">{savedDesigns.length}</span>
-                                )}
-                            </button>
-
-                            <button
-                                onClick={() => setActiveTab("security")}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'security' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}`}
-                            >
-                                <Lock size={18} />
-                                Change Password
-                            </button>
-
-                            <button
-                                onClick={() => setActiveTab("brand_vault")}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm tracking-wide transition-all ${activeTab === 'brand_vault' ? 'bg-gray-950 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-50'}`}
-                            >
-                                <Sparkles size={18} />
-                                Brand Assets
-                            </button>
-
-                            {user?.role === 'admin' && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+                    {/* Sidebar - Responsive Navigation */}
+                    <div className="lg:col-span-3 space-y-4 lg:sticky lg:top-32 z-40">
+                        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-2 shadow-xl shadow-gray-200/50 border border-gray-100/50 flex lg:flex-col overflow-x-auto lg:overflow-visible no-scrollbar gap-1">
+                            {[
+                                { id: "dashboard", label: "Overview", icon: Settings },
+                                { id: "orders", label: "Manifests", icon: Package },
+                                { id: "addresses", label: "Logistics", icon: MapPin },
+                                { id: "details", label: "Identity", icon: UserIcon },
+                                { id: "wishlist", label: "Wishlist", icon: Heart },
+                                { id: "designs", label: "Blueprints", icon: Layers, badge: savedDesigns.length },
+                                { id: "brand_vault", label: "Vault", icon: Sparkles },
+                                { id: "security", label: "Encryption", icon: Lock },
+                            ].map((tab) => (
                                 <button
-                                    onClick={() => router.push('/admin')}
-                                    className="w-full flex items-center gap-3 px-4 py-3 text-emerald-600 hover:bg-emerald-50 rounded-xl font-bold text-sm tracking-wide transition-all"
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shrink-0 lg:w-full ${activeTab === tab.id ? 'bg-gray-950 text-white shadow-xl shadow-gray-200' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-950'}`}
                                 >
-                                    <Settings size={18} />
-                                    Admin Dashboard
+                                    <tab.icon size={16} />
+                                    <span>{tab.label}</span>
+                                    {tab.badge > 0 && (
+                                        <span className={`ml-auto w-5 h-5 rounded-full flex items-center justify-center text-[8px] ${activeTab === tab.id ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'}`}>{tab.badge}</span>
+                                    )}
                                 </button>
-                            )}
-
-                            <div className="h-px bg-gray-100 my-2" />
-
+                            ))}
+                            
+                            <div className="hidden lg:block h-px bg-gray-50 my-2 mx-4" />
+                            
                             <button
                                 onClick={handleLogout}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl font-bold text-sm tracking-wide transition-all"
+                                className="flex items-center gap-3 px-6 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-red-400 hover:bg-red-50 hover:text-red-600 transition-all shrink-0 lg:w-full"
                             >
-                                <LogOut size={18} />
-                                Sign Out
+                                <LogOut size={16} />
+                                <span>Termination</span>
                             </button>
                         </div>
                     </div>
 
                     {/* Main Content Area */}
-                    <div className="lg:col-span-3">
+                    <div className="lg:col-span-9">
                         <AnimatePresence mode="wait">
                             {activeTab === 'dashboard' && (
                                 <motion.div
@@ -937,12 +894,12 @@ function AccountManagementContent() {
                                                 <Layers size={32} />
                                             </div>
                                             <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-2">No saved designs yet.</p>
-                                            <p className="text-[10px] text-gray-400 font-medium mb-6">Create a design in the Customize Lab and click "Save" to see it here.</p>
+                                            <p className="text-[10px] text-gray-400 font-medium mb-6">Create a design in the Customization interface and click "Save" to see it here.</p>
                                             <button
                                                 onClick={() => router.push('/customize')}
                                                 className="px-8 py-3 bg-gray-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all"
                                             >
-                                                Open Customize Lab
+                                                Start New Design
                                             </button>
                                         </div>
                                     ) : (
@@ -997,7 +954,7 @@ function AccountManagementContent() {
                                                                     }}
                                                                     className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-gray-950 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all"
                                                                 >
-                                                                    <Pencil size={12} /> Edit in Lab
+                                                                    <Pencil size={12} /> Refine Design
                                                                 </button>
                                                                 <button
                                                                     onClick={async () => {
@@ -1174,14 +1131,14 @@ function AccountManagementContent() {
                                                     <Sparkles size={20} /> Ignite_Forge Sync
                                                 </h4>
                                                 <p className="text-xs text-gray-400 font-medium leading-relaxed max-w-xl">
-                                                    Your Brand Vault assets are synced across the entire platform. When you enter the **Customize Lab**, our AI will prioritize these assets to generate cohesive, brand-accurate packaging designs in seconds.
+                                                    Your Brand Vault assets are synced across the entire platform. When you enter the **Customization Engine**, our AI will prioritize these assets to generate cohesive, brand-accurate packaging designs in seconds.
                                                 </p>
                                             </div>
                                             <button 
                                                 onClick={() => router.push('/customize')}
                                                 className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-900/40 shrink-0"
                                             >
-                                                Open Customize Lab
+                                                Launch Designer
                                             </button>
                                         </div>
                                         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2" />

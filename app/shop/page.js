@@ -274,11 +274,11 @@ function ShopPageInner() {
                                     exit={{ opacity: 0, y: -8 }}
                                     className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-3xl shadow-2xl shadow-gray-200/80 overflow-y-auto max-h-[70vh] p-3 z-50"
                                 >
-                                    <div className="grid grid-cols-3 gap-1.5">
+                                    <div className="grid grid-cols-3 gap-1.5 mb-3">
                                         {categories.map((cat) => (
                                             <button
                                                 key={cat}
-                                                onClick={() => { setCategory(cat); setShowFilter(false); }}
+                                                onClick={() => setCategory(cat)}
                                                 className={`px-3 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all text-center ${
                                                     category === cat
                                                         ? 'bg-gray-950 text-white'
@@ -289,6 +289,12 @@ function ShopPageInner() {
                                             </button>
                                         ))}
                                     </div>
+                                    <button 
+                                        onClick={() => setShowFilter(false)}
+                                        className="w-full py-3 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
+                                    >
+                                        Done
+                                    </button>
                                 </motion.div>
                             )}
 
@@ -297,11 +303,11 @@ function ShopPageInner() {
                                     initial={{ opacity: 0, y: -8 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -8 }}
-                                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-3xl shadow-2xl shadow-gray-200/80 p-4 space-y-4 z-50"
+                                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-3xl shadow-2xl shadow-gray-200/80 p-4 space-y-6 z-50"
                                 >
                                     {/* Price Range */}
                                     <div>
-                                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400 mb-2 flex items-center gap-1.5">
+                                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400 mb-3 flex items-center gap-1.5">
                                             <SlidersHorizontal size={9} className="text-emerald-500" /> Price Range
                                         </p>
                                         <div className="grid grid-cols-3 gap-1.5">
@@ -323,7 +329,7 @@ function ShopPageInner() {
 
                                     {/* Sort By */}
                                     <div>
-                                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400 mb-2 flex items-center gap-1.5">
+                                        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400 mb-3 flex items-center gap-1.5">
                                             <ArrowUpDown size={9} className="text-emerald-500" /> Sort By
                                         </p>
                                         <div className="grid grid-cols-2 gap-1.5">
@@ -343,14 +349,22 @@ function ShopPageInner() {
                                         </div>
                                     </div>
 
-                                    {activeFiltersCount > 0 && (
-                                        <button
-                                            onClick={() => { setPriceRange("all"); setSortBy("default"); setShowFilter(false); }}
-                                            className="w-full py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest text-red-400 bg-red-50 flex items-center justify-center gap-1.5"
+                                    <div className="pt-2 flex flex-col gap-2">
+                                        <button 
+                                            onClick={() => setShowFilter(false)}
+                                            className="w-full py-4 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all"
                                         >
-                                            <X size={9} /> Clear Filters
+                                            Apply Filters
                                         </button>
-                                    )}
+                                        {activeFiltersCount > 0 && (
+                                            <button
+                                                onClick={() => { setPriceRange("all"); setSortBy("default"); setShowFilter(false); }}
+                                                className="w-full py-3 rounded-xl text-[9px] font-black uppercase tracking-widest text-red-400 bg-red-50 flex items-center justify-center gap-1.5"
+                                            >
+                                                <X size={9} /> Clear Filters
+                                            </button>
+                                        )}
+                                    </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>

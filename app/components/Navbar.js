@@ -164,13 +164,13 @@ export default function Navbar() {
               <div className="relative group flex items-center">
                 <Link
                   href={user ? "/account" : `/login?redirect=${encodeURIComponent(pathname)}`}
-                  className={`flex items-center gap-2 px-2 sm:px-3.5 h-8 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${user
+                  className={`flex items-center gap-2 px-3 sm:px-4 h-9 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${user
                       ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/60"
                       : "bg-gray-950 text-white hover:bg-emerald-600 shadow-lg shadow-gray-200/80"
                     }`}
                 >
-                  <User size={13} />
-                  <span className="hidden sm:inline">{user ? "Account" : "Login"}</span>
+                  <User size={14} />
+                  <span className="inline">{user ? "Account" : "Login"}</span>
                 </Link>
 
                 {user && (
