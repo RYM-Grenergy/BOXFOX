@@ -161,16 +161,16 @@ export default function Navbar() {
               </button>
 
               {/* Login / Account */}
-              <div className="relative group hidden sm:flex items-center">
+              <div className="relative group flex items-center">
                 <Link
                   href={user ? "/account" : `/login?redirect=${encodeURIComponent(pathname)}`}
-                  className={`flex items-center gap-2 px-3.5 h-8 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${user
+                  className={`flex items-center gap-2 px-2 sm:px-3.5 h-8 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${user
                       ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/60"
                       : "bg-gray-950 text-white hover:bg-emerald-600 shadow-lg shadow-gray-200/80"
                     }`}
                 >
                   <User size={13} />
-                  <span className="hidden lg:inline">{user ? "Account" : "Login"}</span>
+                  <span className="hidden sm:inline">{user ? "Account" : "Login"}</span>
                 </Link>
 
                 {user && (
@@ -341,95 +341,105 @@ export default function Navbar() {
               >
                 <X size={24} className="text-gray-950" />
               </button>
-              <div className="flex flex-col gap-4 sm:gap-6 md:gap-8">
-                {navLinks.map((link, idx) => (
-                  <motion.div
-                    key={link.label}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                  >
+
+              <div className="flex flex-col h-full">
+                {/* Account Section at Top */}
+                <div className="pb-8 mb-4 border-b border-gray-50">
+                  {user ? (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-extrabold text-lg border border-emerald-100">
+                          {user.name.charAt(0)}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-black uppercase tracking-widest text-gray-950">{user.name}</span>
+                          <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-[0.2em]">{user.role}_Profile</span>
+                        </div>
+                      </div>
+                      <Link 
+                        href="/account" 
+                        onClick={() => setMenuOpen(false)}
+                        className="p-3 bg-gray-50 rounded-xl text-gray-950 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                      >
+                        <User size={20} />
+                      </Link>
+                    </div>
+                  ) : (
                     <Link
-                      href={link.href}
-                      className={`text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tighter flex items-center justify-between group py-3 px-5 rounded-2xl transition-all ${pathname === link.href
-                          ? "text-emerald-500 bg-emerald-50"
-                          : link.isAI
-                            ? "text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/10"
-                            : link.isB2B
-                              ? "text-white bg-gray-950 shadow-xl shadow-gray-900/5"
-                              : "text-gray-950 hover:bg-gray-50"
-                        }`}
+                      href={`/login?redirect=${encodeURIComponent(pathname)}`}
+                      className="flex items-center justify-center gap-4 py-4 bg-gray-950 text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-gray-200"
                       onClick={() => setMenuOpen(false)}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col">
+                      <User size={16} /> Login / Sign Up
+                    </Link>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-3 sm:gap-4 flex-1">
+                  {navLinks.map((link, idx) => (
+                    <motion.div
+                      key={link.label}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                    >
+                      <Link
+                        href={link.href}
+                        className={`text-lg sm:text-xl font-black uppercase tracking-tighter flex items-center justify-between group py-3 px-4 rounded-2xl transition-all ${pathname === link.href
+                            ? "text-emerald-500 bg-emerald-50"
+                            : link.isAI
+                              ? "text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/10"
+                              : link.isB2B
+                                ? "text-white bg-gray-950 shadow-xl shadow-gray-900/5"
+                                : "text-gray-950 hover:bg-gray-50"
+                          }`}
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <div className="flex items-center gap-3">
                           <span className="flex items-center gap-2">
-                            {link.isAI && <Sparkles size={20} className="text-white animate-pulse" />}
-                            {link.isB2B && <Briefcase size={18} className="text-white" />}
+                            {link.isAI && <Sparkles size={18} className="text-white animate-pulse" />}
+                            {link.isB2B && <Briefcase size={16} className="text-white" />}
                             {link.label}
                           </span>
                         </div>
-                      </div>
-                      <ChevronRight size={24} className={`transition-transform group-hover:translate-x-1 ${pathname === link.href ? "opacity-100" : "opacity-0"}`} />
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
+                        <ChevronRight size={20} className={`transition-transform group-hover:translate-x-1 ${pathname === link.href ? "opacity-100" : "opacity-0"}`} />
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
 
-              <div className="space-y-6 pt-12 border-t border-gray-100">
-                {user ? (
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4 py-2">
-                      <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-extrabold text-sm border border-emerald-100">
-                        {user.name.charAt(0)}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-950">{user.name}</span>
-                        <span className="text-[8px] font-bold text-emerald-500 uppercase tracking-[0.2em]">{user.role}_Profile</span>
-                      </div>
+                <div className="pt-8 border-t border-gray-100 space-y-4">
+                  {user && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Link
+                        href="/account?tab=wishlist"
+                        className="flex flex-col items-center gap-2 p-4 bg-gray-50 rounded-2xl text-[9px] font-black uppercase tracking-widest text-gray-500 hover:text-emerald-600 transition-all group text-center"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <Heart size={16} className="group-hover:scale-110 transition-transform" /> Wishlist
+                      </Link>
+                      <button
+                        onClick={() => {
+                          logout();
+                          setMenuOpen(false);
+                        }}
+                        className="flex flex-col items-center gap-2 p-4 bg-red-50/50 rounded-2xl text-[9px] font-black uppercase tracking-widest text-red-400 hover:text-red-600 transition-all group text-center"
+                      >
+                        <ArrowRight size={16} className="rotate-180 group-hover:-translate-x-1 transition-transform" /> Logout
+                      </button>
                     </div>
+                  )}
 
-                    <Link
-                      href="/account?tab=wishlist"
-                      className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-emerald-500 transition-all group"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      <Heart size={16} className="group-hover:scale-110 transition-transform" /> My Wishlist
-                    </Link>
-
-                    <Link
-                      href="/account"
-                      className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-emerald-500 transition-all group"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      <User size={16} className="group-hover:scale-110 transition-transform" /> Dashboard
-                    </Link>
-
-                    <button
-                      onClick={() => {
-                        logout();
-                        setMenuOpen(false);
-                      }}
-                      className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-500 transition-all w-full group"
-                    >
-                      <ArrowRight size={16} className="rotate-180 group-hover:-translate-x-1 transition-transform" /> Logout_Session
-                    </button>
+                  <div className="p-4 bg-gray-50/50 rounded-3xl flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Support_Line</p>
+                      <a href="mailto:office.ggn@iopl.co" className="text-[10px] font-black text-gray-950 hover:text-emerald-600 transition-colors">office.ggn@iopl.co</a>
+                    </div>
+                    <Briefcase size={16} className="text-gray-200" />
                   </div>
-                ) : (
-                  <Link
-                    href={`/login?redirect=${encodeURIComponent(pathname)}`}
-                    className="flex items-center justify-center gap-4 py-5 bg-gray-950 text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-gray-200 mt-4"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <User size={16} /> Login
-                  </Link>
-                )}
-
-                <div className="p-6 bg-gray-50 rounded-3xl">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Support_Line</p>
-                  <a href="mailto:office.ggn@iopl.co" className="text-xs font-black text-gray-950 block hover:text-emerald-600 transition-colors">office.ggn@iopl.co</a>
                 </div>
               </div>
+
             </motion.div>
           </>
         )}
