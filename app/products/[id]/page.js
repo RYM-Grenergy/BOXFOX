@@ -289,15 +289,10 @@ export default function ProductPage() {
                                             <ShoppingCart size={18} className="group-hover:scale-110 transition-transform" /> Add to Basket
                                         </button>
 
-                                        <Link
-                                            href={`/customize?id=${product._id || product.id}&length=${dimensions.l}&width=${dimensions.w}&height=${dimensions.h}&unit=${unit}`}
-                                            className="w-full py-5 bg-white border-2 border-gray-100 text-gray-950 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:border-emerald-500 hover:text-emerald-600 transition-all flex items-center justify-center gap-3 group"
-                                        >
-                                            <Sparkles size={18} className="text-emerald-500 group-hover:rotate-12 transition-transform" /> Customize in Lab
-                                        </Link>
                                     </div>
                                 </div>
                             </div>
+
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-gray-100">
                                 <div className="flex items-center gap-3">

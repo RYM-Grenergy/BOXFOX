@@ -46,7 +46,7 @@ export default function FeaturesStrip() {
       </div>
 
       <div className="max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-12 relative z-10">
-        <div className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar items-center justify-start lg:justify-between gap-8 sm:gap-12 w-full py-8 border-y border-gray-100">
+        <div className="grid grid-cols-2 md:flex md:items-center md:justify-between gap-6 sm:gap-12 w-full py-8 border-y border-gray-100">
           {features.map(({ icon: Icon, title, desc, tag }, idx) => (
             <motion.div
               key={title}
@@ -54,9 +54,9 @@ export default function FeaturesStrip() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1, duration: 0.6, ease: "easeOut" }}
-              className="group flex flex-col items-center text-center gap-4 sm:gap-6 shrink-0 min-w-[280px] sm:min-w-[320px] snap-center lg:flex-1 lg:min-w-0"
+              className="group flex flex-col items-center text-center gap-3 sm:gap-6 lg:flex-1"
             >
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center gap-3 sm:gap-4">
                 <div className="flex flex-col items-center gap-3">
                   <div className="text-emerald-500 group-hover:scale-110 transition-transform duration-500">
                     <Icon className="w-8 h-8 sm:w-12 sm:h-12" strokeWidth={1.5} />

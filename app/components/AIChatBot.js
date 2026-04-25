@@ -73,10 +73,10 @@ export default function AIChatBot() {
         animate={{ scale: 1, opacity: 1 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        className="fixed bottom-[124px] right-6 z-[9998] flex h-14 w-14 items-center justify-center rounded-full bg-gray-950 text-white shadow-2xl hover:bg-emerald-600 transition-all duration-300"
+        className="fixed bottom-[96px] right-4 sm:bottom-[124px] sm:right-6 z-[9998] flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-gray-950 text-white shadow-2xl hover:bg-emerald-600 transition-all duration-300"
         style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.2)" }}
       >
-        {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
+        {isOpen ? <X size={20} className="sm:w-6 sm:h-6" /> : <MessageSquare size={20} className="sm:w-6 sm:h-6" />}
         {!isOpen && (
             <span className="absolute -top-1 -right-1 flex h-4 w-4">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -92,13 +92,13 @@ export default function AIChatBot() {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed bottom-[190px] right-6 z-[9998] w-[350px] sm:w-[500px] h-[580px] max-h-[75vh] flex flex-col bg-white rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-gray-100"
+            className="fixed bottom-[160px] right-4 left-4 sm:left-auto sm:right-6 sm:bottom-[200px] z-[9998] w-auto sm:w-[500px] h-[500px] sm:h-[600px] max-h-[80vh] flex flex-col bg-white rounded-3xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-gray-100"
           >
             {/* Header */}
-            <div className="bg-gray-950 p-5 flex items-center justify-between">
+            <div className="bg-gray-950 p-4 sm:p-5 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white">
-                  <Bot size={22} />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white">
+                  <Bot size={18} className="sm:w-[22px] sm:h-[22px]" />
                 </div>
                 <div>
                     <h3 className="text-white text-xs font-black uppercase tracking-tight leading-none">Foxie · Concierge</h3>

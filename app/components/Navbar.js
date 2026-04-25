@@ -95,17 +95,17 @@ export default function Navbar() {
 
         {/* Floating pill wrapper */}
         <div className={`mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isScrolled
-            ? "w-[94%] xl:max-w-[1300px] mt-2 mb-2 bg-white/95 backdrop-blur-md border border-gray-200/50 shadow-2xl rounded-[2.5rem] py-1.5 px-6 lg:px-10"
+            ? "w-[96%] sm:w-[94%] xl:max-w-[1300px] mt-2 mb-2 bg-white/95 backdrop-blur-md border border-gray-200/50 shadow-2xl rounded-[2rem] py-1 px-4 lg:px-10"
             : "w-full bg-white border-b border-gray-100 py-0 px-4 sm:px-8 lg:px-14 shadow-none"
           }`}>
-          <div className="flex items-center justify-between h-14">
-
+          <div className="flex items-center justify-between h-12 sm:h-14">
+            
             {/* ── Logo — always left ── */}
             <Link href="/" className="shrink-0 flex items-center">
               <img
                 src="/BOXFOX-1.png"
                 alt="BOXFOX Logo"
-                className={`transition-all duration-500 object-contain ${isScrolled ? "h-4 sm:h-5" : "h-5 sm:h-6"}`}
+                className={`transition-all duration-500 object-contain ${isScrolled ? "h-3.5 sm:h-5" : "h-4 sm:h-6"}`}
               />
             </Link>
 
