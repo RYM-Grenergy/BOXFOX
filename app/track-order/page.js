@@ -178,7 +178,7 @@ export default function TrackOrderPage() {
                                             <div>
                                                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Destination Node</p>
                                                 <p className="text-sm font-black text-gray-950 uppercase mt-1 leading-relaxed">
-                                                    {order.shipping?.address}, {order.shipping?.city}, {order.shipping?.state} - {order.shipping?.pincode}
+                                                    {order.shipping?.address}, {order.shipping?.city}, {order.shipping?.state} - {order.shipping?.pincode || order.shipping?.zipCode}
                                                 </p>
                                             </div>
                                         </div>

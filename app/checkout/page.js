@@ -163,7 +163,7 @@ export default function CheckoutPage() {
                         apartment: formData.shippingAddress.apartment,
                         city: formData.shippingAddress.city,
                         state: formData.shippingAddress.state,
-                        zipCode: formData.shippingAddress.zipCode,
+                        pincode: formData.shippingAddress.zipCode,
                         country: formData.shippingAddress.country
                     }
                 })

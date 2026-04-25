@@ -14,13 +14,20 @@ export async function GET(req) {
 
         // Search by orderId or phone number
         // Clean phone number for better matching (optional, depends on how it's stored)
+        const qRaw = q.trim();
+        const qClean = qRaw.replace(/[^0-9]/g, ''); // Extract only digits
+        
+        // Search by orderId or phone number
         const order = await Order.findOne({
             $or: [
-                { orderId: q.trim() },
-                { 'customer.phone': q.trim() },
-                { 'customer.phone': q.trim().replace(/\s+/g, '') } // Try without spaces
+                { orderId: qRaw },
+                { orderId: qRaw.toUpperCase() },
+                { orderId: `ORD-${qRaw}` }, // Try with ORD- prefix if user forgot it
+                { 'customer.phone': qRaw },
+                { 'customer.phone': qClean }, // Match clean numeric phone
+                ...(qClean.length >= 4 ? [{ 'customer.phone': { $regex: qClean } }] : []) // Partial match only if 4+ digits
             ]
-        }).sort({ createdAt: -1 }); // Get the latest if multiple for phone
+        }).sort({ createdAt: -1 });
 
         if (!order) {
             return NextResponse.json({ error: 'Order not found' }, { status: 404 });
