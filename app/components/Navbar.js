@@ -150,14 +150,14 @@ export default function Navbar() {
             </div>
 
             {/* ── Right Actions ── */}
-            <div className="flex items-center gap-1 sm:gap-1.5">
+            <div className="flex items-center gap-0.5 sm:gap-1.5">
               {/* Search */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
                 aria-label="Search"
                 className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-600 hover:text-gray-900 duration-200"
               >
-                <Search size={15} />
+                <Search size={14} />
               </button>
 
               {/* Login / Account */}
@@ -198,9 +198,9 @@ export default function Navbar() {
                 aria-label="Open Shopping Cart"
                 className="relative flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-600 hover:text-gray-900 duration-200"
               >
-                <ShoppingCart size={16} />
+                <ShoppingCart size={15} />
                 {cart.length > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-emerald-500 text-white text-[8px] font-black rounded-full h-4 w-4 flex items-center justify-center ring-2 ring-white">
+                  <span className="absolute -top-0.5 -right-0.5 bg-emerald-500 text-white text-[7px] font-black rounded-full h-3.5 w-3.5 flex items-center justify-center ring-1 ring-white">
                     {cart.length}
                   </span>
                 )}
@@ -210,9 +210,9 @@ export default function Navbar() {
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 aria-label={menuOpen ? "Close Menu" : "Open Menu"}
-                className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-700 duration-200 ml-1"
+                className="lg:hidden flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 active:scale-90 transition-all text-gray-700 duration-200"
               >
-                {menuOpen ? <X size={18} /> : <Menu size={18} />}
+                {menuOpen ? <X size={16} /> : <Menu size={16} />}
               </button>
             </div>
           </div>
