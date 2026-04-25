@@ -2,13 +2,13 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-    Search, 
-    Package, 
-    Truck, 
-    CheckCircle2, 
-    Clock, 
-    XCircle, 
+import {
+    Search,
+    Package,
+    Truck,
+    CheckCircle2,
+    Clock,
+    XCircle,
     ArrowRight,
     MapPin,
     Calendar,
@@ -16,7 +16,6 @@ import {
     Phone
 } from "lucide-react";
 import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 
 export default function TrackOrderPage() {
     const [query, setQuery] = useState("");
@@ -88,7 +87,7 @@ export default function TrackOrderPage() {
                         </p>
                     </motion.div>
 
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
@@ -204,8 +203,8 @@ export default function TrackOrderPage() {
 
                             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Need deeper logistics intel?</p>
-                                <a 
-                                    href="https://wa.me/919953302917" 
+                                <a
+                                    href="https://wa.me/919953302917"
                                     target="_blank"
                                     className="flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
                                 >
@@ -217,7 +216,6 @@ export default function TrackOrderPage() {
                 </AnimatePresence>
             </main>
 
-            <Footer />
         </div>
     );
 }
