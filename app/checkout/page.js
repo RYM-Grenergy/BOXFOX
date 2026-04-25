@@ -283,7 +283,7 @@ export default function CheckoutPage() {
                                         <label className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Recipient Name</label>
                                         <input
                                             name="name" value={formData.name || ''} onChange={handleFormChange}
-                                            placeholder="John Doe"
+                                            placeholder="Enter Your Name"
                                             className="w-full bg-gray-50 border border-transparent rounded-[1.25rem] lg:rounded-[1.5rem] px-6 lg:px-8 py-5 lg:py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all uppercase tracking-widest"
                                         />
                                     </div>
@@ -291,7 +291,7 @@ export default function CheckoutPage() {
                                         <label className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Contact Email</label>
                                         <input
                                             type="email" name="email" value={formData.email || ''} onChange={handleFormChange}
-                                            placeholder="support@boxfox.in"
+                                            placeholder="Enter Your Email"
                                             className="w-full bg-gray-50 border border-transparent rounded-[1.25rem] lg:rounded-[1.5rem] px-6 lg:px-8 py-5 lg:py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
                                         />
                                     </div>
@@ -299,7 +299,7 @@ export default function CheckoutPage() {
                                         <label className="text-[9px] lg:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Encrypted Phone</label>
                                         <input
                                             name="phone" value={formData.phone || ''} onChange={handleFormChange}
-                                            placeholder="+91 00000 00000"
+                                            placeholder="Enter Your Phone Number"
                                             className="w-full bg-gray-50 border border-transparent rounded-[1.25rem] lg:rounded-[1.5rem] px-6 lg:px-8 py-5 lg:py-6 font-black text-sm outline-none focus:bg-white focus:border-gray-950 hover:bg-gray-100 transition-all"
                                         />
                                     </div>

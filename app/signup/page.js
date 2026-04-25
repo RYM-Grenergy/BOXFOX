@@ -208,7 +208,7 @@ function SignUpContent() {
                                             <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none text-gray-300 group-focus-within/input:text-emerald-500 transition-colors">
                                                 <UserIcon size={18} />
                                             </div>
-                                            <input required name="name" value={formData.name} onChange={handleChange} type="text" className="w-full pl-16 pr-6 py-4 rounded-[1.5rem] bg-gray-50/50 border border-gray-100 focus:bg-white focus:ring-[15px] focus:ring-emerald-500/[0.03] outline-none transition-all font-bold text-sm text-gray-950 placeholder:text-gray-300" placeholder="John Doe" />
+                                            <input required name="name" value={formData.name} onChange={handleChange} type="text" className="w-full pl-16 pr-6 py-4 rounded-[1.5rem] bg-gray-50/50 border border-gray-100 focus:bg-white focus:ring-[15px] focus:ring-emerald-500/[0.03] outline-none transition-all font-bold text-sm text-gray-950 placeholder:text-gray-300" placeholder="Name" />
                                         </div>
                                     </div>
 
@@ -229,19 +229,19 @@ function SignUpContent() {
                                                 <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none text-gray-300 group-focus-within/input:text-emerald-500 transition-colors">
                                                     <Mail size={18} />
                                                 </div>
-                                                <input 
-                                                    required 
-                                                    name="email" 
-                                                    value={formData.email} 
-                                                    onChange={handleChange} 
-                                                    type="email" 
-                                                    className="w-full pl-16 pr-6 py-4 rounded-[1.5rem] bg-gray-50/50 border border-gray-100 focus:bg-white focus:ring-[15px] focus:ring-emerald-500/[0.03] outline-none transition-all font-bold text-sm text-gray-950 placeholder:text-gray-300" 
-                                                    placeholder="name@company.com" 
+                                                <input
+                                                    required
+                                                    name="email"
+                                                    value={formData.email}
+                                                    onChange={handleChange}
+                                                    type="email"
+                                                    className="w-full pl-16 pr-6 py-4 rounded-[1.5rem] bg-gray-50/50 border border-gray-100 focus:bg-white focus:ring-[15px] focus:ring-emerald-500/[0.03] outline-none transition-all font-bold text-sm text-gray-950 placeholder:text-gray-300"
+                                                    placeholder="name@company.com"
                                                 />
                                             </div>
                                             {!otpSent && (
-                                                <button 
-                                                    type="button" 
+                                                <button
+                                                    type="button"
                                                     onClick={handleSendOTP}
                                                     disabled={sendingOtp}
                                                     className="px-6 py-4 bg-gray-950 text-white rounded-[1.2rem] text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all disabled:opacity-50"
@@ -253,28 +253,28 @@ function SignUpContent() {
                                     </div>
 
                                     {otpSent && (
-                                        <motion.div 
+                                        <motion.div
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             className="space-y-3"
                                         >
                                             <label className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] ml-5 flex items-center gap-2">
-                                                Verification Code 
+                                                Verification Code
                                                 <span className="text-[8px] lowercase font-medium text-gray-400 italic font-sans">(Sent to email)</span>
                                             </label>
                                             <div className="relative group/input">
                                                 <div className="absolute inset-y-0 left-0 pl-7 flex items-center pointer-events-none text-emerald-500">
                                                     <ShieldCheck size={18} />
                                                 </div>
-                                                <input 
-                                                    required 
-                                                    name="otp" 
-                                                    value={formData.otp} 
-                                                    onChange={handleChange} 
-                                                    type="text" 
+                                                <input
+                                                    required
+                                                    name="otp"
+                                                    value={formData.otp}
+                                                    onChange={handleChange}
+                                                    type="text"
                                                     maxLength="6"
-                                                    className="w-full pl-16 pr-6 py-4 rounded-[1.5rem] bg-emerald-50/30 border border-emerald-100 focus:bg-white focus:ring-[15px] focus:ring-emerald-500/[0.03] outline-none transition-all font-black text-lg tracking-[0.5em] text-emerald-950 placeholder:text-emerald-200" 
-                                                    placeholder="000000" 
+                                                    className="w-full pl-16 pr-6 py-4 rounded-[1.5rem] bg-emerald-50/30 border border-emerald-100 focus:bg-white focus:ring-[15px] focus:ring-emerald-500/[0.03] outline-none transition-all font-black text-lg tracking-[0.5em] text-emerald-950 placeholder:text-emerald-200"
+                                                    placeholder="000000"
                                                 />
                                             </div>
                                         </motion.div>
@@ -306,14 +306,14 @@ function SignUpContent() {
                                     <div className="md:col-span-2 pt-2 pb-6">
                                         <label className={`flex items-start gap-4 cursor-pointer group/optin transition-opacity ${!otpSent ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
                                             <div className="relative mt-1">
-                                                <input 
-                                                    required 
+                                                <input
+                                                    required
                                                     disabled={!otpSent}
-                                                    type="checkbox" 
+                                                    type="checkbox"
                                                     name="emailOptIn"
                                                     checked={formData.emailOptIn}
                                                     onChange={(e) => setFormData({ ...formData, emailOptIn: e.target.checked })}
-                                                    className="peer absolute opacity-0 cursor-pointer w-0 h-0" 
+                                                    className="peer absolute opacity-0 cursor-pointer w-0 h-0"
                                                 />
                                                 <div className="w-5 h-5 rounded-md border-2 border-gray-100 group-hover/optin:border-emerald-500 transition-all peer-checked:bg-emerald-500 peer-checked:border-emerald-500 flex items-center justify-center text-white">
                                                     <CheckCircle2 size={12} className="opacity-0 peer-checked:opacity-100 transition-opacity" />
