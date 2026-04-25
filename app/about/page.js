@@ -32,25 +32,24 @@ export default function AboutPage() {
         <div className="min-h-screen bg-white text-gray-950 font-sans selection:bg-emerald-500 selection:text-white">
             <Navbar />
 
-            <main className="pt-20 lg:pt-24">
-                {/* Hero Section */}
-                <section className="relative px-6 lg:px-12 py-12 md:py-16 lg:py-24 overflow-hidden">
-                    <div className="absolute top-0 right-0 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-emerald-50/50 blur-[120px] rounded-full -mr-24 -mt-24 pointer-events-none" />
-                    <div className="max-w-[1400px] mx-auto grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <main className="pt-20 lg:pt-24">                {/* Hero Section */}
+                <section className="relative px-6 lg:px-12 py-10 sm:py-16 md:py-16 lg:py-24 overflow-hidden">
+                    <div className="absolute top-0 right-0 w-[200px] md:w-[500px] h-[200px] md:h-[500px] bg-emerald-50/50 blur-[80px] md:blur-[120px] rounded-full -mr-12 -mt-12 md:-mr-24 md:-mt-24 pointer-events-none" />
+                    <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
                         <motion.div
                             initial={{ opacity: 0, x: -30 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.8 }}
-                            className="text-center lg:text-left"
+                            className="text-center lg:text-left order-2 lg:order-1"
                         >
                             <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
-                                <div className="w-8 h-px bg-emerald-500" />
-                                <span className="text-emerald-600 text-[10px] font-black uppercase tracking-[0.4em]">Indo Omakase Pvt. Ltd. | IOPL</span>
+                                <div className="w-6 sm:w-8 h-px bg-emerald-500" />
+                                <span className="text-emerald-600 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.4em]">Indo Omakase Pvt. Ltd. | IOPL</span>
                             </div>
-                            <h1 className="text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter uppercase leading-[0.85] mb-8 text-gray-950">
+                            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-9xl font-black tracking-tighter uppercase leading-[0.85] mb-6 sm:mb-8 text-gray-950">
                                 Serving <br /> <span className="text-emerald-500 italic">India,</span> <br className="hidden md:block" /> Serving You.
                             </h1>
-                            <p className="text-base md:text-xl text-gray-500 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0 italic">
+                            <p className="text-sm sm:text-base md:text-xl text-gray-500 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0 italic">
                                 "We connect millions of buyers and sellers around the world, empowering people & creating economic opportunity for all."
                             </p>
                         </motion.div>
@@ -58,22 +57,22 @@ export default function AboutPage() {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 1, delay: 0.2 }}
-                            className="relative hidden md:block"
+                            className="relative order-1 lg:order-2"
                         >
-                            <div className="aspect-square bg-white rounded-[4rem] border border-gray-100 overflow-hidden flex items-center justify-center shadow-2xl group">
+                            <div className="aspect-square bg-white rounded-[2.5rem] sm:rounded-[4rem] border border-gray-100 overflow-hidden flex items-center justify-center shadow-2xl group">
                                 <img
                                     src="/about.png"
                                     alt="BoxFox Presentation"
                                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                                 />
-                                <div className="absolute -bottom-10 -left-10 bg-white p-6 lg:p-10 rounded-[3rem] shadow-xl border border-gray-200 max-w-[240px] lg:max-w-xs z-20">
-                                    <div className="flex items-center gap-4 mb-4">
-                                        <div className="w-10 h-10 lg:w-12 lg:h-12 bg-emerald-500 rounded-2xl flex items-center justify-center text-white">
-                                            <Award size={24} />
+                                <div className="absolute -bottom-6 -left-6 sm:-bottom-10 sm:-left-10 bg-white p-6 lg:p-10 rounded-[2rem] sm:rounded-[3rem] shadow-xl border border-gray-200 max-w-[180px] sm:max-w-xs z-20">
+                                    <div className="flex items-center gap-3 sm:gap-4 mb-2 sm:mb-4">
+                                        <div className="w-8 h-8 sm:w-12 sm:h-12 bg-emerald-500 rounded-xl sm:rounded-2xl flex items-center justify-center text-white">
+                                            <Award size={18} className="sm:w-[24px] sm:h-[24px]" />
                                         </div>
-                                        <p className="text-[10px] lg:text-xs font-black uppercase tracking-widest text-gray-400">Since_2010</p>
+                                        <p className="text-[8px] sm:text-[10px] lg:text-xs font-black uppercase tracking-widest text-gray-400">Since_2010</p>
                                     </div>
-                                    <p className="text-xs lg:text-sm font-bold text-gray-950 leading-snug">ISO 9001:2008 Certified Company. Actively committed to high-quality Custom Packaging.</p>
+                                    <p className="text-[10px] sm:text-xs lg:text-sm font-bold text-gray-950 leading-snug">ISO 9001:2008 Certified Company. Committed to high-quality Packaging.</p>
                                 </div>
                             </div>
                         </motion.div>
@@ -82,16 +81,16 @@ export default function AboutPage() {
 
                 {/* Company Overview */}
                 <section className="px-6 lg:px-12 py-16 md:py-24 bg-gray-50/50">
-                    <div className="max-w-[1400px] mx-auto space-y-20 md:space-y-32">
+                    <div className="max-w-[1400px] mx-auto space-y-16 md:space-y-32">
                         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16">
                             <div className="lg:col-span-12">
-                                <div className="max-w-4xl space-y-8 md:space-y-10">
+                                <div className="max-w-4xl space-y-6 md:space-y-10">
                                     <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter text-gray-950">Our Journey & Expertise</h2>
-                                    <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-                                        <p className="text-base md:text-lg text-gray-500 leading-relaxed">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
+                                        <p className="text-sm sm:text-base md:text-lg text-gray-500 leading-relaxed">
                                             Indo Omakase Pvt Ltd from 2010 is actively committed to manufacturing and wholesaling high-quality Duplex Custom Designed and Printed Packaging Boxes. Our range includes LED Bulb, Mobile, Watch, Headphone, and FMCG packaging, among many others.
                                         </p>
-                                        <p className="text-base md:text-lg text-gray-500 leading-relaxed">
+                                        <p className="text-sm sm:text-base md:text-lg text-gray-500 leading-relaxed">
                                             We serve big corporates with products related to brand visibility like Acrylic Signage and Digital Medias. Our strength lies in deep product knowledge and advanced machinery, allowing us to deliver perfection in every project.
                                         </p>
                                     </div>
@@ -108,13 +107,13 @@ export default function AboutPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ delay: i * 0.1 }}
-                                    className="p-6 md:p-10 bg-white rounded-[2rem] md:rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200 transition-all group text-center lg:text-left"
+                                    className="p-5 sm:p-8 md:p-10 bg-white rounded-[1.5rem] sm:rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200 transition-all group text-center lg:text-left"
                                 >
-                                    <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-50 rounded-xl flex items-center justify-center mb-4 md:mb-6 mx-auto lg:mx-0 group-hover:scale-110 transition-transform">
-                                        {s.icon}
+                                    <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gray-50 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-6 mx-auto lg:mx-0 group-hover:scale-110 transition-transform">
+                                        {React.cloneElement(s.icon, { size: 20, className: "sm:w-[24px] sm:h-[24px] " + s.icon.props.className })}
                                     </div>
-                                    <p className="text-2xl md:text-4xl font-black tracking-tighter text-gray-950 mb-1 md:mb-2 italic">{s.value}</p>
-                                    <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">{s.label}</p>
+                                    <p className="text-xl sm:text-3xl md:text-4xl font-black tracking-tighter text-gray-950 mb-1 md:mb-2 italic">{s.value}</p>
+                                    <p className="text-[7px] sm:text-[9px] md:text-[10px] font-black uppercase tracking-widest text-gray-400">{s.label}</p>
                                 </motion.div>
                             ))}
                         </div>
@@ -122,31 +121,31 @@ export default function AboutPage() {
                 </section>
 
                 {/* Timeline Section - Premium Redesign */}
-                <section className="px-6 lg:px-12 py-20 md:py-32 lg:py-48 bg-white relative overflow-hidden">
+                <section className="px-6 lg:px-12 py-16 sm:py-24 md:py-32 lg:py-48 bg-white relative overflow-hidden">
                     {/* Background Decorative Text */}
-                    <div className="absolute top-20 left-0 w-full overflow-hidden pointer-events-none opacity-[0.06] select-none">
+                    <div className="absolute top-20 left-0 w-full overflow-hidden pointer-events-none opacity-[0.04] sm:opacity-[0.06] select-none">
                         <h2 className="text-[20vw] font-black uppercase tracking-tighter leading-none whitespace-nowrap">
                             LEGACY • PERSISTENCE • GROWTH • VISION
                         </h2>
                     </div>
 
                     <div className="max-w-[1400px] mx-auto relative z-10">
-                        <div className="flex flex-col mb-20 md:mb-32">
+                        <div className="flex flex-col mb-12 sm:mb-20 md:mb-32">
                             <motion.div
                                 initial={{ opacity: 0, x: -20 }}
                                 whileInView={{ opacity: 1, x: 0 }}
                                 viewport={{ once: true }}
-                                className="flex items-center gap-4 mb-6 md:mb-8"
+                                className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-8"
                             >
-                                <div className="w-12 h-1 bg-emerald-500 rounded-full" />
-                                <span className="text-emerald-500 text-[10px] md:text-xs font-black uppercase tracking-[0.5em]">The_Chronicle</span>
+                                <div className="w-8 sm:w-12 h-1 bg-emerald-500 rounded-full" />
+                                <span className="text-emerald-500 text-[8px] sm:text-[10px] md:text-xs font-black uppercase tracking-[0.5em]">The_Chronicle</span>
                             </motion.div>
-                            <h2 className="text-5xl md:text-7xl lg:text-9xl font-black uppercase tracking-tighter text-gray-950 leading-[0.85]">
+                            <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-9xl font-black uppercase tracking-tighter text-gray-950 leading-[0.85]">
                                 Our <br /> <span className="text-emerald-500 italic">Journey.</span>
                             </h2>
                         </div>
 
-                        <div className="relative space-y-16 md:space-y-40 lg:space-y-0 lg:pb-60 px-4 md:px-0">
+                        <div className="relative space-y-12 sm:space-y-16 md:space-y-40 lg:space-y-0 lg:pb-60 px-0 sm:px-4 md:px-0">
                             {/* Central Path for Desktop */}
                             <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px bg-gray-100 -translate-x-1/2" />
                             {/* Mobile Path */}
@@ -159,32 +158,32 @@ export default function AboutPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true, margin: "-100px" }}
                                     transition={{ duration: 0.8, delay: 0.1 }}
-                                    className={`relative flex flex-col lg:flex-row items-center gap-8 lg:gap-0 ${i % 2 === 0 ? "lg:flex-row-reverse" : ""
-                                        } pl-8 lg:pl-0`}
+                                    className={`relative flex flex-col lg:flex-row items-center gap-6 sm:gap-8 lg:gap-0 ${i % 2 === 0 ? "lg:flex-row-reverse" : ""
+                                        } pl-6 sm:pl-8 lg:pl-0`}
                                 >
                                     {/* Year Pin - Desktop */}
                                     <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 w-20 h-20 bg-white border-4 border-gray-50 rounded-full items-center justify-center z-20 shadow-xl group">
                                         <div className="w-4 h-4 bg-emerald-500 rounded-full group-hover:scale-[3] transition-transform duration-500" />
                                     </div>
                                     {/* Mobile Pin */}
-                                    <div className="lg:hidden absolute left-[-4px] top-6 w-3 h-3 bg-emerald-500 rounded-full z-20" />
+                                    <div className="lg:hidden absolute left-[-4px] top-4 sm:top-6 w-2.5 h-2.5 bg-emerald-500 rounded-full z-20" />
 
                                     {/* Content Card */}
                                     <div className="w-full lg:w-[45%]">
-                                        <div className={`p-8 md:p-14 bg-gray-50 rounded-[2.5rem] md:rounded-[4rem] border border-gray-100 hover:bg-white hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-700 relative overflow-hidden group`}>
+                                        <div className={`p-6 sm:p-10 md:p-14 bg-gray-50 rounded-[2rem] sm:rounded-[3rem] md:rounded-[4rem] border border-gray-100 hover:bg-white hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-700 relative overflow-hidden group`}>
                                             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
 
                                             <div className="relative z-10">
-                                                <div className="flex items-end justify-between mb-6 md:mb-8">
+                                                <div className="flex items-end justify-between mb-4 sm:mb-8">
                                                     <div>
-                                                        <p className="text-emerald-500 text-4xl md:text-6xl font-black tracking-tighter italic leading-none">{item.year}</p>
-                                                        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mt-2">{item.month}</p>
+                                                        <p className="text-emerald-500 text-3xl sm:text-4xl md:text-6xl font-black tracking-tighter italic leading-none">{item.year}</p>
+                                                        <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mt-1 sm:mt-2">{item.month}</p>
                                                     </div>
                                                 </div>
-                                                <h3 className="text-xl md:text-2xl font-black text-gray-950 mb-4 md:mb-6 uppercase tracking-tighter leading-tight italic">
+                                                <h3 className="text-lg sm:text-xl md:text-2xl font-black text-gray-950 mb-3 sm:mb-6 uppercase tracking-tighter leading-tight italic">
                                                     {item.title}
                                                 </h3>
-                                                <p className="text-xs md:text-sm font-bold text-gray-500 italic leading-relaxed uppercase tracking-tight">
+                                                <p className="text-[10px] sm:text-xs md:text-sm font-bold text-gray-500 italic leading-relaxed uppercase tracking-tight">
                                                     {item.desc}
                                                 </p>
                                             </div>
@@ -201,47 +200,47 @@ export default function AboutPage() {
                 </section>
 
                 {/* Infrastructure & Capability - Redefined */}
-                <section className="px-6 lg:px-12 py-16 md:py-32 bg-gray-950 text-white rounded-[3rem] md:rounded-[4rem] mx-4 md:mx-6 lg:mx-12 overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-[400px] md:w-[800px] h-[400px] md:h-[800px] bg-emerald-500/5 blur-[120px] rounded-full -mr-32 -mt-32 pointer-events-none" />
-                    <div className="max-w-[1400px] mx-auto grid lg:grid-cols-2 gap-12 md:gap-24 items-center">
+                <section className="px-6 lg:px-12 py-16 md:py-32 bg-gray-950 text-white rounded-[2rem] sm:rounded-[3rem] md:rounded-[4rem] mx-4 md:mx-6 lg:mx-12 overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-emerald-500/5 blur-[80px] md:blur-[120px] rounded-full -mr-32 -mt-32 pointer-events-none" />
+                    <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-24 items-center">
                         <div>
-                            <span className="text-emerald-500 text-[10px] font-black uppercase tracking-[0.4em] mb-6 md:mb-8 block text-center lg:text-left">Technology_&_Capability</span>
-                            <h2 className="text-4xl md:text-7xl font-black uppercase tracking-tighter leading-[0.9] mb-8 md:mb-10 text-white text-center lg:text-left">
+                            <span className="text-emerald-500 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.4em] mb-4 sm:mb-8 block text-center lg:text-left">Technology_&_Capability</span>
+                            <h2 className="text-3xl sm:text-5xl md:text-7xl font-black uppercase tracking-tighter leading-[0.9] mb-6 md:mb-10 text-white text-center lg:text-left">
                                 Turning Ideas <br /> Into <span className="text-emerald-500 italic underline decoration-emerald-500/20 underline-offset-[8px] md:underline-offset-[12px]">Reality.</span>
                             </h2>
-                            <p className="text-gray-300 text-sm md:text-lg font-medium leading-relaxed mb-10 md:mb-12 italic text-center lg:text-left max-w-2xl mx-auto lg:mx-0">
+                            <p className="text-gray-300 text-xs sm:text-base md:text-lg font-medium leading-relaxed mb-8 md:mb-12 italic text-center lg:text-left max-w-2xl mx-auto lg:mx-0">
                                 We offer best services in printing, pre-press, finishing and binding using state-of-the art technology. Our designers ensure your vision is perfectly translated into a physical product while keeping costs optimized.
                             </p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-8">
-                                <div className="space-y-4 p-8 bg-white/5 rounded-[2rem] md:rounded-3xl border border-white/5 hover:border-emerald-500/30 transition-all group flex flex-col items-center lg:items-start text-center lg:text-left">
-                                    <CheckCircle2 className="text-emerald-500 group-hover:scale-110 transition-transform" size={24} />
+                                <div className="space-y-3 p-6 sm:p-8 bg-white/5 rounded-[1.5rem] sm:rounded-3xl border border-white/5 hover:border-emerald-500/30 transition-all group flex flex-col items-center lg:items-start text-center lg:text-left">
+                                    <CheckCircle2 className="text-emerald-500 group-hover:scale-110 transition-transform" size={20} />
                                     <div>
-                                        <h5 className="font-black uppercase tracking-widest text-[11px] md:text-xs text-white mb-2">New Rigid Boxes</h5>
-                                        <p className="text-[9px] text-emerald-400 uppercase tracking-widest font-black font-mono">Status: Active_Production</p>
+                                        <h5 className="font-black uppercase tracking-widest text-[10px] md:text-xs text-white mb-1 md:mb-2">New Rigid Boxes</h5>
+                                        <p className="text-[8px] text-emerald-400 uppercase tracking-widest font-black font-mono">Status: Active_Production</p>
                                     </div>
                                 </div>
-                                <div className="space-y-4 p-8 bg-white/5 rounded-[2rem] md:rounded-3xl border border-white/5 hover:border-emerald-500/30 transition-all group flex flex-col items-center lg:items-start text-center lg:text-left">
-                                    <CheckCircle2 className="text-emerald-500 group-hover:scale-110 transition-transform" size={24} />
+                                <div className="space-y-3 p-6 sm:p-8 bg-white/5 rounded-[1.5rem] sm:rounded-3xl border border-white/5 hover:border-emerald-500/30 transition-all group flex flex-col items-center lg:items-start text-center lg:text-left">
+                                    <CheckCircle2 className="text-emerald-500 group-hover:scale-110 transition-transform" size={20} />
                                     <div>
-                                        <h5 className="font-black uppercase tracking-widest text-[11px] md:text-xs text-white mb-2">Custom Printing</h5>
-                                        <p className="text-[9px] text-emerald-400 uppercase tracking-widest font-black font-mono">State-of-the-Art Solutions</p>
+                                        <h5 className="font-black uppercase tracking-widest text-[10px] md:text-xs text-white mb-1 md:mb-2">Custom Printing</h5>
+                                        <p className="text-[8px] text-emerald-400 uppercase tracking-widest font-black font-mono">State-of-the-Art Solutions</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div className="grid gap-6">
-                            <div className="bg-white/5 border border-white/10 p-8 md:p-10 rounded-[2.5rem] md:rounded-[3rem] backdrop-blur-md relative overflow-hidden group">
+                            <div className="bg-white/5 border border-white/10 p-6 sm:p-10 rounded-[1.5rem] sm:rounded-[3rem] backdrop-blur-md relative overflow-hidden group">
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl rounded-full translate-x-12 -translate-y-12" />
-                                <p className="text-base md:text-xl text-gray-200 italic font-medium leading-relaxed mb-10 text-center lg:text-left relative z-10">
+                                <p className="text-sm sm:text-base md:text-xl text-gray-200 italic font-medium leading-relaxed mb-6 sm:mb-10 text-center lg:text-left relative z-10">
                                     "IOPL believes in creating value to our customers. Our experts will help you select colors, stock, finishes, and every other aspect for your design."
                                 </p>
-                                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                                    <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center border border-white/10 shrink-0">
-                                        <Target className="text-emerald-500" size={20} />
+                                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4">
+                                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 rounded-full flex items-center justify-center border border-white/10 shrink-0">
+                                        <Target className="text-emerald-500" size={18} />
                                     </div>
                                     <div className="text-center sm:text-left">
-                                        <p className="text-[10px] md:text-xs font-black uppercase tracking-widest text-white/90">Our Mission</p>
-                                        <p className="text-[9px] text-emerald-400 uppercase tracking-[0.2em] font-black">Innovation_Value_Quality</p>
+                                        <p className="text-[8px] sm:text-[10px] md:text-xs font-black uppercase tracking-widest text-white/90">Our Mission</p>
+                                        <p className="text-[8px] text-emerald-400 uppercase tracking-[0.2em] font-black">Innovation_Value_Quality</p>
                                     </div>
                                 </div>
                             </div>
@@ -250,16 +249,16 @@ export default function AboutPage() {
                 </section>
 
                 {/* Leaders Section - Premium Grid */}
-                <section className="px-6 lg:px-12 py-24 md:py-48">
+                <section className="px-6 lg:px-12 py-16 sm:py-24 md:py-48">
                     <div className="max-w-[1400px] mx-auto">
-                        <div className="flex flex-col items-center text-center mb-16 md:mb-32">
-                            <span className="text-emerald-500 text-[10px] font-black uppercase tracking-[0.4em] mb-6 md:mb-8 block">The_Mindset</span>
-                            <h2 className="text-5xl md:text-7xl lg:text-9xl font-black uppercase tracking-tighter text-gray-950 leading-[0.85]">
+                        <div className="flex flex-col items-center text-center mb-12 sm:mb-16 md:mb-32">
+                            <span className="text-emerald-500 text-[8px] sm:text-[10px] font-black uppercase tracking-[0.4em] mb-4 sm:mb-8 block">The_Mindset</span>
+                            <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-9xl font-black uppercase tracking-tighter text-gray-950 leading-[0.85]">
                                 Meet Our <br /> <span className="text-gray-300">Leaders.</span>
                             </h2>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 max-w-6xl mx-auto">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 md:gap-20 max-w-6xl mx-auto">
                             {[
                                 { name: 'Jay Agarwal (RichieJay)', role: 'CEO Founder', image: '/jay.jpg' },
                                 { name: 'Richa Agarwal', role: 'Director', image: '/richa.jpg' },
@@ -272,7 +271,7 @@ export default function AboutPage() {
                                     transition={{ delay: i * 0.2 }}
                                     className="group relative"
                                 >
-                                    <div className="relative aspect-[4/5] rounded-[2.5rem] md:rounded-[4rem] overflow-hidden bg-gray-100 border border-gray-100">
+                                    <div className="relative aspect-[4/5] rounded-[2rem] sm:rounded-[4rem] overflow-hidden bg-gray-100 border border-gray-100">
                                         <img
                                             src={l.image}
                                             alt={l.name}
@@ -280,30 +279,29 @@ export default function AboutPage() {
                                         />
 
                                         {/* Overlay Content */}
-                                        <div className="absolute inset-x-0 bottom-0 p-6 md:p-10 bg-gradient-to-t from-gray-950/90 via-gray-950/40 to-transparent">
+                                        <div className="absolute inset-x-0 bottom-0 p-6 sm:p-10 bg-gradient-to-t from-gray-950/90 via-gray-950/40 to-transparent">
                                             <div className="translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
-                                                <span className="text-emerald-400 text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] mb-2 block">{l.role}</span>
-                                                <h3 className="text-2xl md:text-4xl font-black text-white italic tracking-tighter leading-none mb-4">{l.name}</h3>
-                                                <div className="w-12 h-1 bg-emerald-500 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left" />
+                                                <span className="text-emerald-400 text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] mb-1 sm:mb-2 block">{l.role}</span>
+                                                <h3 className="text-xl sm:text-2xl md:text-4xl font-black text-white italic tracking-tighter leading-none mb-3 sm:mb-4">{l.name}</h3>
+                                                <div className="w-10 sm:w-12 h-1 bg-emerald-500 rounded-full scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left" />
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Background Accent */}
-                                    <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                                    <div className="absolute -bottom-6 -right-6 w-24 h-24 sm:w-32 sm:h-32 bg-emerald-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                                 </motion.div>
                             ))}
                         </div>
 
-                        <div className="mt-20 md:mt-40 text-center max-w-3xl mx-auto px-4">
-                            <p className="text-base md:text-xl text-gray-500 font-bold italic leading-relaxed uppercase tracking-tight">
+                        <div className="mt-16 sm:mt-20 md:mt-40 text-center max-w-3xl mx-auto px-4">
+                            <p className="text-sm sm:text-base md:text-xl text-gray-500 font-bold italic leading-relaxed uppercase tracking-tight">
                                 "Our mentor Mr. Agarwal is the guiding force behind our rapid growth, encouraging us to bring out a perfect innovation in our offered range."
                             </p>
                         </div>
                     </div>
                 </section>
             </main>
-
         </div>
     );
 }
