@@ -188,15 +188,15 @@ export default function B2BPage() {
                             {/* Contact Details */}
                             <div className="space-y-2 sm:space-y-3">
                                 <label className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 sm:ml-6">Company Name</label>
-                                <input required name="companyName" value={formData.companyName} onChange={handleChange} type="text" className="w-full px-6 sm:px-8 py-4 sm:py-6 rounded-2xl sm:rounded-3xl bg-white border border-gray-100 focus:border-emerald-500 focus:ring-4 sm:ring-8 focus:ring-emerald-500/5 outline-none transition-all font-black text-gray-950 shadow-sm text-sm sm:text-base" placeholder="e.g. Acme Corp" />
+                                <input required name="companyName" value={formData.companyName} onChange={handleChange} type="text" className="w-full px-6 sm:px-8 py-4 sm:py-6 rounded-2xl sm:rounded-3xl bg-white border border-gray-100 focus:border-emerald-500 outline-none transition-all font-black text-gray-950 shadow-sm text-sm sm:text-base" placeholder="e.g. Acme Corp" />
                             </div>
                             <div className="space-y-2 sm:space-y-3">
                                 <label className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 sm:ml-6">Contact Email</label>
-                                <input required name="contactEmail" value={formData.contactEmail} onChange={handleChange} type="email" className="w-full px-6 sm:px-8 py-4 sm:py-6 rounded-2xl sm:rounded-3xl bg-white border border-gray-100 focus:border-emerald-500 focus:ring-4 sm:ring-8 focus:ring-emerald-500/5 outline-none transition-all font-black text-gray-950 shadow-sm text-sm sm:text-base" placeholder="corp@email.com" />
+                                <input required name="contactEmail" value={formData.contactEmail} onChange={handleChange} type="email" className="w-full px-6 sm:px-8 py-4 sm:py-6 rounded-2xl sm:rounded-3xl bg-white border border-gray-100 focus:border-emerald-500 outline-none transition-all font-black text-gray-950 shadow-sm text-sm sm:text-base" placeholder="corp@email.com" />
                             </div>
                             <div className="space-y-2 sm:space-y-3">
                                 <label className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 sm:ml-6">Phone Number</label>
-                                <input required name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} type="tel" className="w-full px-6 sm:px-8 py-4 sm:py-6 rounded-2xl sm:rounded-3xl bg-white border border-gray-100 focus:border-emerald-500 focus:ring-4 sm:ring-8 focus:ring-emerald-500/5 outline-none transition-all font-black text-gray-950 shadow-sm text-sm sm:text-base" placeholder="+91 XXXXX XXXXX" />
+                                <input required name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} type="tel" className="w-full px-6 sm:px-8 py-4 sm:py-6 rounded-2xl sm:rounded-3xl bg-white border border-gray-100 focus:border-emerald-500 outline-none transition-all font-black text-gray-950 shadow-sm text-sm sm:text-base" placeholder="+91 XXXXX XXXXX" />
                             </div>
 
                             {/* Product Selectors */}
@@ -289,7 +289,7 @@ export default function B2BPage() {
 
                             <div className="space-y-2 sm:space-y-3 md:col-span-2">
                                 <label className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 sm:ml-6">CAD Instructions / Requirements</label>
-                                <textarea name="requirements" value={formData.requirements} onChange={handleChange} className="w-full px-6 sm:px-10 py-6 sm:py-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-white border border-gray-100 focus:border-emerald-500 focus:ring-4 sm:ring-8 focus:ring-emerald-500/5 outline-none transition-all font-bold text-gray-950 min-h-[150px] sm:min-h-[180px] shadow-sm resize-none text-sm sm:text-base" placeholder="Provide technical details, structural inserts, or additional finishing instructions..."></textarea>
+                                <textarea name="requirements" value={formData.requirements} onChange={handleChange} className="w-full px-6 sm:px-10 py-6 sm:py-8 rounded-[1.5rem] sm:rounded-[2.5rem] bg-white border border-gray-100 focus:border-emerald-500 outline-none transition-all font-bold text-gray-950 min-h-[150px] sm:min-h-[180px] shadow-sm resize-none text-sm sm:text-base" placeholder="Provide technical details, structural inserts, or additional finishing instructions..."></textarea>
                             </div>
                             <div className="md:col-span-2 mt-4 sm:mt-8">
                                 <button disabled={status === "loading"} type="submit" className="w-full py-5 sm:py-7 bg-gray-950 text-white rounded-[1.5rem] sm:rounded-[2.5rem] font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs hover:bg-emerald-600 hover:scale-[1.01] active:scale-[0.98] transition-all shadow-2xl flex items-center justify-center gap-3 sm:gap-4 disabled:opacity-50">
