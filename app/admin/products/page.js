@@ -24,7 +24,9 @@ export default function ProductsManager() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
+    const [isUploadingImages, setIsUploadingImages] = useState(false);
+    const [isUploadingPattern, setIsUploadingPattern] = useState(false);
+    const [isUploadingDieline, setIsUploadingDieline] = useState(false);
     const [successMsg, setSuccessMsg] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
@@ -83,36 +85,59 @@ export default function ProductsManager() {
         const files = Array.from(e.target.files);
         if (!files.length) return;
 
-        setIsUploading(true);
+        setIsUploadingImages(true);
         try {
-            const uploadedUrls = [];
-            for (const file of files) {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                await new Promise((resolve) => {
-                    reader.onload = async () => {
-                        const base64Data = reader.result;
-                        const response = await fetch('/api/upload', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ image: base64Data })
-                        });
-                        const data = await response.json();
-                        if (data.url) uploadedUrls.push(data.url);
-                        resolve();
-                    };
-                });
-            }
+            const { compressFile } = await import('@/lib/compression');
+            
+            // Parallelize compression and upload
+            const uploadPromises = files.map(async (file) => {
+                try {
+                    // Compress if needed (even for product images, targeting a reasonable size like 2MB)
+                    const fileToUpload = await compressFile(file, 2);
+                    
+                    const formDataObj = new FormData();
+                    formDataObj.append('image', fileToUpload);
+                    formDataObj.append('type', 'product');
+
+                    const response = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formDataObj
+                    });
+                    const data = await response.json();
+                    return data.url || null;
+                } catch (err) {
+                    console.error('Individual file upload failed:', err);
+                    return null;
+                }
+            });
+
+            const results = await Promise.all(uploadPromises);
+            const uploadedUrls = results.filter(Boolean);
+
             if (uploadedUrls.length > 0) {
                 const currentImages = formData.images ? formData.images.split(',').map(u => u.trim()).filter(Boolean) : [];
                 setFormData({ ...formData, images: [...currentImages, ...uploadedUrls].join(', ') });
             }
         } catch (error) {
-            console.error('Upload failed:', error);
-            alert('Failed to upload images');
+            console.error('Bulk upload failed:', error);
+            alert('Failed to upload some images');
         } finally {
-            setIsUploading(false);
+            setIsUploadingImages(false);
             e.target.value = '';
+        }
+    };
+
+    const handleCloudinaryDelete = async (url) => {
+        if (!url) return;
+        try {
+            // Extract publicId if possible, or send URL to server to find it
+            await fetch('/api/upload', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+        } catch (error) {
+            console.error('Failed to delete from Cloudinary:', error);
         }
     };
 
@@ -120,34 +145,41 @@ export default function ProductsManager() {
         const file = e.target.files[0];
         if (!file) return;
 
-        setIsUploading(true);
+        setIsUploadingPattern(true);
         try {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            await new Promise((resolve) => {
-                reader.onload = async () => {
-                    const base64Data = reader.result;
-                    const response = await fetch('/api/upload', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ image: base64Data })
-                    });
-                    const data = await response.json();
-                    if (data.url) {
-                        setFormData(prev => ({
-                            ...prev,
-                            patternImg: data.url,
-                            patternFormat: data.format || (file.type.includes('pdf') ? 'pdf' : 'image')
-                        }));
-                    }
-                    resolve();
-                };
+            // Automatic compression if needed
+            let fileToUpload = file;
+            if (file.size > 9 * 1024 * 1024) {
+                console.log('File > 9MB, attempting compression...');
+                const { compressFile } = await import('@/lib/compression');
+                fileToUpload = await compressFile(file, 8.5);
+                
+                if (fileToUpload.size > 9.5 * 1024 * 1024) {
+                    console.warn('File is still over 9MB after optimization. Proceeding with upload as requested...');
+                }
+            }
+
+            const formDataObj = new FormData();
+            formDataObj.append('image', fileToUpload);
+            formDataObj.append('type', 'pattern');
+
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formDataObj
             });
+            const data = await response.json();
+            if (data.url) {
+                setFormData(prev => ({
+                    ...prev,
+                    patternImg: data.url,
+                    patternFormat: data.format || (fileToUpload.type.includes('pdf') ? 'pdf' : 'image')
+                }));
+            }
         } catch (error) {
             console.error('Pattern upload failed:', error);
-            alert('Failed to upload pattern');
+            alert('Failed to upload pattern: ' + error.message);
         } finally {
-            setIsUploading(false);
+            setIsUploadingPattern(false);
             e.target.value = '';
         }
     };
@@ -156,34 +188,41 @@ export default function ProductsManager() {
         const file = e.target.files[0];
         if (!file) return;
 
-        setIsUploading(true);
+        setIsUploadingDieline(true);
         try {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            await new Promise((resolve) => {
-                reader.onload = async () => {
-                    const base64Data = reader.result;
-                    const response = await fetch('/api/upload', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ image: base64Data })
-                    });
-                    const data = await response.json();
-                    if (data.url) {
-                        setFormData(prev => ({
-                            ...prev,
-                            dielineImg: data.url,
-                            dielineFormat: data.format || (file.type.includes('pdf') ? 'pdf' : 'image')
-                        }));
-                    }
-                    resolve();
-                };
+            // Automatic compression if needed
+            let fileToUpload = file;
+            if (file.size > 9 * 1024 * 1024) {
+                console.log('File > 9MB, attempting compression...');
+                const { compressFile } = await import('@/lib/compression');
+                fileToUpload = await compressFile(file, 8.5);
+                
+                if (fileToUpload.size > 9.5 * 1024 * 1024) {
+                    console.warn('File is still over 9MB after optimization. Proceeding with upload as requested...');
+                }
+            }
+
+            const formDataObj = new FormData();
+            formDataObj.append('image', fileToUpload);
+            formDataObj.append('type', 'dieline');
+
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formDataObj
             });
+            const data = await response.json();
+            if (data.url) {
+                setFormData(prev => ({
+                    ...prev,
+                    dielineImg: data.url,
+                    dielineFormat: data.format || (fileToUpload.type.includes('pdf') ? 'pdf' : 'image')
+                }));
+            }
         } catch (error) {
             console.error('Dieline upload failed:', error);
-            alert('Failed to upload dieline');
+            alert('Failed to upload dieline: ' + error.message);
         } finally {
-            setIsUploading(false);
+            setIsUploadingDieline(false);
             e.target.value = '';
         }
     };
@@ -924,9 +963,9 @@ export default function ProductsManager() {
                                                             placeholder="Add image URLs separated by commas..."
                                                             className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all resize-none"
                                                         />
-                                                        <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                                                            {isUploading ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">{isUploading ? 'Uploading...' : 'Upload Images'}</span>
+                                                        <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploadingImages ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                            {isUploadingImages ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">{isUploadingImages ? 'Uploading...' : 'Upload Images'}</span>
                                                             <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
                                                         </label>
                                                     </div>
@@ -946,6 +985,8 @@ export default function ProductsManager() {
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => {
+                                                                            const urlToDelete = url.trim();
+                                                                            handleCloudinaryDelete(urlToDelete);
                                                                             const newUrls = formData.images.split(',').map(u => u.trim()).filter(Boolean);
                                                                             newUrls.splice(i, 1);
                                                                             setFormData({ ...formData, images: newUrls.join(', ') });
@@ -967,7 +1008,7 @@ export default function ProductsManager() {
                                                     <label className="text-xs font-black uppercase tracking-widest text-gray-400">Internal Pattern Overlay (Admin Only)</label>
                                                     <span className="text-[8px] font-black bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full uppercase tracking-widest">Order Processing Only</span>
                                                 </div>
-                                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">The following pattern image is for internal use by the admin team and will be attached to customer orders for reproduction purposes. It is not publicly visible on the main catalog.</p>
+                                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">The following pattern image is for internal use by the admin team and will be attached to customer orders for reproduction purposes. It is not publicly visible on the main catalog. (Max 9MB per PDF)</p>
                                                 <div className="space-y-2">
                                                     <div className="flex gap-4">
                                                         <div className="flex-1 bg-white border border-gray-100 rounded-2xl px-6 py-4 flex items-center gap-4">
@@ -1001,7 +1042,10 @@ export default function ProductsManager() {
                                                                         </button>
                                                                         <button
                                                                             type="button"
-                                                                            onClick={() => setFormData({ ...formData, patternImg: '', patternFormat: '' })}
+                                                                            onClick={() => {
+                                                                                handleCloudinaryDelete(formData.patternImg);
+                                                                                setFormData({ ...formData, patternImg: '', patternFormat: '' });
+                                                                            }}
                                                                             className="p-1.5 bg-red-500 text-white rounded-lg hover:scale-110 active:scale-95 transition-all shadow-sm"
                                                                             title="Remove"
                                                                         >
@@ -1045,9 +1089,9 @@ export default function ProductsManager() {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                                                            {isUploading ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">Upload Pattern</span>
+                                                        <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploadingPattern ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                            {isUploadingPattern ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">{isUploadingPattern ? 'Uploading...' : 'Upload Pattern'}</span>
                                                             <input type="file" accept="image/*,.pdf" className="hidden" onChange={handlePatternUpload} />
                                                         </label>
                                                     </div>
@@ -1059,7 +1103,7 @@ export default function ProductsManager() {
                                                     <label className="text-xs font-black uppercase tracking-widest text-gray-400">Dieline (Admin Only)</label>
                                                     <span className="text-[8px] font-black bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full uppercase tracking-widest">Admin Reference</span>
                                                 </div>
-                                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">Upload the dieline file for this product. This is strictly for admin reference and internal use.</p>
+                                                <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic">Upload the dieline file for this product. This is strictly for admin reference and internal use. (Max 9MB per PDF)</p>
                                                 <div className="space-y-2">
                                                     <div className="flex gap-4">
                                                         <div className="flex-1 bg-white border border-gray-100 rounded-2xl px-6 py-4 flex items-center gap-4">
@@ -1093,7 +1137,10 @@ export default function ProductsManager() {
                                                                         </button>
                                                                         <button
                                                                             type="button"
-                                                                            onClick={() => setFormData({ ...formData, dielineImg: '', dielineFormat: '' })}
+                                                                            onClick={() => {
+                                                                                handleCloudinaryDelete(formData.dielineImg);
+                                                                                setFormData({ ...formData, dielineImg: '', dielineFormat: '' });
+                                                                            }}
                                                                             className="p-1.5 bg-red-500 text-white rounded-lg hover:scale-110 active:scale-95 transition-all shadow-sm"
                                                                             title="Remove"
                                                                         >
@@ -1137,9 +1184,9 @@ export default function ProductsManager() {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
-                                                            {isUploading ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">Upload Dieline</span>
+                                                        <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploadingDieline ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                            {isUploadingDieline ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">{isUploadingDieline ? 'Uploading...' : 'Upload Dieline'}</span>
                                                             <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleDielineUpload} />
                                                         </label>
                                                     </div>

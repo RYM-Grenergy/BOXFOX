@@ -611,13 +611,20 @@ function CustomDesignBlueprint({ item, order, expandedFace, setExpandedFace, dow
                             <span className="text-[9px] font-black bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full uppercase tracking-widest">Order Processing Only</span>
                         </div>
                         <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic mb-4">
-                            The following pattern image is for internal use by the admin team and will be attached to customer orders for reproduction purposes.
+                            The following pattern image is for internal use by the admin team and will be attached to customer orders for reproduction purposes. It is not publicly visible on the main catalog.
                         </p>
                         
                         {productDetails?.patternImg ? (
                             <div className="mt-auto space-y-4">
-                                <div className="relative aspect-video rounded-2xl border border-gray-200 overflow-hidden group">
-                                    <img src={productDetails.patternImg} className="w-full h-full object-cover" alt="Pattern" />
+                                <div className="relative aspect-video rounded-2xl border border-gray-200 overflow-hidden group flex items-center justify-center bg-white shadow-sm">
+                                    {productDetails.patternFormat === 'pdf' || (typeof productDetails.patternImg === 'string' && productDetails.patternImg.toLowerCase().endsWith('.pdf')) ? (
+                                        <div className="flex flex-col items-center justify-center text-red-500 scale-125">
+                                            <FileText size={48} strokeWidth={2.5} />
+                                            <span className="text-[10px] font-black uppercase mt-2">PDF DOC</span>
+                                        </div>
+                                    ) : (
+                                        <img src={productDetails.patternImg} className="w-full h-full object-cover" alt="Pattern" />
+                                    )}
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                         <button 
                                             onClick={() => window.open(productDetails.patternImg, "_blank")}
@@ -661,8 +668,15 @@ function CustomDesignBlueprint({ item, order, expandedFace, setExpandedFace, dow
 
                         {productDetails?.dielineImg ? (
                             <div className="mt-auto space-y-4">
-                                <div className="relative aspect-video rounded-2xl border border-gray-200 overflow-hidden group">
-                                    <img src={productDetails.dielineImg} className="w-full h-full object-cover" alt="Dieline" />
+                                <div className="relative aspect-video rounded-2xl border border-gray-200 overflow-hidden group flex items-center justify-center bg-white shadow-sm">
+                                    {productDetails.dielineFormat === 'pdf' || (typeof productDetails.dielineImg === 'string' && productDetails.dielineImg.toLowerCase().endsWith('.pdf')) ? (
+                                        <div className="flex flex-col items-center justify-center text-red-500 scale-125">
+                                            <FileText size={48} strokeWidth={2.5} />
+                                            <span className="text-[10px] font-black uppercase mt-2">PDF DOC</span>
+                                        </div>
+                                    ) : (
+                                        <img src={productDetails.dielineImg} className="w-full h-full object-cover" alt="Dieline" />
+                                    )}
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                         <button 
                                             onClick={() => window.open(productDetails.dielineImg, "_blank")}

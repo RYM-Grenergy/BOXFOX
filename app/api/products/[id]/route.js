@@ -58,7 +58,9 @@ export async function GET(req, { params }) {
             meta: product.meta,
             pacdoraId: product.pacdoraId,
             patternImg: product.patternImg,
-            dielineImg: product.dielineImg
+            patternFormat: product.patternFormat,
+            dielineImg: product.dielineImg,
+            dielineFormat: product.dielineFormat
         };
 
         return NextResponse.json(result);
