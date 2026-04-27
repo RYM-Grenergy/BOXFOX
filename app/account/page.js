@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { LogOut, User as UserIcon, Settings, Search, Package, MapPin, Phone, Mail, Lock, Heart, Trash2, ChevronRight, RotateCw, Layers, Ruler, Type, Palette, Eye, RefreshCw, Box, Share2, Link2, Copy, Check, Pencil, Sparkles, Plus, Upload } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, Search, Package, MapPin, Phone, Mail, Lock, Heart, Trash2, ChevronRight, RotateCw, Layers, Ruler, Type, Palette, Eye, RefreshCw, Box, Share2, Link2, Copy, Check, Pencil, Sparkles, Plus, Upload, Shield } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useToast } from "@/app/context/ToastContext";
 import { useSearchParams } from "next/navigation";
@@ -438,6 +438,15 @@ function AccountManagementContent() {
                             
                             <div className="hidden lg:block h-px bg-gray-50 my-2 mx-4" />
                             
+                            {user?.role === 'admin' && (
+                                <button
+                                    onClick={() => router.push('/admin')}
+                                    className="flex flex-col lg:flex-row items-center lg:items-center gap-2 lg:gap-3 px-4 lg:px-6 py-5 lg:py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-emerald-600 bg-emerald-50/50 lg:bg-transparent hover:bg-emerald-50 transition-all col-span-2 lg:col-span-1 border border-emerald-100/50 lg:border-none"
+                                >
+                                    <Shield size={18} />
+                                    <span>Admin Panel</span>
+                                </button>
+                            )}
                             <button
                                 onClick={handleLogout}
                                 className="flex flex-col lg:flex-row items-center lg:items-center gap-2 lg:gap-3 px-4 lg:px-6 py-5 lg:py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-red-400 bg-red-50/50 lg:bg-transparent hover:bg-red-50 hover:text-red-600 transition-all col-span-2 lg:col-span-1 border border-red-100/50 lg:border-none"

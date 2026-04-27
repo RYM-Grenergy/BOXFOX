@@ -1,5 +1,6 @@
 "use client";
 import React from 'react';
+import { motion } from "framer-motion";
 import { ShieldCheck, Truck, Recycle, Award, CheckCircle2, Sparkles, Target, Users, TrendingUp, History, User } from "lucide-react";
 
 export default function AboutPage() {
