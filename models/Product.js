@@ -5,7 +5,9 @@ const productSchema = new mongoose.Schema({
     type: { type: String, default: 'simple' }, // simple, variable, variation
     sku: { type: String, unique: true, sparse: true },
     patternImg: String,
+    patternFormat: String,
     dielineImg: String,
+    dielineFormat: String,
     name: { type: String, required: true },
     isFeatured: { type: Boolean, default: false },
     short_description: String,

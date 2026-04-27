@@ -197,45 +197,69 @@ export async function POST(req) {
             textInstruction = "Include subtle typographic decorative elements. ";
         }
 
-        // ----- STEP 5: Assemble Final Prompt -----
+        // ----- STEP 5: ASSEMBLE MASTER PROMPT (EXTENSIVE & ACCURATE) -----
         const coreParts = [];
 
-        // Opening directive — this is the most important line
-        coreParts.push("IMPORTANT: Generate ONLY a flat 2D graphic surface design. DO NOT draw any box, container, product, or 3D object whatsoever. The output should look like a digital wallpaper or print-ready artwork that fills the entire frame edge to edge.");
+        // 1. MASTER DIRECTIVE (Primary focus on flat 2D print-ready art)
+        coreParts.push(`
+            OBJECTIVE: Create a high-end, professional 2D graphic surface design for premium box packaging.
+            FORMAT: Flat, seamless, edge-to-edge 2D surface texture. 
+            STRICT RULES: 
+            - NO 3D objects, NO boxes, NO containers, NO physical mockups.
+            - NO shadows, NO lighting effects, NO perspective, NO depth.
+            - The output must be a PURE DIGITAL ARTWORK file that looks like a high-res wallpaper or a sheet of gift wrap.
+            - Fill the entire canvas area completely with zero borders.
+        `.trim());
 
-        // User's vision
+        // 2. USER VISION ENHANCEMENT
         if (sanitizedIdea) {
-            coreParts.push(`The user's design vision: "${sanitizedIdea}".`);
+            coreParts.push(`
+                USER CORE THEME: ${sanitizedIdea}.
+                Translate this vision into a sophisticated graphic language. If the user mentioned specific objects or motifs, render them in a clean, professional vector or illustrative style that fits a luxury packaging context.
+            `.trim());
+        } else {
+            coreParts.push("THEME: Professional contemporary branding motif with elegant abstract elements.");
         }
 
-        // Color
-        if (colorInstruction) coreParts.push(colorInstruction);
-
-        // Text
-        if (textInstruction) coreParts.push(textInstruction);
-
-        // Style
-        if (styleParts.length > 0) {
-            coreParts.push(`Design style: ${styleParts.join(". ")}.`);
+        // 3. COLOR & PALETTE PRECISION
+        if (colorInstruction) {
+            coreParts.push(`COLOR PALETTE: ${colorInstruction} Use harmonious secondary and tertiary tones to create depth without using 3D effects. Maintain high color accuracy for professional printing.`);
+        } else if (boxColors?.front && boxColors.front !== "#059669") {
+            coreParts.push(`COLOR PALETTE: Base color is ${boxColors.front}. Build a sophisticated tonal palette around this hue, utilizing varying saturations and complementary shades for a cohesive look.`);
         }
 
-        // Industry
-        if (industryParts.length > 0) {
-            coreParts.push(`Design context: ${industryParts.join(". ")}.`);
+        // 4. STYLE & INDUSTRY LAYER (Highly Descriptive)
+        if (styleParts.length > 0 || industryParts.length > 0) {
+            coreParts.push(`
+                AESTHETIC LAYERING: 
+                ${styleParts.join(". ")} 
+                ${industryParts.join(". ")}
+                Synthesize these styles into a singular, high-impact visual identity. Focus on the fine details: the weight of the lines, the balance of the composition, and the professional spacing of elements.
+            `.trim());
         }
 
-        // Minimal vs Bold adjustments
-        if (intentFlags.wantsMinimal) {
-            coreParts.push("Keep the design very clean and minimal. Use ample negative space. Less is more.");
-        }
-        if (intentFlags.wantsBold) {
-            coreParts.push("Make the design bold, vibrant, and eye-catching with strong contrasts.");
+        // 5. COMPOSITION & PATTERN LOGIC
+        coreParts.push(`
+            COMPOSITION LOGIC:
+            - Create a balanced, repeating or semi-repeating pattern.
+            - Ensure motifs are distributed evenly across the surface.
+            - Utilize professional graphic design principles: rule of thirds, golden ratio for focal points, and deliberate symmetry or asymmetry.
+            - The design should feel intentional, not random.
+        `.trim());
+
+        // 6. TEXTUAL INTEGRATION (Typographic Elements)
+        if (textInstruction) {
+            coreParts.push(textInstruction);
         }
 
-        // Technical quality directives (always included)
-        coreParts.push("Technical specs: flat 2D only, seamless edge-to-edge surface pattern, high-resolution 8K clarity, crisp vector-like edges, no shadows, no lighting effects, no perspective distortion, no physical objects, pure graphic design.");
+        // 7. ULTRA-HIGH TECHNICAL QUALITY (Negative & Positive)
+        coreParts.push(`
+            TECHNICAL QUALITY DIRECTIVES:
+            - POSITIVE: 8K resolution, crisp vector-sharp edges, ultra-detailed textures, professional color grading, clean minimalist aesthetic, high-fidelity digital art, Adobe Illustrator quality.
+            - NEGATIVE: blurry, distorted, 3D structure, shadows, lighting, perspective, photo of a box, cardboard texture, messy, amateur, low resolution, watermark, text unless requested.
+        `.trim());
 
-        const finalPrompt = coreParts.join(" ");
+        const finalPrompt = coreParts.join("\n\n");
 
         console.log("🎨 AI Forge — User Idea (Raw):", userIdea || "(none)");
         console.log("🎨 AI Forge — User Idea (Sanitized):", sanitizedIdea || "(none)");

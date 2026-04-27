@@ -1,7 +1,21 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
-import { getOrSetCache } from "@/lib/redis";
+import { getOrSetCache, default as redis } from "@/lib/redis";
+
+async function invalidateProductCache() {
+  try {
+    // We use a simple approach for now: clear all keys starting with 'products:'
+    // Upstash Redis supports the 'keys' command
+    const keys = await redis.keys('products:*');
+    if (keys.length > 0) {
+      await redis.del(...keys);
+      console.log(`[Redis] Invalidated ${keys.length} product cache keys`);
+    }
+  } catch (err) {
+    console.error("[Redis] Cache invalidation failed:", err);
+  }
+}
 
 export async function GET(req) {
   try {
@@ -88,7 +102,9 @@ export async function GET(req) {
             dimensions: p.dimensions,
             pacdoraId: p.pacdoraId,
             patternImg: p.patternImg,
+            patternFormat: p.patternFormat,
             dielineImg: p.dielineImg,
+            dielineFormat: p.dielineFormat,
             isActive: p.isActive !== false
           };
         });
@@ -240,7 +256,8 @@ export async function POST(req) {
         short_description: data.short_description,
         pacdoraId: data.pacdoraId,
         isActive: data.isActive !== undefined ? data.isActive : true
-      }, { new: true });
+      }, { returnDocument: 'after' });
+      await invalidateProductCache();
       return NextResponse.json({ success: true, product: updatedProduct });
     }
 
@@ -272,6 +289,7 @@ export async function POST(req) {
       pacdoraId: data.pacdoraId,
       isActive: data.isActive !== undefined ? data.isActive : true
     });
+    await invalidateProductCache();
     return NextResponse.json({ success: true, product });
   } catch (e) {
     console.error("POST Error:", e);
@@ -297,6 +315,7 @@ export async function DELETE(req) {
         { _id: id }
       ]
     });
+    await invalidateProductCache();
 
     return NextResponse.json({ success: true });
   } catch (e) {

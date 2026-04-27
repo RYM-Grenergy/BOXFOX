@@ -14,7 +14,8 @@ import {
     Loader2,
     Copy,
     Download,
-    Star
+    Star,
+    FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -32,7 +33,9 @@ export default function ProductsManager() {
         name: '',
         sku: '',
         patternImg: '',
+        patternFormat: '',
         dielineImg: '',
+        dielineFormat: '',
         category: 'CupCake',
         minPrice: '',
         maxPrice: '',
@@ -131,7 +134,11 @@ export default function ProductsManager() {
                     });
                     const data = await response.json();
                     if (data.url) {
-                        setFormData({ ...formData, patternImg: data.url });
+                        setFormData(prev => ({
+                            ...prev,
+                            patternImg: data.url,
+                            patternFormat: data.format || (file.type.includes('pdf') ? 'pdf' : 'image')
+                        }));
                     }
                     resolve();
                 };
@@ -163,7 +170,11 @@ export default function ProductsManager() {
                     });
                     const data = await response.json();
                     if (data.url) {
-                        setFormData({ ...formData, dielineImg: data.url });
+                        setFormData(prev => ({
+                            ...prev,
+                            dielineImg: data.url,
+                            dielineFormat: data.format || (file.type.includes('pdf') ? 'pdf' : 'image')
+                        }));
                     }
                     resolve();
                 };
@@ -201,7 +212,9 @@ export default function ProductsManager() {
                         name: '',
                         sku: '',
                         patternImg: '',
+                        patternFormat: '',
                         dielineImg: '',
+                        dielineFormat: '',
                         category: 'Packaging',
                         minPrice: '',
                         maxPrice: '',
@@ -288,7 +301,9 @@ export default function ProductsManager() {
             name: product.name,
             sku: product.sku || '',
             patternImg: product.patternImg || '',
+            patternFormat: product.patternFormat || '',
             dielineImg: product.dielineImg || '',
+            dielineFormat: product.dielineFormat || '',
             category: product.category,
             minPrice: product.minPrice || '',
             maxPrice: product.maxPrice || '',
@@ -319,7 +334,9 @@ export default function ProductsManager() {
             name: product.name + " (Copy)",
             sku: (product.sku ? product.sku + "-copy" : ''),
             patternImg: product.patternImg || '',
+            patternFormat: product.patternFormat || '',
             dielineImg: product.dielineImg || '',
+            dielineFormat: product.dielineFormat || '',
             category: product.category,
             minPrice: product.minPrice || '',
             maxPrice: product.maxPrice || '',
@@ -477,7 +494,7 @@ export default function ProductsManager() {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-gray-50/50">
-                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Product</th>
+                                    <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Product</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">SKU</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Category</th>
                                     <th className="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap">Price Range</th>
@@ -489,14 +506,8 @@ export default function ProductsManager() {
                             <tbody className="divide-y divide-gray-50">
                                 {flatProducts.map((product) => (
                                     <tr key={product.id} className="hover:bg-gray-50/50 transition-colors group">
-                                         <td className="px-8 py-5">
+                                        <td className="px-8 py-5">
                                             <div className="flex items-center gap-4">
-                                                <button 
-                                                    onClick={(e) => { e.stopPropagation(); handleToggleFeatured(product); }}
-                                                    className={`shrink-0 transition-all ${product.isFeatured ? 'text-amber-400 scale-125' : 'text-gray-200 hover:text-gray-400'}`}
-                                                >
-                                                    <Star size={18} fill={product.isFeatured ? "currentColor" : "none"} />
-                                                </button>
                                                 <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
                                                     <img src={product.img} alt="" className="w-full h-full object-cover" />
                                                 </div>
@@ -510,10 +521,22 @@ export default function ProductsManager() {
                                                         )}
                                                     </div>
                                                     <p className="text-[10px] font-bold text-gray-400 uppercase">ID: {product.id}</p>
+                                                    <div className="flex gap-2 mt-1">
+                                                        {product.patternImg && (
+                                                            <span title="Internal Pattern Attached" className="flex items-center gap-1 text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                                                                <FileText size={10} /> Pattern
+                                                            </span>
+                                                        )}
+                                                        {product.dielineImg && (
+                                                            <span title="Dieline Attached" className="flex items-center gap-1 text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                                                                <Download size={10} /> Dieline
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
-                                         <td className="px-8 py-5">
+                                        <td className="px-8 py-5">
                                             <span className="text-[11px] font-black text-gray-950 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm whitespace-nowrap block w-fit">
                                                 {product.sku || 'PENDING'}
                                             </span>
@@ -553,6 +576,16 @@ export default function ProductsManager() {
                                         <td className="px-8 py-5">
                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <button onClick={() => handleEdit(product)} title="Edit" className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><Edit size={16} /></button>
+                                                {product.patternImg && (
+                                                    <button onClick={() => window.open(product.patternImg, '_blank')} title="View Internal Pattern" className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all">
+                                                        <FileText size={16} />
+                                                    </button>
+                                                )}
+                                                {product.dielineImg && (
+                                                    <button onClick={() => window.open(product.dielineImg, '_blank')} title="View Dieline" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                                                        <Download size={16} />
+                                                    </button>
+                                                )}
                                                 <button onClick={() => handleDownloadProductAssets(product)} title="Download All Assets" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Download size={16} /></button>
                                                 <button onClick={() => handleDuplicate(product)} title="Duplicate" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all"><Copy size={16} /></button>
                                                 <button onClick={() => handleDelete(product._id || product.id)} title="Delete" className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
@@ -679,7 +712,7 @@ export default function ProductsManager() {
                                                 </div>
                                             </div>
 
-                                             <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-[2rem] border border-gray-100">
+                                            <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-[2rem] border border-gray-100">
                                                 <div className="flex items-center justify-between">
                                                     <div>
                                                         <p className="text-sm font-black text-gray-950 uppercase tracking-tighter">Active Status</p>
@@ -708,7 +741,7 @@ export default function ProductsManager() {
                                                 </div>
                                             </div>
 
-                                             <div className="grid grid-cols-2 gap-6">
+                                            <div className="grid grid-cols-2 gap-6">
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-black uppercase tracking-widest text-gray-400">Min Order Qty</label>
                                                     <input
@@ -939,28 +972,46 @@ export default function ProductsManager() {
                                                     <div className="flex gap-4">
                                                         <div className="flex-1 bg-white border border-gray-100 rounded-2xl px-6 py-4 flex items-center gap-4">
                                                             {formData.patternImg ? (
-                                                                <div className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden shrink-0 relative group">
-                                                                    <img src={formData.patternImg} className="w-full h-full object-cover" alt="Pattern" />
-                                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                                                <div className="w-20 h-20 rounded-2xl border border-gray-200 overflow-hidden shrink-0 relative group flex items-center justify-center bg-gray-50 shadow-sm">
+                                                                    {formData.patternFormat === 'pdf' || (typeof formData.patternImg === 'string' && formData.patternImg.toLowerCase().endsWith('.pdf')) ? (
+                                                                        <div className="flex flex-col items-center justify-center text-red-500 scale-90">
+                                                                            <FileText size={32} strokeWidth={2.5} />
+                                                                            <span className="text-[7px] font-black uppercase mt-1">PDF DOC</span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <img src={formData.patternImg} className="w-full h-full object-cover" alt="Pattern" />
+                                                                    )}
+                                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-1.5 p-1">
+                                                                        <a
+                                                                            href={formData.patternImg}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="p-1.5 bg-white text-gray-900 rounded-lg hover:scale-110 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+                                                                            title="View"
+                                                                        >
+                                                                            <ImageIcon size={14} />
+                                                                        </a>
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => handleDownload(formData.patternImg, `${formData.name}_pattern`)}
-                                                                            className="p-1 bg-white text-gray-900 rounded-md hover:scale-105"
+                                                                            className="p-1.5 bg-white text-gray-900 rounded-lg hover:scale-110 active:scale-95 transition-all shadow-sm"
+                                                                            title="Download"
                                                                         >
-                                                                            <Download size={12} />
+                                                                            <Download size={14} />
                                                                         </button>
                                                                         <button
                                                                             type="button"
-                                                                            onClick={() => setFormData({ ...formData, patternImg: '' })}
-                                                                            className="p-1 bg-red-500 text-white rounded-md hover:scale-105"
+                                                                            onClick={() => setFormData({ ...formData, patternImg: '', patternFormat: '' })}
+                                                                            className="p-1.5 bg-red-500 text-white rounded-lg hover:scale-110 active:scale-95 transition-all shadow-sm"
+                                                                            title="Remove"
                                                                         >
-                                                                            <Trash2 size={12} />
+                                                                            <Trash2 size={14} />
                                                                         </button>
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 border border-gray-100">
-                                                                    <ImageIcon size={20} className="text-gray-300" />
+                                                                <div className="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center shrink-0 border border-gray-100 shadow-inner">
+                                                                    <ImageIcon size={24} className="text-gray-300" />
                                                                 </div>
                                                             )}
                                                             <input
@@ -969,11 +1020,35 @@ export default function ProductsManager() {
                                                                 placeholder="Pattern URL or upload ->"
                                                                 className="flex-1 bg-transparent font-bold text-gray-950 outline-none text-sm"
                                                             />
+                                                            {formData.patternImg && (
+                                                                <div className="flex gap-1">
+                                                                    <a
+                                                                        href={formData.patternImg}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all flex items-center justify-center"
+                                                                        title="View"
+                                                                    >
+                                                                        <ImageIcon size={16} />
+                                                                    </a>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            navigator.clipboard.writeText(formData.patternImg);
+                                                                            alert('Link copied!');
+                                                                        }}
+                                                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                                        title="Copy Link"
+                                                                    >
+                                                                        <Copy size={16} />
+                                                                    </button>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
                                                             {isUploading ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
                                                             <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">Upload Pattern</span>
-                                                            <input type="file" accept="image/*" className="hidden" onChange={handlePatternUpload} />
+                                                            <input type="file" accept="image/*,.pdf" className="hidden" onChange={handlePatternUpload} />
                                                         </label>
                                                     </div>
                                                 </div>
@@ -989,28 +1064,46 @@ export default function ProductsManager() {
                                                     <div className="flex gap-4">
                                                         <div className="flex-1 bg-white border border-gray-100 rounded-2xl px-6 py-4 flex items-center gap-4">
                                                             {formData.dielineImg ? (
-                                                                <div className="w-12 h-12 rounded-xl border border-gray-200 overflow-hidden shrink-0 relative group">
-                                                                    <img src={formData.dielineImg} className="w-full h-full object-cover" alt="Dieline" />
-                                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                                                <div className="w-20 h-20 rounded-2xl border border-gray-200 overflow-hidden shrink-0 relative group flex items-center justify-center bg-gray-50 shadow-sm">
+                                                                    {formData.dielineFormat === 'pdf' || (typeof formData.dielineImg === 'string' && formData.dielineImg.toLowerCase().endsWith('.pdf')) ? (
+                                                                        <div className="flex flex-col items-center justify-center text-red-500 scale-90">
+                                                                            <FileText size={32} strokeWidth={2.5} />
+                                                                            <span className="text-[7px] font-black uppercase mt-1">PDF DOC</span>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <img src={formData.dielineImg} className="w-full h-full object-cover" alt="Dieline" />
+                                                                    )}
+                                                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-wrap items-center justify-center gap-1.5 p-1">
+                                                                        <a
+                                                                            href={formData.dielineImg}
+                                                                            target="_blank"
+                                                                            rel="noopener noreferrer"
+                                                                            className="p-1.5 bg-white text-gray-900 rounded-lg hover:scale-110 active:scale-95 transition-all shadow-sm flex items-center justify-center"
+                                                                            title="View"
+                                                                        >
+                                                                            <ImageIcon size={14} />
+                                                                        </a>
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => handleDownload(formData.dielineImg, `${formData.name}_dieline`)}
-                                                                            className="p-1 bg-white text-gray-900 rounded-md hover:scale-105"
+                                                                            className="p-1.5 bg-white text-gray-900 rounded-lg hover:scale-110 active:scale-95 transition-all shadow-sm"
+                                                                            title="Download"
                                                                         >
-                                                                            <Download size={12} />
+                                                                            <Download size={14} />
                                                                         </button>
                                                                         <button
                                                                             type="button"
-                                                                            onClick={() => setFormData({ ...formData, dielineImg: '' })}
-                                                                            className="p-1 bg-red-500 text-white rounded-md hover:scale-105"
+                                                                            onClick={() => setFormData({ ...formData, dielineImg: '', dielineFormat: '' })}
+                                                                            className="p-1.5 bg-red-500 text-white rounded-lg hover:scale-110 active:scale-95 transition-all shadow-sm"
+                                                                            title="Remove"
                                                                         >
-                                                                            <Trash2 size={12} />
+                                                                            <Trash2 size={14} />
                                                                         </button>
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 border border-gray-100">
-                                                                    <ImageIcon size={20} className="text-gray-300" />
+                                                                <div className="w-20 h-20 rounded-2xl bg-gray-100 flex items-center justify-center shrink-0 border border-gray-100 shadow-inner">
+                                                                    <ImageIcon size={24} className="text-gray-300" />
                                                                 </div>
                                                             )}
                                                             <input
@@ -1019,11 +1112,35 @@ export default function ProductsManager() {
                                                                 placeholder="Dieline URL or upload ->"
                                                                 className="flex-1 bg-transparent font-bold text-gray-950 outline-none text-sm"
                                                             />
+                                                            {formData.dielineImg && (
+                                                                <div className="flex gap-1">
+                                                                    <a
+                                                                        href={formData.dielineImg}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all flex items-center justify-center"
+                                                                        title="View"
+                                                                    >
+                                                                        <ImageIcon size={16} />
+                                                                    </a>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            navigator.clipboard.writeText(formData.dielineImg);
+                                                                            alert('Link copied!');
+                                                                        }}
+                                                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                                        title="Copy Link"
+                                                                    >
+                                                                        <Copy size={16} />
+                                                                    </button>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
                                                             {isUploading ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
                                                             <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">Upload Dieline</span>
-                                                            <input type="file" accept="image/*" className="hidden" onChange={handleDielineUpload} />
+                                                            <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleDielineUpload} />
                                                         </label>
                                                     </div>
                                                 </div>

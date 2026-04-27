@@ -3,6 +3,8 @@ import dbConnect from '@/lib/mongodb';
 import Order from '@/models/Order';
 import Coupon from '@/models/Coupon';
 import Product from '@/models/Product';
+import UserImage from '@/models/UserImage';
+import { finalizeImagesInObject } from '@/lib/image-finalizer';
 import { 
     sendEmail, 
     getAdminOrderTemplate, 
@@ -116,6 +118,13 @@ export async function POST(req) {
                     }
                 ]
             });
+        }
+
+        // 4. Finalize Images (Mark them as permanent in UserImage collection)
+        try {
+            await finalizeImagesInObject(orderData);
+        } catch (err) {
+            console.error("Image Finalization Error:", err);
         }
 
         return NextResponse.json({ success: true, orderId: newOrder.orderId });

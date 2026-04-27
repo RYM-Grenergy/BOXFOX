@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import dbConnect from '@/lib/mongodb';
 import SavedDesign from '@/models/SavedDesign';
 import User from '@/models/User';
+import UserImage from '@/models/UserImage';
+import { finalizeImagesInObject } from '@/lib/image-finalizer';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_development_purposes';
 
@@ -57,6 +59,11 @@ export async function POST(req) {
             isPublic: body.isPublic || false,
         });
 
+        // Finalize any temporary images used in this design
+        if (body.customDesign) {
+            await finalizeImagesInObject(body.customDesign);
+        }
+
         return NextResponse.json({ success: true, design });
     } catch (e) {
         console.error('API Designs POST Error:', e);
@@ -84,6 +91,12 @@ export async function PATCH(req) {
         );
 
         if (!design) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+        // Finalize any temporary images used in this updated design
+        if (customDesign) {
+            await finalizeImagesInObject(customDesign);
+        }
+
         return NextResponse.json({ success: true, design });
     } catch (e) {
         console.error('API Designs PATCH Error:', e);

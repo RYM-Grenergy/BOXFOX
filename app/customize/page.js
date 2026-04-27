@@ -96,6 +96,8 @@ function CustomizeLabContent() {
   const [labConfig, setLabConfig] = useState({ hierarchies: [], specifications: [] });
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
+  const [selectedSpec, setSelectedSpec] = useState(null);
+  const [estimatedSpec, setEstimatedSpec] = useState(null);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -126,6 +128,21 @@ function CustomizeLabContent() {
     }
   }, [selectedCategory, labConfig]);
 
+  // Initial default size selection to ensure "Add to Basket" is visible on first load
+  useEffect(() => {
+    if (labConfig.specifications.length > 0 && selectedSubCategory && !selectedSpec) {
+      const defaultSpec = labConfig.specifications.find(s => 
+        (selectedCategory === "All" || s.category === selectedCategory) && 
+        (selectedSubCategory === "All" || s.subCategory === selectedSubCategory)
+      );
+      if (defaultSpec) {
+        setSelectedSpec(defaultSpec);
+        setDimensions({ l: defaultSpec.l, w: defaultSpec.w, h: defaultSpec.h });
+        setUnit(defaultSpec.unit || "mm");
+      }
+    }
+  }, [labConfig.specifications, selectedCategory, selectedSubCategory, selectedSpec]);
+
   const FINISH_OPTIONS = Object.keys(LAM_RATES);
   const PRINT_OPTIONS = Object.keys(COLOUR_FACTORS);
   const GSM_OPTIONS = ENGINE_GSM_OPTIONS.map(g => `${g} GSM`);
@@ -147,7 +164,6 @@ function CustomizeLabContent() {
   const [designName, setDesignName] = useState("Untitled Design");
   const [activeDesignId, setActiveDesignId] = useState(null);
 
-  const [selectedSpec, setSelectedSpec] = useState(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   // AI Forge: Smart Prompt Builder
@@ -260,12 +276,12 @@ function CustomizeLabContent() {
     right: null,
   });
   const [logoSettings, setLogoSettings] = useState({
-    front: { scale: 1, x: 50, y: 50, rotation: 0 },
-    back: { scale: 1, x: 50, y: 50, rotation: 0 },
-    left: { scale: 1, x: 50, y: 50, rotation: 0 },
-    right: { scale: 1, x: 50, y: 50, rotation: 0 },
-    top: { scale: 1, x: 50, y: 50, rotation: 0 },
-    bottom: { scale: 1, x: 50, y: 50, rotation: 0 },
+    front: { scale: 1, x: 50, y: 50, rotate: 0 },
+    back: { scale: 1, x: 50, y: 50, rotate: 0 },
+    left: { scale: 1, x: 50, y: 50, rotate: 0 },
+    right: { scale: 1, x: 50, y: 50, rotate: 0 },
+    top: { scale: 1, x: 50, y: 50, rotate: 0 },
+    bottom: { scale: 1, x: 50, y: 50, rotate: 0 },
   });
 
   const [labConfigs, setLabConfigs] = useState(null);
@@ -447,26 +463,29 @@ function CustomizeLabContent() {
   }, [searchParams]);
 
   const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const imageSrc = reader.result;
-        setImageToCrop(imageSrc);
+    const files = Array.from(e.target.files).slice(0, 3 - assetPool.length);
+    if (files.length > 0) {
+      files.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const imageSrc = reader.result;
 
-        // Add original to pool immediately so they don't have to wait for crop to see it
-        setAssetPool((prev) => {
-          const updated = [...prev, imageSrc].slice(-3);
-          setActiveAssetIndex(updated.length - 1);
-          return updated;
-        });
+          setAssetPool((prev) => {
+            const updated = [...prev, imageSrc].slice(-3);
+            // If it's the first file of this batch, select it
+            if (index === 0) setActiveAssetIndex(updated.length - 1);
+            return updated;
+          });
 
-        // Automatically apply to front if it's the first asset or for immediate feedback
-        setBoxTextures((prev) => ({ ...prev, front: imageSrc }));
-
-        setShowCropModal(true);
-      };
-      reader.readAsDataURL(file);
+          // Show crop modal for the first image uploaded if it's the very first asset
+          if (assetPool.length === 0 && index === 0) {
+            setImageToCrop(imageSrc);
+            setShowCropModal(true);
+            setBoxTextures((prev) => ({ ...prev, front: imageSrc }));
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
@@ -570,44 +589,40 @@ function CustomizeLabContent() {
     }
   };
 
-  // Automatically match dimensions with Lab Specifications
+  // Automatically match dimensions with Lab Specifications for pricing/estimation ONLY
   useEffect(() => {
-    // Only auto-match if not explicitly in "custom_contact" mode
-    if (selectedSpec === "custom_contact") return;
-
     const match = labConfig.specifications.find(s =>
       s.l === dimensions.l &&
       s.w === dimensions.w &&
       s.h === dimensions.h &&
-      s.unit === (s.unit || 'mm') // Handle potential missing unit
+      s.unit === (s.unit || 'mm')
     );
 
     if (match) {
-      setSelectedSpec(match);
+      setEstimatedSpec(match);
     } else {
-      // If no exact match, find the closest specification to estimate manufacturing cost (ups/machine)
       const closest = findClosestSpec(dimensions.l, dimensions.w, dimensions.h, selectedCategory);
-      setSelectedSpec(closest);
+      setEstimatedSpec(closest);
     }
   }, [dimensions, unit, labConfig.specifications, selectedCategory]);
 
   // Auto-reset dimensions and other specs when subcategory (Product) changes
   useEffect(() => {
     if (!selectedSubCategory || !labConfig.specifications.length) return;
-    
+
     // Find a reference spec for this new product to set default dimensions
-    const refSpec = labConfig.specifications.find(s => 
-      s.category === selectedCategory && 
+    const refSpec = labConfig.specifications.find(s =>
+      s.category === selectedCategory &&
       s.subCategory === selectedSubCategory
     );
 
     if (refSpec) {
       setDimensions({ l: refSpec.l, w: refSpec.w, h: refSpec.h });
       setUnit(refSpec.unit || 'mm');
-      // Also reset material/brand/GSM to match the reference spec if possible
+      setSelectedSpec(refSpec);
       if (refSpec.gsm) setSelectedGSM(String(refSpec.gsm));
     }
-  }, [selectedSubCategory, selectedCategory]);
+  }, [selectedSubCategory, selectedCategory, labConfig.specifications]);
 
   const applyToAllFaces = () => {
     if (customMode === "texture") {
@@ -654,10 +669,17 @@ function CustomizeLabContent() {
 
   const smartApplyAI = (imageSrc) => {
     setAssetPool((prev) => {
-      const updated = [...prev, imageSrc].slice(-3);
-      setActiveAssetIndex(updated.length - 1);
-      return updated;
+      // Add to pool if not already present
+      if (!prev.includes(imageSrc)) {
+        const updated = [...prev, imageSrc].slice(-3);
+        setActiveAssetIndex(updated.length - 1);
+        return updated;
+      }
+      return prev;
     });
+
+    // Automatically apply to all faces for immediate feedback, 
+    // but the user can now override specific faces using the mapping UI
     setBoxTextures({
       front: imageSrc,
       back: imageSrc,
@@ -696,6 +718,68 @@ function CustomizeLabContent() {
     }
   };
 
+  const generateAITexture = async () => {
+    if (!aiPrompt && selectedChips.length === 0) return;
+    setIsGenerating(true);
+    try {
+      const finalPrompt = buildSmartPrompt();
+      const res = await fetch('/api/customize/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userIdea: aiPrompt.trim(),
+          styles: selectedChips.filter(c => chipCategories.style.includes(c)),
+          industries: selectedChips.filter(c => chipCategories.industry.includes(c)),
+          boxMode,
+          customText: customText.trim(),
+          boxColors: boxColors,
+        })
+      });
+      const startData = await res.json();
+      if (!res.ok) {
+        if (startData.limitReached) setShowPremiumModal(true);
+        else showToast(startData.message || startData.error || "Generation failed", "error");
+        setIsGenerating(false);
+        return;
+      }
+      const taskId = startData.data.task_id;
+      if (checkUser) checkUser();
+      let completed = false;
+      let attempts = 0;
+      while (!completed && attempts < 100) {
+        await new Promise(r => setTimeout(r, 3000));
+        const statusRes = await fetch(`/api/customize/status/${taskId}`, { cache: 'no-store' });
+        const statusData = await statusRes.json();
+        if (!statusRes.ok) { attempts++; continue; }
+        const currentStatus = statusData?.data?.status;
+        if (currentStatus === 'COMPLETED') {
+          const data = statusData?.data;
+          let imageUrl = (Array.isArray(data?.generated) && data.generated[0]) || (Array.isArray(data?.result) && data.result[0]) || data?.result?.items?.[0]?.url || (typeof data?.result === 'string' ? data.result : null);
+          if (imageUrl) {
+            smartApplyAI(imageUrl);
+            try {
+              await fetch('/api/user/save-pattern', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: imageUrl, prompt: aiPrompt || "AI Generated Design" })
+              });
+            } catch (e) { }
+            if (checkUser) checkUser();
+            completed = true;
+            break;
+          }
+        } else if (currentStatus === 'FAILED') {
+          throw new Error(statusData?.data?.message || "Generation process failed");
+        }
+        attempts++;
+      }
+    } catch (err) {
+      showToast("Forge error: " + err.message, "error");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   // Chip categories for smart prompt builder
   const chipCategories = {
     style: [
@@ -722,7 +806,6 @@ function CustomizeLabContent() {
       "Artisan & Craft",
       "Health & Wellness",
     ],
-    history: [], // Mark as special category
   };
 
   const toggleChip = (chip) =>
@@ -818,7 +901,7 @@ function CustomizeLabContent() {
     if (!product || !quantity || quantity <= 0) return null;
     try {
       return calculateBoxPrice({
-        spec: selectedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
+        spec: (selectedSpec && typeof selectedSpec === 'object') ? selectedSpec : (estimatedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 }),
         qty: Math.max(10, parseInt(quantity) || 10),
         gsm: gsmNum,
         material: selectedMaterial,
@@ -1040,7 +1123,7 @@ function CustomizeLabContent() {
         onClose={() => router.push('/')}
       />
       {/* AI Generate overlay removed for direct lab flow */}
-      <main className="pt-20 sm:pt-24 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8 xl:px-12 max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10">
+      <div className="pt-20 sm:pt-24 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8 xl:px-12 max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10">
         {/* 3D SPATIAL CANVAS (LEFT) */}
         <div className="lg:col-span-7 lg:sticky lg:top-24 lg:h-[calc(100vh-120px)] flex flex-col space-y-4 md:space-y-6 overflow-y-auto no-scrollbar pb-6">
           <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-gray-50 border border-gray-100 rounded-2xl sm:rounded-[2rem] shadow-sm shrink-0">
@@ -1509,11 +1592,18 @@ function CustomizeLabContent() {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* CUSTOMIZATION OPTIONS UI (BELOW 3D MODEL) */}
-          <div className="mt-8 bg-white/80 backdrop-blur-md p-6 sm:p-8 rounded-[2rem] border border-gray-100 shadow-xl space-y-6">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-              <h3 className="text-sm font-black text-gray-950 uppercase tracking-widest">Product Formulation</h3>
+        {/* CONTROL PANEL (RIGHT) */}
+        <div className="lg:col-span-5 space-y-6">
+
+          {/* Step 1: Product Formulation */}
+          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden group transition-all hover:border-emerald-200">
+            <div className="flex items-center justify-between px-6 py-5 bg-gray-50/50 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500 text-white text-[10px] font-black">1</div>
+                <h3 className="text-xs font-black text-gray-950 uppercase tracking-widest">Product Formulation</h3>
+              </div>
               <button
                 onClick={() => {
                   setSelectedGSM("300");
@@ -1530,945 +1620,500 @@ function CustomizeLabContent() {
                   setDesignName("Untitled Design");
                   if (typeof setUnit === "function") setUnit("in");
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 hover:border-red-200 hover:bg-red-50 text-gray-500 hover:text-red-500 rounded-xl transition-all text-[10px] font-black uppercase tracking-widest shadow-sm active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-red-200 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-xl transition-all text-[9px] font-black uppercase tracking-widest shadow-sm"
               >
                 <RefreshCw size={12} />
                 <span>Reset All</span>
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Category */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Category</label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  <option value="All">All Categories</option>
-                  {categories.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-
-              {/* Sub-Category */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Sub-Category</label>
-                <select
-                  value={selectedSubCategory}
-                  onChange={(e) => setSelectedSubCategory(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  <option value="All">All Sub-Categories</option>
-                  {subCategories.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-
-              {/* GSM */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select GSM</label>
-                <select
-                  value={selectedGSM}
-                  onChange={(e) => setSelectedGSM(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  {ENGINE_GSM_OPTIONS.map(g => <option key={g} value={g}>{g} GSM</option>)}
-                </select>
-              </div>
-
-              {/* Material */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Select Material</label>
-                <select
-                  value={selectedMaterial}
-                  onChange={(e) => {
-                    const mat = e.target.value;
-                    setSelectedMaterial(mat);
-                    const brands = getBrandsForMaterial(mat);
-                    setSelectedBrand(brands.includes("ITC") ? "ITC" : brands[0]);
-                  }}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  {MATERIAL_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-
-
-              {/* Finish */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Lamination / Finish</label>
-                <select
-                  value={selectedFinish}
-                  onChange={(e) => setSelectedFinish(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  {FINISH_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-
-              {/* Print Type */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Printing Type</label>
-                <select
-                  value={selectedPrintType}
-                  onChange={(e) => setSelectedPrintType(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all cursor-pointer"
-                >
-                  {PRINT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-
-
-            </div>
-          </div>
-        </div>
-
-        {/* CONTROL PANEL (RIGHT) */}
-        <div className="lg:col-span-5 space-y-4 sm:space-y-6">
-          <div className="bg-gray-50 rounded-2xl sm:rounded-[2.5rem] md:rounded-[3.5rem] p-5 sm:p-7 md:p-9 lg:p-10 border border-gray-100 shadow-sm space-y-6 sm:space-y-8 md:space-y-10 relative overflow-hidden">
-            {/* Section 1: Geometry */}
-            <div className="space-y-5 sm:space-y-6 md:space-y-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                    <Ruler size={13} className="text-emerald-500" />
-                  </div>
-                  <h3 className="text-xs sm:text-sm font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-gray-950 italic leading-none">
-                    Geometry_Core
-                  </h3>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Select Category</label>
+                  <select
+                    value={selectedCategory || "All"}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-[11px] font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all"
+                  >
+                    <option value="All">All Categories</option>
+                    {categories.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-[7px] font-black p-1.5 bg-gray-900 text-white rounded-lg tracking-widest uppercase">{unit === 'mm' ? 'Metric' : 'Imperial'}_Active</span>
-                  <div className="flex bg-white border border-gray-100 p-1 rounded-xl shadow-inner">
-                    <button
-                      onClick={() => {
-                        if (unit === "mm") {
-                          setUnit("in");
-                          setDimensions({
-                            l: parseFloat((dimensions.l / 25.4).toFixed(1)),
-                            w: parseFloat((dimensions.w / 25.4).toFixed(1)),
-                            h: parseFloat((dimensions.h / 25.4).toFixed(1))
-                          });
-                        }
-                      }}
-                      className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${unit === 'in' ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-400'}`}
-                    >IN</button>
-                    <button
-                      onClick={() => {
-                        if (unit === "in") {
-                          setUnit("mm");
-                          setDimensions({
-                            l: Math.round(dimensions.l * 25.4),
-                            w: Math.round(dimensions.w * 25.4),
-                            h: Math.round(dimensions.h * 25.4)
-                          });
-                        }
-                      }}
-                      className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase transition-all ${unit === 'mm' ? 'bg-emerald-500 text-white shadow-sm' : 'text-gray-400'}`}
-                    >MM</button>
-                  </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Select Sub-Category</label>
+                  <select
+                    value={selectedSubCategory || "All"}
+                    onChange={(e) => setSelectedSubCategory(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-[11px] font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all"
+                  >
+                    <option value="All">All Sub-Categories</option>
+                    {subCategories.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Select GSM</label>
+                  <select
+                    value={selectedGSM || "300"}
+                    onChange={(e) => setSelectedGSM(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-[11px] font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all"
+                  >
+                    {ENGINE_GSM_OPTIONS.map(g => <option key={g} value={g}>{g} GSM</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Select Material</label>
+                  <select
+                    value={selectedMaterial || "SBS"}
+                    onChange={(e) => {
+                      const mat = e.target.value;
+                      setSelectedMaterial(mat);
+                      const brands = getBrandsForMaterial(mat);
+                      setSelectedBrand(brands.includes("ITC") ? "ITC" : brands[0]);
+                    }}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-[11px] font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all"
+                  >
+                    {MATERIAL_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Lamination / Finish</label>
+                  <select
+                    value={selectedFinish || "Plain"}
+                    onChange={(e) => setSelectedFinish(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-[11px] font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all"
+                  >
+                    {FINISH_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Printing Type</label>
+                  <select
+                    value={selectedPrintType || "Four Colour"}
+                    onChange={(e) => setSelectedPrintType(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-[11px] font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all"
+                  >
+                    {PRINT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </select>
                 </div>
               </div>
 
-              {/* Standard Sizes Dropdown */}
-              <div className="space-y-2">
-                <label className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Predefined Standard Sizes</label>
+              <div className="pt-6 border-t border-gray-100 space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Predefined Standard Sizes</label>
+                  <div className="flex bg-gray-100 p-1 rounded-lg">
+                    {['in', 'mm'].map(u => (
+                      <button
+                        key={u}
+                        onClick={() => {
+                          if (unit !== u) {
+                            setUnit(u);
+                            const factor = u === 'mm' ? 25.4 : (1 / 25.4);
+                            setDimensions({
+                              l: parseFloat((dimensions.l * factor).toFixed(u === 'mm' ? 0 : 1)),
+                              w: parseFloat((dimensions.w * factor).toFixed(u === 'mm' ? 0 : 1)),
+                              h: parseFloat((dimensions.h * factor).toFixed(u === 'mm' ? 0 : 1)),
+                            });
+                            setSelectedSpec(null); // Force WhatsApp for custom sizes after conversion
+                          }
+                        }}
+                        className={`px-2 py-0.5 rounded text-[8px] font-black uppercase transition-all ${unit === u ? 'bg-white text-emerald-500 shadow-sm' : 'text-gray-400'}`}
+                      >
+                        {u}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="relative group">
                   <select
+                    value={selectedSpec?.spec || (typeof selectedSpec === 'string' ? selectedSpec : "")}
                     onChange={(e) => {
                       const val = e.target.value;
                       if (val === "custom_contact") {
                         setSelectedSpec("custom_contact");
                         return;
                       }
-
                       const selected = labConfig.specifications.find(s => s.spec === val);
                       if (selected) {
                         setDimensions({ l: selected.l, w: selected.w, h: selected.h });
                         setUnit(selected.unit || "mm");
                         setSelectedSpec(selected);
-
-                        // Intelligent Defaults based on Spec
                         if (selected.category !== "All") setSelectedCategory(selected.category);
                         if (selected.subCategory !== "All") setSelectedSubCategory(selected.subCategory);
-
-                        // Force specific material defaults if needed
-                        if (selected.category === "Bakery") {
-                          setSelectedMaterial("SBS");
-                          setSelectedBrand("ITC");
-                        }
+                        if (selected.category === "Bakery") { setSelectedMaterial("SBS"); setSelectedBrand("ITC"); }
                       } else {
                         setSelectedSpec(null);
                       }
                     }}
-                    className="w-full bg-white border-2 border-emerald-100 hover:border-emerald-500 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-wider text-gray-950 outline-none transition-all cursor-pointer shadow-sm appearance-none"
+                    className="w-full bg-white border-2 border-emerald-100 rounded-2xl px-5 py-3.5 text-xs font-black uppercase tracking-wider text-gray-950 outline-none transition-all cursor-pointer appearance-none"
                   >
                     <option value="">Select a calibrated size...</option>
-                    {(() => {
-                      const filteredSpecs = labConfig.specifications.filter(s => {
-                        const catMatch = selectedCategory === "All" || s.category?.trim().toLowerCase() === selectedCategory?.trim().toLowerCase();
-                        const subMatch = selectedSubCategory === "All" || s.subCategory?.trim().toLowerCase() === selectedSubCategory?.trim().toLowerCase();
-                        return catMatch && subMatch;
-                      });
-
-                      if (filteredSpecs.length === 0) {
-                        return <option disabled>No standard sizes for {selectedSubCategory || 'this selection'}</option>;
-                      }
-
-                      return filteredSpecs.map((spec, idx) => (
-                        <option key={idx} value={spec.spec}>
-                          {spec.spec.split('|')[0].trim()}
-                        </option>
-                      ));
-                    })()}
-                    <optgroup label="CAN'T FIND YOUR SIZE?">
-                      <option value="custom_contact">REQUEST CUSTOM SIZE (WHATSAPP)</option>
-                    </optgroup>
+                    {labConfig.specifications.filter(s => (selectedCategory === "All" || s.category === selectedCategory) && (selectedSubCategory === "All" || s.subCategory === selectedSubCategory)).map((spec, idx) => (
+                      <option key={idx} value={spec.spec}>{spec.spec.split('|')[0].trim()}</option>
+                    ))}
+                    <option value="custom_contact">REQUEST CUSTOM SIZE (WHATSAPP)</option>
                   </select>
-                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none group-hover:scale-110 transition-transform" size={18} />
+                  <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none" size={16} />
                 </div>
-                {selectedSpec === "custom_contact" && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-gray-900 border border-emerald-500/30 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden"
-                  >
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl rounded-full" />
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center animate-pulse">
-                          <Shield size={16} className="text-white" />
-                        </div>
-                        <h4 className="text-[10px] font-black text-white uppercase tracking-widest leading-none italic">Structural_Request_Active</h4>
-                      </div>
-                      <p className="text-[11px] font-medium text-gray-400 leading-relaxed max-w-[280px]">
-                        Dimensions <span className="text-emerald-400 font-black">{dimensions.l}{unit} × {dimensions.w}{unit} × {dimensions.h}{unit}</span> require custom die-line calibration. Our engineering team can deploy this for you via WhatsApp.
-                      </p>
-                      <button
-                        onClick={() => {
-                          const msg = `Hi BoxFox Team! I need a custom box size that is not in your standard list.\nDimensions: ${dimensions.l}${unit} x ${dimensions.w}${unit} x ${dimensions.h}${unit}\nProduct: ${product?.name || 'Custom Box'}\nQuantity: ${quantity}\nCategory: ${selectedCategory}`;
-                          window.open(`https://wa.me/918449339999?text=${encodeURIComponent(msg)}`, '_blank');
+
+                <div className="grid grid-cols-3 gap-3">
+                  {["l", "w", "h"].map((d) => (
+                    <div key={d} className="space-y-1">
+                      <input
+                        type="text"
+                        value={dimensions[d] === "" ? "" : dimensions[d]}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
+                            setDimensions({ ...dimensions, [d]: val === "" ? "" : parseFloat(val) || 0 });
+                            setSelectedSpec(null); // Force WhatsApp for custom sizes
+                          }
                         }}
-                        className="mt-4 w-full py-3 bg-emerald-500 text-white rounded-xl font-black uppercase text-[10px] tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:bg-white hover:text-emerald-500 transition-all flex items-center justify-center gap-2"
-                      >
-                        <Zap size={12} className="fill-current" />
-                        Direct_WhatsApp_Forge
-                      </button>
+                        className="w-full h-12 bg-white border border-gray-200 rounded-xl px-2 text-lg font-black text-center focus:border-emerald-500 outline-none transition-all"
+                      />
+                      <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest text-center">
+                        {d === "l" ? "Length" : d === "w" ? "Width" : "Height"}
+                      </p>
                     </div>
-                  </motion.div>
-                )}
-                {selectedSpec && typeof selectedSpec === 'object' && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-sm"
-                  >
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 size={14} className="text-emerald-500" />
-                      <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest leading-tight">
-                        Standard Size Calibrated
-                      </h4>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-              <div className="grid grid-cols-3 gap-3 sm:gap-4 md:gap-5">
-                {["l", "w", "h"].map((d) => (
-                  <div key={d} className="space-y-2 sm:space-y-3">
-                    <input
-                      type="text"
-                      value={dimensions[d] === "" ? "" : dimensions[d]}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
-                          setDimensions({
-                            ...dimensions,
-                            [d]: val === "" ? "" : parseFloat(val) || 0,
-                          });
-                        }
-                      }}
-                      onBlur={() => {
-                        if (dimensions[d] === "" || dimensions[d] === 0) {
-                          setDimensions((prev) => ({ ...prev, [d]: 1 }));
-                        }
-                      }}
-                      className="w-full h-14 sm:h-16 md:h-18 lg:h-20 bg-white border border-gray-200 rounded-2xl sm:rounded-[1.5rem] md:rounded-[1.8rem] px-2 sm:px-4 text-xl sm:text-2xl font-black focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all shadow-sm text-center text-gray-950"
-                    />
-                    <p className="text-[10px] sm:text-xs font-black text-gray-600 uppercase tracking-widest text-center">
-                      {d === "l" ? "Length" : d === "w" ? "Width" : "Height"}
-                    </p>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-4 px-5 py-3 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex-1">
+                    <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Vol_Cubic_{unit.toUpperCase()}</p>
+                    <p className="text-xs font-black text-gray-950">{(dimensions.l * dimensions.w * dimensions.h).toFixed(unit === "mm" ? 0 : 1)}<span className="text-[9px] ml-0.5 opacity-40">{unit}³</span></p>
                   </div>
-                ))}
-              </div>
-
-
-              {/* Real-time Metrics Pill */}
-              <div className="flex items-center gap-4 px-6 py-4 bg-white rounded-2xl border border-gray-100 shadow-inner">
-                <div className="flex-1">
-                  <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">Vol_Cubic_{unit.toUpperCase()}</p>
-                  <p className="text-sm font-black text-gray-950">{(dimensions.l * dimensions.w * dimensions.h).toFixed(unit === "mm" ? 0 : 1)}<span className="text-[10px] ml-1 opacity-40 uppercase">{unit}³</span></p>
-                </div>
-                <div className="w-px h-8 bg-gray-100" />
-                <div className="flex-1">
-                  <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest mb-1">Surf_Area</p>
-                  <p className="text-sm font-black text-gray-950">{(unit === "mm" ? 2 * (dimensions.l * dimensions.w + dimensions.w * dimensions.h + dimensions.h * dimensions.l) : currentSA).toFixed(unit === "mm" ? 0 : 1)}<span className="text-[10px] ml-1 opacity-40 uppercase">{unit}²</span></p>
+                  <div className="w-px h-6 bg-gray-200" />
+                  <div className="flex-1">
+                    <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Surf_Area</p>
+                    <p className="text-xs font-black text-gray-950">{(unit === "mm" ? 2 * (dimensions.l * dimensions.w + dimensions.w * dimensions.h + dimensions.h * dimensions.l) : currentSA).toFixed(unit === "mm" ? 0 : 1)}<span className="text-[9px] ml-0.5 opacity-40">{unit}²</span></p>
+                  </div>
                 </div>
               </div>
+            </div>
+          </div>
 
+          {/* Step 2: Neural_Maps */}
+          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden group transition-all hover:border-blue-200">
+            <div className="flex items-center justify-between px-6 py-5 bg-gray-50/50 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-[10px] font-black">2</div>
+                <h3 className="text-xs font-black text-gray-950 uppercase tracking-widest">Neural_Maps</h3>
+              </div>
+              <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-[8px] font-black tracking-widest">NEURAL_V2.5</div>
             </div>
 
-            {/* Section 2: Asset Library */}
-            <div className="space-y-5 sm:space-y-6 md:space-y-8 pt-5 sm:pt-6 border-t border-gray-200">
-              <div className="flex items-center">
-                <div className="flex p-1 sm:p-1.5 bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-sm w-full sm:w-auto overflow-x-auto no-scrollbar">
+            <div className="p-6 space-y-6">
+              <div className="flex p-1 bg-gray-100 rounded-xl">
+                {['texture', 'logo', 'color', 'upload'].map(mode => (
                   <button
-                    onClick={() => setCustomMode("texture")}
-                    className={`flex-1 sm:flex-none px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all active:scale-90 ${customMode === "texture"
-                      ? "bg-gray-950 text-white shadow-md"
-                      : "text-gray-500 hover:text-gray-950"
-                      }`}
+                    key={mode}
+                    onClick={() => setCustomMode(mode)}
+                    className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${customMode === mode ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                   >
-                    Neural_Maps
+                    {mode === 'texture' ? 'AI_Texture' : mode === 'logo' ? 'Logo_Lab' : mode === 'color' ? 'Solid_Lab' : 'Image_Upload'}
                   </button>
-                  <button
-                    onClick={() => setCustomMode("logo")}
-                    className={`flex-1 sm:flex-none px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all active:scale-90 ${customMode === "logo"
-                      ? "bg-gray-950 text-white shadow-md"
-                      : "text-gray-500 hover:text-gray-950"
-                      }`}
-                  >
-                    Logo_Lab
-                  </button>
-                  <button
-                    onClick={() => setCustomMode("color")}
-                    className={`flex-1 sm:flex-none px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all active:scale-90 ${customMode === "color"
-                      ? "bg-gray-950 text-white shadow-md"
-                      : "text-gray-500 hover:text-gray-950"
-                      }`}
-                  >
-                    Solid_Lab
-                  </button>
-                </div>
+                ))}
               </div>
+              {/* Mode-Specific Tools */}
+              {customMode === 'texture' && (
+                <div className="space-y-6">
+                  {/* AI Forge Logic */}
+                  <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                    <div className="flex border-b border-gray-100 overflow-x-auto no-scrollbar">
+                      {Object.keys(chipCategories).map(cat => (
+                        <button
+                          key={cat}
+                          onClick={() => setActiveChipCategory(cat)}
+                          className={`px-4 py-2 text-[8px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${activeChipCategory === cat ? 'bg-gray-950 text-white' : 'text-gray-400 hover:bg-gray-50'}`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="p-4 flex flex-wrap gap-2">
+                      {chipCategories[activeChipCategory]?.map(chip => (
+                        <button
+                          key={chip}
+                          onClick={() => toggleChip(chip)}
+                          className={`px-2.5 py-1.5 rounded-lg text-[9px] font-bold border transition-all ${selectedChips.includes(chip) ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-gray-50 text-gray-500 border-gray-100 hover:border-blue-200'}`}
+                        >
+                          {chip}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              {customMode === "texture" ? (
-                <div className="grid grid-cols-4 gap-4">
-                  <label className="aspect-square border-2 border-dashed border-gray-300 bg-white rounded-[2rem] flex items-center justify-center cursor-pointer hover:border-emerald-500 hover:bg-emerald-50/30 transition-all group overflow-hidden">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Describe Your Idea</label>
+                    <textarea
+                      placeholder="e.g. minimalist white mailer with gold foil logo..."
+                      value={aiPrompt || ""}
+                      onChange={(e) => { setAiPrompt(e.target.value); setIsPromptEnhanced(false); }}
+                      rows={3}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-xs font-medium focus:border-blue-400 outline-none transition-all resize-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {customMode === 'logo' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-4 gap-3">
+                    <label className="aspect-square border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all">
+                      <input type="file" className="hidden" onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => { setBoxLogos(prev => ({ ...prev, [selectedFace || 'top']: reader.result })); showToast("Logo Uploaded!"); };
+                          reader.readAsDataURL(file);
+                        }
+                      }} />
+                      <Upload size={20} className="text-gray-300" />
+                    </label>
+                    {Object.entries(boxLogos).filter(([_, src]) => src).map(([face, src], idx) => (
+                      <div key={idx} className="relative aspect-square rounded-2xl border border-gray-100 bg-white p-2 group overflow-hidden">
+                        <img src={src} className="w-full h-full object-contain" />
+                        <button onClick={() => setBoxLogos(prev => ({ ...prev, [face]: null }))} className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {boxLogos[selectedFace || 'top'] && (
+                    <div className="bg-gray-50 rounded-2xl p-4 space-y-4">
+                      <div className="flex justify-between items-center"><span className="text-[8px] font-black uppercase text-gray-400">Scale</span><span className="text-[9px] font-black text-blue-600">{logoSettings[selectedFace || 'top']?.scale || 100}%</span></div>
+                      <input type="range" min="1" max="100" value={logoSettings[selectedFace || 'top']?.scale || 100} onChange={(e) => setLogoSettings(prev => ({ ...prev, [selectedFace || 'top']: { ...prev[selectedFace || 'top'], scale: parseInt(e.target.value) } }))} className="w-full h-1 bg-gray-200 rounded-full appearance-none accent-blue-600" />
+                      <div className="flex justify-between items-center"><span className="text-[8px] font-black uppercase text-gray-400">Rotation</span><span className="text-[9px] font-black text-blue-600">{logoSettings[selectedFace || 'top']?.rotate || 0}°</span></div>
+                      <input type="range" min="-180" max="180" value={logoSettings[selectedFace || 'top']?.rotate || 0} onChange={(e) => setLogoSettings(prev => ({ ...prev, [selectedFace || 'top']: { ...prev[selectedFace || 'top'], rotate: parseInt(e.target.value) } }))} className="w-full h-1 bg-gray-200 rounded-full appearance-none accent-blue-600" />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {customMode === 'color' && (
+                <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[8px] font-black uppercase text-gray-400 tracking-[0.2em]">Quick Fill</span>
+                        <button 
+                          onClick={() => {
+                            if (activeColor) {
+                              const allSides = {};
+                              ['front', 'back', 'top', 'bottom', 'left', 'right'].forEach(s => {
+                                allSides[s] = activeColor;
+                              });
+                              setBoxColors(allSides);
+                              setBoxTextures({}); // Clear textures if solid fill
+                              showToast("Solid color applied to all sides!");
+                            }
+                          }}
+                          className="px-3 py-1 bg-gray-50 text-gray-400 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-gray-950 hover:text-white transition-all"
+                        >
+                          Fill All Sides
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-6 gap-2">
+                    {["#000000", "#FFFFFF", "#059669", "#1D4ED8", "#B91C1C", "#D97706"].map(c => (
+                      <button key={c} onClick={() => setActiveColor(c)} style={{ backgroundColor: c }} className={`aspect-square rounded-xl border-2 ${activeColor === c ? 'border-blue-600 scale-90' : 'border-gray-100'}`} />
+                    ))}
+                    <div className="aspect-square rounded-xl bg-white border border-gray-100 flex items-center justify-center relative overflow-hidden">
+                      <input type="color" value={activeColor || "#FFFFFF"} onChange={(e) => setActiveColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer scale-[5]" />
+                      <Palette size={14} className="text-gray-400" />
+                  </div>
+                </div>
+
+                  <div className="pt-4 space-y-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[8px] font-black uppercase text-gray-400 tracking-[0.2em]">Map Color to Side</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {['front', 'back', 'top', 'bottom', 'left', 'right'].map(side => {
+                        const isMapped = boxColors[side] === activeColor;
+                        return (
+                          <button
+                            key={side}
+                            onClick={() => {
+                              if (!activeColor) return;
+                              setBoxColors(prev => ({
+                                ...prev,
+                                [side]: isMapped ? "rgba(16, 185, 129, 0.05)" : activeColor
+                              }));
+                              if (!isMapped) {
+                                setBoxTextures(prev => ({ ...prev, [side]: null }));
+                              }
+                            }}
+                            className={`py-3 rounded-xl border text-[8px] font-black uppercase tracking-widest transition-all ${isMapped ? 'bg-white border-emerald-500 text-emerald-500 shadow-sm' : 'bg-white border-gray-100 text-gray-400'}`}
+                          >
+                            {side}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {customMode === 'upload' && (
+                <div className="p-8 border-2 border-dashed border-gray-100 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 bg-gray-50/30 hover:bg-blue-50/30 hover:border-blue-200 transition-all group">
+                  <div className="w-16 h-16 rounded-full bg-white shadow-xl flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
+                    <Upload size={24} />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] font-black text-gray-950 uppercase tracking-widest">Upload Custom Graphics</p>
+                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-1">High-res PNG/JPG supported</p>
+                  </div>
+                  <label className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 cursor-pointer hover:bg-blue-700 transition-all active:scale-95">
+                    Select Files
                     <input
                       type="file"
+                      multiple
                       className="hidden"
                       onChange={handleFileUpload}
                     />
-                    <Plus
-                      size={28}
-                      className="text-gray-400 group-hover:text-emerald-600 group-hover:scale-125 transition-all"
-                    />
                   </label>
-                  {assetPool.map((asset, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => setActiveAssetIndex(idx)}
-                      className={`relative group aspect-square rounded-[2rem] overflow-hidden cursor-pointer border-2 transition-all ${activeAssetIndex === idx ? "border-emerald-500 scale-95 shadow-lg" : "border-transparent opacity-60 hover:opacity-100 hover:scale-105"}`}
-                    >
-                      <img src={asset} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setImageToCrop(asset);
-                            setShowCropModal(true);
-                          }}
-                          title="Crop Image"
-                          className="w-10 h-10 rounded-full bg-white text-gray-900 flex items-center justify-center hover:bg-blue-500 hover:text-white transition-all transform hover:scale-110 active:scale-95 shadow-xl"
-                        >
-                          <Scissors size={18} />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (confirm("Delete this texture from your session?")) {
-                              setAssetPool(prev => {
-                                const newPool = prev.filter((_, i) => i !== idx);
-                                if (activeAssetIndex >= newPool.length) {
-                                  setActiveAssetIndex(Math.max(0, newPool.length - 1));
-                                }
-                                return newPool;
-                              });
-                            }
-                          }}
-                          title="Delete Texture"
-                          className="w-10 h-10 rounded-full bg-white text-gray-900 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all transform hover:scale-110 active:scale-95 shadow-xl"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
                 </div>
-              ) : customMode === "logo" ? (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-4 gap-4">
-                    <label className="aspect-square border-2 border-dashed border-gray-300 bg-white rounded-[2rem] flex items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/30 transition-all group overflow-hidden">
-                      <input
-                        type="file"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setBoxLogos(prev => ({ ...prev, [selectedFace || 'top']: reader.result }));
-                              showToast("Logo Uploaded!");
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-                      <Upload size={24} className="text-gray-400 group-hover:text-blue-600 transition-all" />
-                    </label>
-                    {Object.entries(boxLogos).filter(([_, src]) => src).map(([face, src], idx) => (
-                      <div
-                        key={idx}
-                        className="relative aspect-square rounded-[2rem] border-2 border-blue-200 bg-white p-2 group overflow-hidden"
-                      >
-                        <img src={src} className="w-full h-full object-contain" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => saveToVault('logo', src, `Logo_${face}_${new Date().toLocaleDateString()}`)}
-                            title="Save to Vault"
-                            className="p-1.5 bg-white rounded-lg hover:bg-emerald-500 hover:text-white transition-all shadow-lg"
-                          >
-                            <Sparkles size={12} />
-                          </button>
-                          <button
-                            onClick={() => setBoxLogos(prev => ({ ...prev, [face]: null }))}
-                            title="Remove"
-                            className="p-1.5 bg-white rounded-lg hover:bg-red-500 hover:text-white transition-all shadow-lg"
-                          >
-                            <X size={12} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              )}
 
-                  {/* Brand Asset Vault - Logos */}
-                  {brandVault.logos?.length > 0 && (
-                    <div className="pt-4 border-t border-gray-100">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 flex items-center gap-2">
-                        <Lock size={10} className="text-emerald-500" /> Brand_Vault Assets
-                      </p>
-                      <div className="grid grid-cols-4 gap-3">
-                        {brandVault.logos.map((vaultLogo, lidx) => (
-                          <div
-                            key={lidx}
-                            onClick={() => setBoxLogos(prev => ({ ...prev, [selectedFace || 'top']: vaultLogo.url }))}
-                            className="aspect-square rounded-2xl border border-gray-100 bg-white p-2 cursor-pointer hover:border-emerald-500 hover:scale-105 transition-all group relative overflow-hidden shadow-sm"
-                          >
-                            <img src={vaultLogo.url} alt={vaultLogo.name} className="w-full h-full object-contain" />
-                            <button
-                              onClick={(e) => { e.stopPropagation(); deleteFromVault('logo', vaultLogo.url); }}
-                              className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center translate-x-10 group-hover:translate-x-0 transition-transform duration-300 shadow-md"
-                            >
-                              <X size={10} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-
-                  {/* Logo Control Panel */}
-                  {(boxLogos[selectedFace || 'top']) && (
-                    <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm space-y-5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Transform_Logic</span>
-                        <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-3 py-1 rounded-full uppercase tracking-widest">{selectedFace || 'Top'} Layer</span>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
-                            <span>Logo Scale</span>
-                            <span>{logoSettings[selectedFace || 'top'].scale}%</span>
-                          </div>
-                          <input
-                            type="range"
-                            min="1"
-                            max="100"
-                            value={logoSettings[selectedFace || 'top'].scale}
-                            onChange={(e) => setLogoSettings(prev => ({
-                              ...prev,
-                              [selectedFace || 'top']: { ...prev[selectedFace || 'top'], scale: parseInt(e.target.value) }
-                            }))}
-                            className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
-                              <span>X Offset</span>
-                              <span>{logoSettings[selectedFace || 'top'].x}%</span>
-                            </div>
-                            <input
-                              type="range"
-                              min="0"
-                              max="100"
-                              value={logoSettings[selectedFace || 'top'].x}
-                              onChange={(e) => setLogoSettings(prev => ({
-                                ...prev,
-                                [selectedFace || 'top']: { ...prev[selectedFace || 'top'], x: parseInt(e.target.value) }
-                              }))}
-                              className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
-                              <span>Y Offset</span>
-                              <span>{logoSettings[selectedFace || 'top'].y}%</span>
-                            </div>
-                            <input
-                              type="range"
-                              min="0"
-                              max="100"
-                              value={logoSettings[selectedFace || 'top'].y}
-                              onChange={(e) => setLogoSettings(prev => ({
-                                ...prev,
-                                [selectedFace || 'top']: { ...prev[selectedFace || 'top'], y: parseInt(e.target.value) }
-                              }))}
-                              className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2 pt-2 border-t border-gray-50">
-                          <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-gray-500">
-                            <span>Rotation</span>
-                            <span>{logoSettings[selectedFace || 'top'].rotate}°</span>
-                          </div>
-                          <input
-                            type="range"
-                            min="-180"
-                            max="180"
-                            value={logoSettings[selectedFace || 'top'].rotate}
-                            onChange={(e) => setLogoSettings(prev => ({
-                              ...prev,
-                              [selectedFace || 'top']: { ...prev[selectedFace || 'top'], rotate: parseInt(e.target.value) }
-                            }))}
-                            className="w-full h-1 bg-gray-100 rounded-full appearance-none cursor-pointer accent-blue-600"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-6 gap-3">
-                    {[
-                      "#000000",
-                      "#FFFFFF",
-                      "#059669",
-                      "#1D4ED8",
-                      "#B91C1C",
-                      "#D97706",
-                      "#7C3AED",
-                      "#DB2777",
-                    ].map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => setActiveColor(color)}
-                        style={{ backgroundColor: color }}
-                        className={`aspect-square rounded-2xl border-2 transition-all ${activeColor === color ? "border-emerald-500 scale-90 ring-4 ring-emerald-500/10 shadow-lg" : "border-gray-100 hover:border-emerald-500/40"}`}
-                      />
-                    ))}
-                    <div className="aspect-square rounded-2xl bg-white border border-gray-100 flex items-center justify-center relative group overflow-hidden">
-                      <input
-                        type="color"
-                        value={activeColor}
-                        onChange={(e) => setActiveColor(e.target.value)}
-                        className="absolute inset-0 opacity-0 cursor-pointer scale-[5]"
-                      />
-                      <Palette
-                        size={16}
-                        className="text-gray-400 group-hover:text-emerald-500 transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Brand Asset Vault - Colors */}
-                  <div className="pt-4 border-t border-gray-100 space-y-4">
+              {/* Shared Asset Manager (Visible in Texture and Upload Modes) */}
+              {(customMode === 'texture' || customMode === 'upload') && (
+                <div className="space-y-6 pt-6 border-t border-gray-100">
+                  {/* Multi-Asset Pool Gallery */}
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
-                        <Lock size={10} className="text-emerald-500" /> My_Branding_Palette
-                      </p>
-                      <button
-                        onClick={() => saveToVault('color', activeColor)}
-                        className="p-1 px-3 bg-white border border-gray-200 text-gray-400 rounded-lg text-[8px] font-black uppercase tracking-widest hover:border-emerald-500 hover:text-emerald-500 transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
-                      >
-                        <Star size={10} className="text-emerald-500" fill={brandVault.colors.includes(activeColor) ? "currentColor" : "none"} />
-                        {brandVault.colors.includes(activeColor) ? "Identified" : "Secure Color"}
-                      </button>
+                      <label className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Active Asset Pool ({assetPool.length}/3)</label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[7px] font-black text-gray-300 uppercase tracking-widest">Mix & Match Enabled</span>
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-3">
-                      {brandVault.colors?.length > 0 ? (
-                        brandVault.colors.map((c, cidx) => (
-                          <div key={cidx} className="relative group">
-                            <button
-                              onClick={() => setActiveColor(c)}
-                              style={{ backgroundColor: c }}
-                              className={`w-12 h-12 rounded-2xl border-2 transition-all ${activeColor === c ? "border-emerald-500 scale-90 ring-4 ring-emerald-500/10 shadow-lg" : "border-gray-100 hover:border-emerald-500/40"}`}
-                            />
-                            <button
-                              onClick={(e) => { e.stopPropagation(); deleteFromVault('color', c); }}
-                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center scale-0 group-hover:scale-100 transition-transform shadow-md"
-                            >
-                              <X size={10} />
-                            </button>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="w-full py-4 border-2 border-dashed border-gray-100 rounded-2xl flex items-center justify-center">
-                          <p className="text-[8px] font-black text-gray-300 uppercase tracking-widest italic">Vault is empty. Secure a color to begin.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
 
-              {(assetPool.length > 0 || customMode === "color") && (
-                <div className="space-y-4 sm:space-y-5 bg-white rounded-2xl sm:rounded-[2rem] md:rounded-[3rem] p-4 sm:p-6 md:p-7 border border-gray-100 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[9px] sm:text-[10px] font-black text-gray-950 uppercase tracking-[0.2em] sm:tracking-[0.3em] italic">
-                      Face_Mapping_Active
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={applyToAllFaces}
-                        className="px-2.5 py-1 bg-emerald-500 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-90"
-                      >
-                        All
-                      </button>
-                      <button
-                        onClick={clearAllFaces}
-                        className="px-2.5 py-1 bg-gray-100 text-gray-500 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-400 transition-all active:scale-90"
-                      >
-                        Clear
-                      </button>
-                      <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className="grid grid-cols-3 gap-3">
+                      {[0, 1, 2].map((idx) => (
+                        <div key={idx} className="relative aspect-square">
+                          {assetPool[idx] ? (
+                            <motion.div
+                              whileHover={{ scale: 1.05 }}
+                              onClick={() => setActiveAssetIndex(idx)}
+                              className={`w-full h-full rounded-2xl border-2 overflow-hidden cursor-pointer transition-all ${activeAssetIndex === idx ? 'border-blue-600 shadow-lg shadow-blue-500/20' : 'border-gray-100'}`}
+                            >
+                              <img src={assetPool[idx]} className="w-full h-full object-cover" />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAssetPool(prev => prev.filter((_, i) => i !== idx));
+                                  if (activeAssetIndex >= idx) setActiveAssetIndex(Math.max(0, activeAssetIndex - 1));
+                                }}
+                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-colors"
+                              >
+                                <X size={10} />
+                              </button>
+                            </motion.div>
+                          ) : (
+                            <div className="w-full h-full border-2 border-dashed border-gray-50 rounded-2xl flex items-center justify-center text-gray-200">
+                              <Sparkles size={16} />
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
-                    {["front", "back", "left", "right", "top", "bottom"].map(
-                      (face) => (
+
+                  {/* Active Asset Mapping Controls */}
+                  {assetPool[activeAssetIndex] && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-gray-50 rounded-3xl border border-gray-100 p-6 space-y-5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-blue-600" />
+                          <h4 className="text-[10px] font-black text-gray-950 uppercase tracking-widest">Assign to Side</h4>
+                        </div>
                         <button
-                          key={face}
-                          onClick={() => toggleFaceMapping(face)}
-                          className={`py-3 sm:py-4 md:py-5 rounded-xl sm:rounded-2xl md:rounded-[1.5rem] text-[8px] sm:text-[9px] sm:text-[10px] font-black uppercase tracking-widest transition-all border active:scale-90 ${(customMode === "texture" &&
-                            boxTextures[face] ===
-                            assetPool[activeAssetIndex] &&
-                            boxTextures[face]) ||
-                            (customMode === "color" &&
-                              boxColors[face] === activeColor)
-                            ? "bg-emerald-500 text-white border-emerald-500 shadow-md"
-                            : "bg-gray-50 text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-gray-950"
-                            }`}
+                          onClick={() => {
+                            const current = assetPool[activeAssetIndex];
+                            setBoxTextures({
+                              top: current, bottom: current, front: current, back: current, left: current, right: current
+                            });
+                            showToast("Asset applied to all sides!");
+                          }}
+                          className="px-3 py-1.5 bg-gray-950 text-white rounded-xl text-[8px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 transition-all shadow-sm"
                         >
-                          {face}
+                          Apply to All
                         </button>
-                      ),
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+                      </div>
 
-            {/* Section 3: Neural AI Forge */}
-            <div className="space-y-4 sm:space-y-5 pt-5 sm:pt-6 border-t border-gray-200">
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <Sparkles size={16} className="text-emerald-500" />
-                  <h3 className="text-xs sm:text-sm font-black uppercase tracking-[0.3em] sm:tracking-[0.4em] text-gray-950 italic">
-                    AI_Texture_Forge
-                  </h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  {selectedChips.length > 0 && (
-                    <button
-                      onClick={() => setSelectedChips([])}
-                      className="px-2.5 py-1 bg-gray-100 text-gray-500 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-red-50 hover:text-red-400 transition-all"
-                    >
-                      Clear
-                    </button>
-                  )}
-                  <div className="px-3 sm:px-4 py-1 sm:py-1.5 bg-emerald-100 text-emerald-700 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black border border-emerald-200 tracking-widest">
-                    NEURAL_V2.5
-                  </div>
-                </div>
-              </div>
-
-              {/* Style Quick-Pick Tabs */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="flex border-b border-gray-100">
-                  {Object.keys(chipCategories).map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setActiveChipCategory(cat)}
-                      className={`flex-1 py-2 sm:py-2.5 text-[7px] sm:text-[8px] font-black uppercase tracking-widest transition-all ${activeChipCategory === cat
-                        ? "bg-gray-950 text-white"
-                        : "text-gray-400 hover:text-gray-700 hover:bg-gray-50"
-                        }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-                <div className="p-3 sm:p-4 flex flex-wrap gap-1.5 sm:gap-2">
-                  {activeChipCategory === 'history' ? (
-                    <div className="w-full">
-                      {savedPatterns.length > 0 ? (
-                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-4 gap-2">
-                          {savedPatterns.map((pat, idx) => (
+                      <div className="grid grid-cols-3 gap-2">
+                        {['top', 'bottom', 'front', 'back', 'left', 'right'].map(face => {
+                          const isMapped = boxTextures[face] === assetPool[activeAssetIndex];
+                          const hasOtherImage = boxTextures[face] && !isMapped;
+                          return (
                             <button
-                              key={idx}
-                              onClick={() => smartApplyAI(pat.url)}
-                              className="group relative aspect-square rounded-lg overflow-hidden border border-gray-100 hover:border-emerald-500 transition-all shadow-sm"
+                              key={face}
+                              onClick={() => {
+                                setBoxTextures(prev => ({
+                                  ...prev,
+                                  [face]: isMapped ? null : assetPool[activeAssetIndex]
+                                }));
+                              }}
+                              className={`group relative py-3 rounded-xl border text-[8px] font-black uppercase tracking-widest transition-all ${isMapped ? 'bg-white border-blue-600 text-blue-600 shadow-md scale-105' : 'bg-white border-gray-100 text-gray-400 hover:border-blue-200'}`}
                             >
-                              <img
-                                src={pat.url}
-                                alt={pat.prompt}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                              />
-                              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <Plus size={16} className="text-white" />
-                              </div>
+                              {face}
+                              {isMapped && (
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-600 rounded-full flex items-center justify-center">
+                                  <Check size={6} className="text-white" />
+                                </div>
+                              )}
+                              {hasOtherImage && (
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full flex items-center justify-center shadow-sm">
+                                  <Layers size={6} className="text-white" />
+                                </div>
+                              )}
                             </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="py-8 text-center space-y-2">
-                          <ImageIcon size={24} className="mx-auto text-gray-200" />
-                          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">No Patterns Found</p>
-                          <p className="text-[8px] text-gray-300">Generate your first design above</p>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    chipCategories[activeChipCategory].map((chip) => (
-                      <button
-                        key={chip}
-                        onClick={() => toggleChip(chip)}
-                        className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl text-[8px] sm:text-[9px] font-bold border transition-all active:scale-95 ${selectedChips.includes(chip)
-                          ? "bg-emerald-500 text-white border-emerald-500 shadow-sm"
-                          : "bg-gray-50 text-gray-500 border-gray-200 hover:border-emerald-400 hover:text-emerald-600"
-                          }`}
-                      >
-                        {chip}
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
+                          );
+                        })}
+                      </div>
 
-              {/* Describe Your Idea */}
-              <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/80 to-white overflow-hidden shadow-sm">
-                {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100 bg-white/60">
-                  <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-lg bg-blue-500 flex items-center justify-center">
-                      <Sparkles size={11} className="text-white" />
-                    </div>
-                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-blue-700">
-                      Your Idea
-                    </p>
-                    <span className="px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-500 text-[7px] font-bold uppercase tracking-widest">
-                      Optional
-                    </span>
-                  </div>
-
-                </div>
-                {/* Textarea */}
-                <div className="p-3 sm:p-4">
-                  <textarea
-                    placeholder={`Describe your box design... (e.g. "minimalist white mailer with gold foil logo and clean typography")`}
-                    value={aiPrompt}
-                    onChange={(e) => {
-                      setAiPrompt(e.target.value);
-                      setIsPromptEnhanced(false);
-                    }}
-                    rows={3}
-                    className="w-full bg-white border border-blue-100 rounded-xl p-3 sm:p-4 text-sm font-medium text-gray-800 placeholder:text-gray-400 placeholder:font-medium focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10 outline-none resize-none transition-all"
-                  />
-                  {aiPrompt.trim() && (
-                    <button
-                      onClick={() => {
-                        setAiPrompt("");
-                        setIsPromptEnhanced(false);
-                      }}
-                      className="mt-1.5 text-[8px] font-black uppercase tracking-widest text-blue-300 hover:text-red-400 transition-colors"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Smart Prompt Preview */}
-              {(aiPrompt.trim() || selectedChips.length > 0) && (
-                <div className="rounded-xl sm:rounded-2xl border border-emerald-100 bg-emerald-50/60 overflow-hidden">
-                  <button
-                    onClick={() => setShowSmartPreview((v) => !v)}
-                    className="w-full flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-emerald-700"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <Zap size={11} /> Smart Prompt Preview
-                    </span>
-                    <ChevronDown
-                      size={13}
-                      className={`transition-transform duration-300 ${showSmartPreview ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                  {showSmartPreview && (
-                    <div className="px-3 sm:px-4 pb-3 sm:pb-4">
-                      <p className="text-[9px] sm:text-[10px] text-emerald-800 leading-relaxed font-medium italic bg-white/70 rounded-xl p-3 border border-emerald-100">
-                        {buildSmartPrompt()}
+                      <p className="text-[8px] leading-relaxed text-gray-400 font-bold text-center uppercase tracking-tighter">
+                        Tap any side to toggle the current image. Mix AI and Uploads seamlessly.
                       </p>
-                    </div>
+                    </motion.div>
                   )}
                 </div>
               )}
 
-              {/* Text on Box Toggle */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <button
-                  onClick={() => setTextOnBox((v) => !v)}
-                  className="w-full flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5"
-                >
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Type
-                      size={14}
-                      className={
-                        textOnBox ? "text-emerald-500" : "text-gray-300"
-                      }
-                    />
-                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.25em] text-gray-700">
-                      Brand Text on Box
-                    </span>
-                  </div>
-                  <div
-                    className={`w-9 h-5 rounded-full transition-all duration-300 relative ${textOnBox ? "bg-emerald-500" : "bg-gray-200"
-                      }`}
-                  >
-                    <div
-                      className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${textOnBox ? "left-[1.15rem]" : "left-0.5"
-                        }`}
-                    />
-                  </div>
+              <div className="pt-4 border-t border-gray-100">
+                <button onClick={() => setTextOnBox(!textOnBox)} className="w-full flex items-center justify-between py-2">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-700">Brand Text on Box</span>
+                  <div className={`w-8 h-4 rounded-full transition-all ${textOnBox ? 'bg-blue-600' : 'bg-gray-200'}`}><div className={`w-3 h-3 m-0.5 rounded-full bg-white transition-all ${textOnBox ? 'translate-x-4' : 'translate-x-0'}`} /></div>
                 </button>
-
                 {textOnBox && (
-                  <div className="px-4 sm:px-5 pb-4 sm:pb-5 space-y-5 border-t border-gray-50 pt-3">
-                    <input
-                      type="text"
-                      placeholder="Your brand / text..."
+                  <div className="mt-4 space-y-4">
+                    <textarea
+                      placeholder="Enter brand text..."
                       value={customText}
                       onChange={(e) => setCustomText(e.target.value)}
-                      className="w-full px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl sm:rounded-2xl text-sm font-semibold text-gray-950 placeholder:text-gray-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-[11px] font-medium outline-none focus:border-blue-400 transition-all resize-none"
+                      rows={2}
                     />
-
-                    {/* Text Style */}
-                    <div className="space-y-2">
-                      <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">
-                        Font Style
-                      </p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[
-                          { id: "bold", label: "Bold", preview: "font-black" },
-                          { id: "classic", label: "Classic", preview: "font-serif" },
-                          { id: "script", label: "Script", preview: "italic font-serif" },
-                          { id: "minimal", label: "Minimal", preview: "font-light tracking-widest" },
-                          { id: "modern", label: "Modern", preview: "font-extralight" },
-                        ].map((s) => (
-                          <button
-                            key={s.id}
-                            onClick={() => setBoxTextStyle(s.id)}
-                            className={`py-2 px-1 rounded-xl text-[8px] border transition-all ${boxTextStyle === s.id
-                              ? "bg-gray-950 text-white border-gray-950 shadow-md"
-                              : "bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-400"
-                              } ${s.preview}`}
-                          >
-                            {s.label}
-                          </button>
-                        ))}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[8px] font-black uppercase text-gray-400">Shift X</label>
+                        <input type="range" min="0" max="100" value={boxTextSettings.x} onChange={(e) => setBoxTextSettings(prev => ({ ...prev, x: parseInt(e.target.value) }))} className="w-full h-1 bg-gray-200 rounded-full appearance-none accent-blue-600" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[8px] font-black uppercase text-gray-400">Shift Y</label>
+                        <input type="range" min="0" max="100" value={boxTextSettings.y} onChange={(e) => setBoxTextSettings(prev => ({ ...prev, y: parseInt(e.target.value) }))} className="w-full h-1 bg-gray-200 rounded-full appearance-none accent-blue-600" />
                       </div>
                     </div>
-
-                    {/* Position & Size Sliders */}
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">Font Size</p>
-                          <span className="text-[9px] font-black text-emerald-600">{boxTextSettings.size}px</span>
-                        </div>
-                        <input
-                          type="range" min="5" max="100" value={boxTextSettings.size}
-                          onChange={(e) => setBoxTextSettings(prev => ({ ...prev, size: parseInt(e.target.value) }))}
-                          className="w-full h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">Shift X</p>
-                          <input
-                            type="range" min="0" max="100" value={boxTextSettings.x}
-                            onChange={(e) => setBoxTextSettings(prev => ({ ...prev, x: parseInt(e.target.value) }))}
-                            className="w-full h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">Shift Y</p>
-                          <input
-                            type="range" min="0" max="100" value={boxTextSettings.y}
-                            onChange={(e) => setBoxTextSettings(prev => ({ ...prev, y: parseInt(e.target.value) }))}
-                            className="w-full h-1 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Text Color */}
                     <div className="space-y-2">
-                      <p className="text-[8px] font-black uppercase tracking-[0.3em] text-gray-400">
-                        Text Color
-                      </p>
-                      <div className="flex flex-wrap gap-2 items-center">
-                        {[
-                          "#FFFFFF", "#000000", "#059669", "#F59E0B", "#EF4444",
-                          "#6366F1", "#EC4899", "#14B8A6", "#8B5CF6"
-                        ].map((c) => (
-                          <button
-                            key={c}
-                            onClick={() => setBoxTextColor(c)}
-                            style={{ backgroundColor: c }}
-                            className={`w-7 h-7 rounded-full border-2 transition-all ${boxTextColor === c ? "border-emerald-500 scale-90 ring-2 ring-emerald-500/10" : "border-gray-200"
-                              }`}
-                          />
+                      <label className="text-[8px] font-black uppercase text-gray-400">Text Color</label>
+                      <div className="flex flex-wrap gap-2">
+                        {["#FFFFFF", "#000000", "#059669", "#1D4ED8", "#B91C1C", "#D97706"].map(c => (
+                          <button key={c} onClick={() => setBoxTextColor(c)} style={{ backgroundColor: c }} className={`w-6 h-6 rounded-full border ${boxTextColor === c ? 'ring-2 ring-blue-600 ring-offset-1' : 'border-gray-200'}`} />
                         ))}
-                        <div className="relative">
-                          <input
-                            type="color"
-                            value={boxTextColor}
-                            onChange={(e) => setBoxTextColor(e.target.value)}
-                            className="w-7 h-7 rounded-full cursor-pointer opacity-0 absolute inset-0 z-10"
-                          />
-                          <div className="w-7 h-7 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
-                            <Palette size={12} className="text-gray-400" />
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -2476,135 +2121,8 @@ function CustomizeLabContent() {
               </div>
 
               <button
-                onClick={async () => {
-                  if ((!aiPrompt && selectedChips.length === 0)) return;
-
-                  setIsGenerating(true);
-                  try {
-                    const finalPrompt = buildSmartPrompt();
-
-                    // Step 1: Initiate Generation — Send structured context to backend
-                    const res = await fetch('/api/customize/generate', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        userIdea: aiPrompt.trim(),
-                        styles: selectedChips.filter(c => chipCategories.style.includes(c)),
-                        industries: selectedChips.filter(c => chipCategories.industry.includes(c)),
-                        boxMode,
-                        customText: customText.trim(),
-                        boxColors: boxColors,
-                      })
-                    });
-
-                    const startData = await res.json();
-                    if (!res.ok) {
-                      if (startData.limitReached) {
-                        setShowPremiumModal(true);
-                      } else {
-                        showToast(startData.message || startData.error || "Generation failed", "error");
-                      }
-                      setIsGenerating(false);
-                      return;
-                    }
-
-                    const taskId = startData.data.task_id;
-
-                    // Trigger a session refresh immediately to update the generation count UI
-                    if (checkUser) checkUser();
-
-                    // Step 2: Poll for Status
-                    let completed = false;
-                    let attempts = 0;
-                    const maxAttempts = 100; // 5 minutes max (100 * 3s)
-
-                    while (!completed && attempts < maxAttempts) {
-                      try {
-                        await new Promise(r => setTimeout(r, 3000)); // Poll every 3s
-                        const statusRes = await fetch(`/api/customize/status/${taskId}`, { cache: 'no-store' });
-                        const statusData = await statusRes.json();
-
-
-
-                        if (!statusRes.ok) {
-                          console.warn("Status check failed, retrying...", statusData);
-                          attempts++;
-                          continue;
-                        }
-
-                        const currentStatus = statusData?.data?.status;
-
-                        if (currentStatus === 'COMPLETED') {
-                          console.log("AI Generation Completed Successfully");
-
-                          // Extract image URL from various possible response structures
-                          const data = statusData?.data;
-                          let imageUrl = null;
-
-                          if (Array.isArray(data?.generated) && data.generated.length > 0) {
-                            imageUrl = data.generated[0];
-                          } else if (Array.isArray(data?.result) && data.result.length > 0) {
-                            imageUrl = data.result[0];
-                          } else if (data?.result?.items?.length > 0) {
-                            imageUrl = data.result.items[0].url;
-                          } else if (typeof data?.result === 'string') {
-                            imageUrl = data.result;
-                          }
-
-                          if (imageUrl) {
-                            console.log("Applying AI texture:", imageUrl);
-                            smartApplyAI(imageUrl);
-
-                            // Persistent Save: Store on Website History
-                            try {
-                              const saveRes = await fetch('/api/user/save-pattern', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                  url: imageUrl,
-                                  prompt: aiPrompt || "AI Generated Design"
-                                })
-                              });
-
-                              if (saveRes.ok) {
-                                setSavedPatterns(prev => [
-                                  { url: imageUrl, prompt: aiPrompt || "AI Generated Design", createdAt: new Date() },
-                                  ...prev
-                                ].slice(0, 12));
-                              }
-                            } catch (e) { console.error("Auto-save failed:", e); }
-
-                            if (checkUser) checkUser();
-                            completed = true;
-                            break; // Exit loop immediately
-                          } else {
-                            console.error("Failed to extract imageUrl from response. Structure:", data);
-                            // If we can't find the image but it's "COMPLETED", this is a structure error
-                            throw new Error("Image URL not found in completed response");
-                          }
-                        } else if (currentStatus === 'FAILED') {
-                          throw new Error(statusData?.data?.message || "Generation process failed on server");
-                        }
-                      } catch (pollErr) {
-                        console.error("Polling error:", pollErr);
-                        // Don't stop on single poll error, keep trying until timeout
-                      }
-                      attempts++;
-                    }
-
-                    if (!completed) throw new Error("Generation timed out");
-
-                  } catch (err) {
-                    console.error("Forge Error:", err);
-                    showToast("Forge error: " + err.message, "error");
-                  } finally {
-                    setIsGenerating(false);
-                  }
-                }}
-                disabled={
-                  isGenerating ||
-                  (!aiPrompt.trim() && selectedChips.length === 0)
-                }
+                onClick={generateAITexture}
+                disabled={isGenerating || (!aiPrompt.trim() && selectedChips.length === 0)}
                 className="w-full py-4 sm:py-5 md:py-6 bg-gray-950 text-white rounded-xl sm:rounded-2xl font-black uppercase text-xs sm:text-sm tracking-[0.3em] sm:tracking-[0.45em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-emerald-500 transition-all shadow-lg active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed group relative overflow-hidden"
               >
                 {isGenerating ? (
@@ -2614,10 +2132,7 @@ function CustomizeLabContent() {
                   </>
                 ) : (
                   <>
-                    <Sparkles
-                      size={17}
-                      className="group-hover:rotate-12 transition-transform shrink-0"
-                    />
+                    <Sparkles size={17} className="group-hover:rotate-12 transition-transform shrink-0" />
                     <span>Ignite_Forge</span>
                   </>
                 )}
@@ -2629,72 +2144,81 @@ function CustomizeLabContent() {
               </div>
             </div>
           </div>
-          <div className="bg-emerald-50/50 rounded-2xl border border-emerald-100 p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center">
-                  <ShoppingCart size={12} className="text-white" />
-                </div>
-                <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Order_Quantity</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === "") { setQuantity(""); return; }
-                    let val = parseInt(raw, 10);
-                    if (isNaN(val)) val = 500;
-                    if (val > 5000) val = 5000;
-                    setQuantity(val);
-                  }}
-                  onBlur={() => {
-                    if (!quantity || quantity < 500) setQuantity(500);
-                  }}
-                  className="w-20 h-8 bg-white border border-emerald-200 rounded-lg text-center font-black text-xs focus:border-emerald-500 outline-none"
-                />
-                <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Units</span>
+          {/* Step 3: Order_Quantity */}
+          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden group transition-all hover:border-emerald-200">
+            <div className="flex items-center justify-between px-6 py-5 bg-gray-50/50 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500 text-white text-[10px] font-black">3</div>
+                <h3 className="text-xs font-black text-gray-950 uppercase tracking-widest">Order_Quantity</h3>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setQuantity(Math.max(500, (parseInt(quantity) || 500) - 50))}
-                className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
-              >
-                <Minus size={14} />
-              </button>
-              <input
-                type="range"
-                min="500"
-                max="5000"
-                step="50"
-                value={quantity || 500}
-                onChange={(e) => setQuantity(parseInt(e.target.value))}
-                className="flex-1 h-1 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-              />
-              <button
-                onClick={() => setQuantity(Math.min(5000, (parseInt(quantity) || 500) + 50))}
-                className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
-              >
-                <Plus size={14} />
-              </button>
+            <div className="p-6 space-y-6">
+              <div className="bg-emerald-50/50 rounded-2xl border border-emerald-100 p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Unit Count</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        if (raw === "") { setQuantity(""); return; }
+                        let val = parseInt(raw, 10);
+                        if (isNaN(val)) val = 500;
+                        if (val > 5000) val = 5000;
+                        setQuantity(val);
+                      }}
+                      onBlur={() => {
+                        if (!quantity || quantity < 500) setQuantity(500);
+                      }}
+                      className="w-20 h-8 bg-white border border-emerald-200 rounded-lg text-center font-black text-xs focus:border-emerald-500 outline-none"
+                    />
+                    <span className="text-[8px] font-black text-emerald-400 uppercase tracking-widest">Units</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setQuantity(Math.max(500, (parseInt(quantity) || 500) - 50))}
+                    className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
+                  >
+                    <Minus size={14} />
+                  </button>
+                  <input
+                    type="range"
+                    min="500"
+                    max="5000"
+                    step="50"
+                    value={quantity || 500}
+                    onChange={(e) => setQuantity(parseInt(e.target.value))}
+                    className="flex-1 h-1 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                  />
+                  <button
+                    onClick={() => setQuantity(Math.min(5000, (parseInt(quantity) || 500) + 50))}
+                    className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Compact Small Card Order Summary */}
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+          {/* Step 4: Live_Quote */}
+          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden group transition-all hover:border-gray-950/10">
+            <div className="flex items-center justify-between px-6 py-5 bg-gray-50/50 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-950 text-white text-[10px] font-black">4</div>
+                <h3 className="text-xs font-black text-gray-950 uppercase tracking-widest">Live_Quote</h3>
+              </div>
+              <div className="flex items-center gap-1 text-emerald-500 animate-pulse">
+                <Zap size={12} fill="currentColor" />
+                <span className="text-[9px] font-black uppercase tracking-widest italic">Instant</span>
+              </div>
+            </div>
             <div className="p-6 space-y-6">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-gray-950 text-white px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-md">
-                    Live_Quote
-                  </div>
-                  <div className="flex items-center gap-1 text-emerald-500 animate-pulse">
-                    <Zap size={12} fill="currentColor" />
-                    <span className="text-[9px] font-black uppercase tracking-widest italic">Instant</span>
-                  </div>
-                </div>
                 <div className="text-[8px] font-black text-gray-300 uppercase tracking-widest flex items-center gap-1.5">
                   <RotateCw size={10} className="animate-spin-slow" />
                   Updates with every change
@@ -2756,7 +2280,7 @@ function CustomizeLabContent() {
                             <td className="px-3 py-2 text-right">₹{pricingResult.paperCost.toLocaleString('en-IN')}</td>
                             <td className="px-3 py-2 text-right">₹{(pricingResult.paperCost / quantity).toFixed(4)}</td>
                           </tr>
-                           <tr>
+                          <tr>
                             <td className="px-3 py-2">Fixed Charges (AE2)</td>
                             <td className="px-3 py-2 text-right">₹{pricingResult.fixedCharges.toLocaleString('en-IN')}</td>
                             <td className="px-3 py-2 text-right">₹{(pricingResult.fixedCharges / quantity).toFixed(4)}</td>
@@ -2815,7 +2339,7 @@ function CustomizeLabContent() {
                     className="w-full py-5 bg-emerald-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-emerald-600 transition-all shadow-xl shadow-emerald-500/20 active:scale-95 group"
                   >
                     <Zap size={16} className="text-white group-hover:scale-110 transition-transform" />
-                    Request_Quote
+                    Connect on WhatsApp
                   </button>
                 ) : (
                   <button
@@ -2978,7 +2502,7 @@ function CustomizeLabContent() {
             )}
           </AnimatePresence>
         </div>
-      </main>
+      </div>
 
       {/* Floating Price Tag removed in favor of Small Card in flow */}
 
