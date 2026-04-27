@@ -74,7 +74,7 @@ function CustomizeLabContent() {
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(500);
+  const [quantity, setQuantity] = useState(10);
   const [viewMode, setViewMode] = useState("2D");
 
   // Customization States
@@ -400,7 +400,7 @@ function CustomizeLabContent() {
 
         if (data && !data.error) {
           setProduct(data);
-          setQuantity(data.minOrderQuantity || 500);
+          setQuantity(data.minOrderQuantity || 10);
 
           // Sync dimensions if not already set by URL params
           if (!l && !w && !h && data.dimensions) {
@@ -926,7 +926,7 @@ function CustomizeLabContent() {
 
   // Force minimum 500 if quantity is set lower
   useEffect(() => {
-    if (quantity < 500) setQuantity(500);
+    if (quantity < 10) setQuantity(10);
   }, [quantity]);
 
   // Rolling Number Animation for Price Tag
@@ -2166,12 +2166,12 @@ function CustomizeLabContent() {
                         const raw = e.target.value;
                         if (raw === "") { setQuantity(""); return; }
                         let val = parseInt(raw, 10);
-                        if (isNaN(val)) val = 500;
+                        if (isNaN(val)) val = 10;
                         if (val > 5000) val = 5000;
                         setQuantity(val);
                       }}
                       onBlur={() => {
-                        if (!quantity || quantity < 500) setQuantity(500);
+                        if (!quantity || quantity < 10) setQuantity(10);
                       }}
                       className="w-20 h-8 bg-white border border-emerald-200 rounded-lg text-center font-black text-xs focus:border-emerald-500 outline-none"
                     />
@@ -2180,22 +2180,22 @@ function CustomizeLabContent() {
                 </div>
                 <div className="flex items-center gap-4">
                   <button
-                    onClick={() => setQuantity(Math.max(500, (parseInt(quantity) || 500) - 50))}
+                    onClick={() => setQuantity(Math.max(10, (parseInt(quantity) || 10) - 50))}
                     className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
                   >
                     <Minus size={14} />
                   </button>
                   <input
                     type="range"
-                    min="500"
+                    min="10"
                     max="5000"
                     step="50"
-                    value={quantity || 500}
+                    value={quantity || 10}
                     onChange={(e) => setQuantity(parseInt(e.target.value))}
                     className="flex-1 h-1 bg-emerald-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                   />
                   <button
-                    onClick={() => setQuantity(Math.min(5000, (parseInt(quantity) || 500) + 50))}
+                    onClick={() => setQuantity(Math.min(5000, (parseInt(quantity) || 10) + 50))}
                     className="w-8 h-8 rounded-lg bg-white border border-emerald-200 flex items-center justify-center text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all active:scale-95 shadow-sm"
                   >
                     <Plus size={14} />

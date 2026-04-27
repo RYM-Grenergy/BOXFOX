@@ -25,7 +25,7 @@ export function CartProvider({ children }) {
         if (product.customDesign) {
             const pricingParams = {
                 spec: product.customDesign.specData || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
-                qty: Math.max(500, quantity),
+                qty: Math.max(10, quantity),
                 gsm: parseInt(product.customDesign.selectedGSM) || 300,
                 material: product.customDesign.selectedMaterial || 'SBS',
                 brand: product.customDesign.selectedBrand || 'Normal',
@@ -80,7 +80,7 @@ export function CartProvider({ children }) {
         let isUpdate = false;
         setCart(prev => {
             const existing = prev.find(item => item.id === product.id);
-            const minQty = product.customDesign ? 500 : 10;
+            const minQty = 10;
             const finalQty = Math.max(minQty, quantity);
 
             if (existing) {
@@ -116,7 +116,7 @@ export function CartProvider({ children }) {
     const updateQuantity = (id, quantity) => {
         setCart(prev => prev.map(item => {
             if (item.id === id) {
-                const minQty = item.customDesign ? 500 : 10;
+                const minQty = 10;
                 const validQuantity = Math.max(minQty, Math.floor(quantity));
                 const pricing = calculateItemPricing(item, validQuantity);
                 return {
