@@ -1862,18 +1862,33 @@ function CustomizeLabContent() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <label className={`text-[10px] font-black uppercase tracking-widest transition-colors ${customMode === 'texture' ? 'text-emerald-700' : 'text-blue-700'}`}>Describe Your Idea</label>
-                      {customMode === 'texture' && <div className="text-[7px] font-black text-emerald-500 uppercase tracking-widest">Neural_Processor_v2.5</div>}
+                  <div className={`space-y-3 p-4 rounded-3xl transition-all ${customMode === 'texture' ? 'bg-emerald-500/5 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.05)]' : ''}`}>
+                    <div className="flex items-center justify-between px-1">
+                      <label className={`text-[11px] font-black uppercase tracking-[0.15em] transition-colors ${customMode === 'texture' ? 'text-emerald-900' : 'text-blue-700'}`}>Describe Your Idea</label>
+                      {customMode === 'texture' && (
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500 text-white rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+                          <div className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+                          <span className="text-[8px] font-black uppercase tracking-widest">Neural_Processor_v2.5</span>
+                        </div>
+                      )}
                     </div>
                     <textarea
                       placeholder="e.g. minimalist white mailer with gold foil logo..."
                       value={aiPrompt || ""}
                       onChange={(e) => { setAiPrompt(e.target.value); setIsPromptEnhanced(false); }}
                       rows={3}
-                      className={`w-full border rounded-2xl p-4 text-xs font-medium outline-none transition-all resize-none ${customMode === 'texture' ? 'bg-white border-emerald-200 focus:border-emerald-500 text-emerald-950 placeholder:text-emerald-200' : 'bg-gray-50 border-gray-100 focus:border-blue-400'}`}
+                      className={`w-full border-2 rounded-[1.5rem] p-5 text-[13px] font-bold outline-none transition-all resize-none shadow-sm ${
+                        customMode === 'texture' 
+                          ? 'bg-white border-emerald-500/30 focus:border-emerald-500 text-emerald-950 placeholder:text-emerald-100 shadow-emerald-500/5' 
+                          : 'bg-gray-50 border-gray-100 focus:border-blue-400'
+                      }`}
                     />
+                    {customMode === 'texture' && (
+                      <div className="flex items-center gap-2 px-1">
+                        <div className="w-1 h-1 rounded-full bg-emerald-400" />
+                        <p className="text-[9px] font-bold text-emerald-600/60 uppercase tracking-wider">AI uses Neural_Maps to project your description onto the 3D dieline</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
