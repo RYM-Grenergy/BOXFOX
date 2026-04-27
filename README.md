@@ -1,182 +1,151 @@
-# BoxFox Database Design
+# BoxFox Store 📦
 
-## Core Collections
+BoxFox Store is a premium, state-of-the-art e-commerce platform specializing in highly customizable packaging solutions. Built with **Next.js**, **Three.js**, and **AI-driven tools**, it offers a seamless experience for both retail and B2B customers to design, visualize, and order custom boxes.
 
-### User
-User accounts with authentication, preferences, and design assets.
+---
 
-```javascript
-{
-  _id: ObjectId,
-  name: String,
-  email: String (unique),
-  password: String,
-  role: ['user', 'admin', 'staff_fulfillment'],
-  phone: String,
-  businessName: String,
-  shippingAddress: {
-    street, apartment, city, state, zipCode, country
-  },
-  wishlist: [ProductId],
-  aiGenerationCount: Number,
-  aiUnlimitedUntil: Date,
-  brandVault: {
-    logos: [{url, name, createdAt}],
-    colors: [String],
-    fonts: [String]
-  },
-  timestamps: {createdAt, updatedAt}
-}
-```
+## 🚀 Key Features
 
-### Order
-Customer orders with items, shipping, and payment tracking.
+### 🧠 The Neural Suite (NEURAL_V2.5)
 
-```javascript
-{
-  _id: ObjectId,
-  orderId: String (unique),
-  userId: UserId (ref),
-  customer: {name, email, phone},
-  shipping: {address, city, state, pincode},
-  items: [{
-    productId, name, quantity, price, variant, 
-    image, customDesign
-  }],
-  total: Number,
-  discount: Number,
-  couponCode: String,
-  status: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'],
-  paid: Boolean,
-  labNotes: String,
-  timestamps: {createdAt, updatedAt}
-}
-```
+The core of BoxFox's innovation, providing advanced AI-driven design capabilities:
 
-### Product
-Complete product catalog with pricing & specifications.
+- **Ignite_Forge**: The powerful AI generation engine that breathes life into your ideas.
+- **Neural_Maps**: Advanced texture mapping technology for 3D surfaces.
+- **AI_Texture**: Generate high-fidelity, seamless patterns and textures instantly.
+- **Logo_Lab**: AI-assisted logo creation and brand asset generation.
+- **Solid_Lab**: Precision control over material solids and base finishes.
+- **Neural Multi-Asset Pool**: A dynamic "Active Asset Pool" (up to 3 assets) with **Mix & Match** capabilities for complex designs.
 
-```javascript
-{
-  _id: ObjectId,
-  wpId: Number (unique),
-  sku: String (unique, sparse),
-  type: ['simple', 'variable', 'variation'],
-  name: String,
-  description: String,
-  price: String,
-  regular_price: String,
-  sale_price: String,
-  categories: [String],
-  tags: [String],
-  images: [String],
-  stock_quantity: Number,
-  stock_status: String,
-  parent_id: Number,
-  minOrderQuantity: Number,
-  dimensions: {length, width, height, unit},
-  weight: Number,
-  attributes: [{name, options}],
-  specifications: [{key, value}],
-  pacdoraId: String,
-  isFeatured: Boolean,
-  timestamps: {createdAt, updatedAt}
-}
-```
+### 🎨 3D Box Customization (The "Lab")
 
-### BoxCategory
-Categories for customizable boxes.
+- **Real-time 3D Preview**: Powered by Three.js and `@react-three/fiber`, users can visualize their designs on 3D box models.
+- **Face-Specific Design**: Apply textures, colors, and logos to individual box faces (front, back, top, bottom, sides).
+- **Brand Text on Box**: Add custom typography directly onto the 3D model with real-time editing.
+- **Image_Upload**: Seamless integration for high-resolution user-provided assets.
+- **Dynamic Sizing**: Customize dimensions (Length, Width, Height) with real-time price updates.
+- **Dieline Generation**: Automatically generate and download dielines for professional manufacturing.
 
-```javascript
-{
-  _id: ObjectId,
-  name: String,
-  description: String,
-  image: String,
-  timestamps: {createdAt, updatedAt}
-}
-```
+### 🤖 Smart Prompt Builder
 
-### BoxProductGroup
-Groups of box products within categories.
+A sophisticated AI interface to guide users through the design process:
 
-```javascript
-{
-  _id: ObjectId,
-  categoryId: BoxCategoryId (ref),
-  name: String,
-  description: String,
-  image: String,
-  timestamps: {createdAt, updatedAt}
-}
-```
+- **Industry & Style Chips**: Select from curated styles like *Luxury Premium*, *Eco & Sustainable*, *Bold & Playful*, *Minimal & Clean*, *Festive & Celebratory*, *Professional Corporate*, *Rustic Artisan*, *Modern High-End*, *Vintage Classic*, and *Ultra Sleek*.
+- **Describe Your Idea**: Natural language input (e.g., *"minimalist white mailer with gold foil logo"*) processed by our neural engine.
 
-### BoxProduct
-Individual box specifications with pricing formulas.
+### 🏢 B2B & Wholesale
 
-```javascript
-{
-  _id: ObjectId,
-  groupId: BoxProductGroupId (ref),
-  name: String,
-  defaultLength: Number,
-  defaultBreadth: Number,
-  defaultHeight: Number,
-  minDimensions: {l, b, h},
-  maxDimensions: {l, b, h},
-  defaultMaterial: String,
-  defaultColor: String,
-  defaultTexture: String,
-  priceFormulaType: ['area', 'volume', 'fixed'],
-  basePrice: Number,
-  multiplier: Number,
-  flapType: ['rsc', 'mailer', 'tuck_top', 'auto_bottom'],
-  has3DPreview: Boolean,
-  pacdoraId: String,
-  timestamps: {createdAt, updatedAt}
-}
-```
+- **Bulk Ordering**: Specialized pricing and workflows for large-volume B2B orders.
+- **B2B Inquiry System**: Integrated forms for custom quotes and corporate partnerships.
+- **Hierarchical Catalog**: Structured categorization for industrial and retail packaging needs.
 
-### SavedDesign
-User-created and shareable custom designs.
+### 🛡️ Brand Vault
 
-```javascript
-{
-  _id: ObjectId,
-  userId: UserId (ref),
-  name: String,
-  shareId: String (unique, sparse),
-  isPublic: Boolean,
-  customDesign: {
-    textures, colors, textureSettings,
-    text, textStyle, textColor, textSettings,
-    dimensions, unit
-  },
-  productId: String,
-  thumbnail: String,
-  timestamps: {createdAt, updatedAt}
-}
-```
+- Securely store and manage brand assets including logos, color palettes, and typography.
+- Quick-access to brand assets during the customization process.
 
-## Relationships
+### 📊 Admin Dashboard
 
-```
-User
-  ├── wishlist → [Product]
-  └── brandVault → {logos, colors, fonts}
+- **Comprehensive Analytics**: Track sales, user behavior, and popular products.
+- **Product Management**: Robust tools for managing a complex catalog of simple and variable products.
+- **Order Fulfillment**: Detailed order tracking and management.
+- **Lab Configuration**: Fine-tune pricing formulas, material rates, and production specifications.
+- **Coupon & Marketing**: Manage discount codes and promotional campaigns.
 
-Order
-  ├── userId → User
-  └── items[].productId → Product | BoxProduct
+---
 
-SavedDesign
-  ├── userId → User
-  └── productId → Product | BoxProduct
+## 🛠️ Tech Stack
 
-BoxProductGroup
-  └── categoryId → BoxCategory
+- **Frontend**: Next.js 16 (App Router), React 18, Tailwind CSS 4
+- **3D Rendering**: Three.js, React Three Fiber, React Three Drei
+- **Animations**: Framer Motion, GSAP
+- **Backend**: Next.js API Routes (Serverless)
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT-based auth with secure cookies
+- **File Storage**: Cloudinary (Image management and optimization)
+- **Email**: NodeMailer for transactional emails (Invoices, OTPs)
+- **Caching**: Upstash Redis
+- **Data Processing**: `xlsx`, `csv-parser` for bulk product operations
 
-BoxProduct
-  └── groupId → BoxProductGroup
-```
+---
 
+## 📂 Project Structure
+
+### Frontend (`/app`)
+
+- `/admin`: Full-featured administrative dashboard.
+- `/customize`: The 3D design lab for custom boxes.
+- `/shop`: Product catalog and discovery.
+- `/products`: Individual product detail pages.
+- `/cart` & `/checkout`: Secure e-commerce flow.
+- `/account`: User profile, order history, and Brand Vault.
+- `/b2b`: Corporate and wholesale portal.
+- `/components`: Reusable UI components (Navbar, Footer, Modals, etc.).
+- `/context`: Global state management (Auth, Cart, Toast).
+
+### Backend (`/app/api`)
+
+- `/api/auth`: Authentication endpoints (Login, Signup, OTP).
+- `/api/products`: Product CRUD and catalog management.
+- `/api/orders`: Order processing and tracking.
+- `/api/customize`: AI generation and design saving.
+- `/api/lab`: Lab-specific configuration and pricing logic.
+- `/api/admin`: Protected administrative endpoints.
+- `/api/upload`: Cloudinary integration for image uploads.
+
+### Logic & Models
+
+- `/lib`: Core business logic, including:
+  - `boxfoxPricing.js`: Complex pricing engine for custom dimensions.
+  - `dieline-generator.js`: SVG/PDF dieline creation logic.
+  - `mail.js`: Email templating and dispatching.
+- `/models`: Mongoose schemas for MongoDB (User, Order, Product, SavedDesign, etc.).
+
+---
+
+## ⚙️ Development & Setup
+
+### Prerequisites
+
+- Node.js (Latest LTS)
+- MongoDB Database
+- Cloudinary Account
+- Redis (Upstash recommended)
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone <repo-url>
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up environment variables:
+   Create a `.env` file based on the provided configuration (see `.env.example`).
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+### Scripts
+
+- `npm run dev`: Starts the development server.
+- `npm run build`: Builds the application for production.
+- `npm run start`: Runs the built application.
+- `npm run lint`: Runs ESLint for code quality checks.
+
+---
+
+## 📝 Recent Enhancements & New Features
+
+- **Advanced Pricing Engine**: Implemented a sophisticated formula-based pricing system that accounts for material GSM, wastage, and finish types.
+- **Admin Product File Uploads**: Streamlined bulk product management via Excel/CSV imports.
+- **Minimum Customize Order Limits**: Integrated business logic to enforce MOQs on custom designs.
+- **Brand Vault Integration**: Unified storage for user design assets across the platform.
+- **Enhanced 3D Controls**: Added spatial panning and precision rotation for better design accuracy.
+
+---
+
+© 2026 BOXFOX. All rights reserved.

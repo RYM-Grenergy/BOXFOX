@@ -1795,22 +1795,39 @@ function CustomizeLabContent() {
           </div>
 
           {/* Step 2: Neural_Maps */}
-          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden group transition-all hover:border-blue-200">
-            <div className="flex items-center justify-between px-6 py-5 bg-gray-50/50 border-b border-gray-100">
+          <div className={`relative rounded-[2rem] border transition-all duration-700 overflow-hidden group shadow-xl ${customMode === 'texture' ? 'bg-emerald-50/30 border-emerald-500/50 shadow-emerald-500/10' : 'bg-white border-gray-100 hover:border-blue-200'}`}>
+            {/* Neural Scanning Animation (Visible only in Texture mode) */}
+            {customMode === 'texture' && (
+              <motion.div 
+                initial={{ top: '0%' }}
+                animate={{ top: '100%' }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent z-10 pointer-events-none"
+              />
+            )}
+            
+            <div className={`flex items-center justify-between px-6 py-5 border-b transition-colors duration-500 ${customMode === 'texture' ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-gray-50/50 border-gray-100'}`}>
               <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white text-[10px] font-black">2</div>
-                <h3 className="text-xs font-black text-gray-950 uppercase tracking-widest">Neural_Maps</h3>
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-black transition-all ${customMode === 'texture' ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-blue-600 text-white'}`}>2</div>
+                <div className="flex flex-col">
+                  <h3 className={`text-xs font-black uppercase tracking-widest transition-colors ${customMode === 'texture' ? 'text-emerald-900' : 'text-gray-950'}`}>Neural_Maps</h3>
+                  {customMode === 'texture' && <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest animate-pulse">Scanning Active</span>}
+                </div>
               </div>
-              <div className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-[8px] font-black tracking-widest">NEURAL_V2.5</div>
+              <div className={`px-3 py-1 rounded-lg text-[8px] font-black tracking-widest transition-all ${customMode === 'texture' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-blue-100 text-blue-700'}`}>NEURAL_V2.5</div>
             </div>
 
             <div className="p-6 space-y-6">
-              <div className="flex p-1 bg-gray-100 rounded-xl">
+              <div className={`flex p-1 rounded-xl transition-colors ${customMode === 'texture' ? 'bg-emerald-100/50' : 'bg-gray-100'}`}>
                 {['texture', 'logo', 'color', 'upload'].map(mode => (
                   <button
                     key={mode}
                     onClick={() => setCustomMode(mode)}
-                    className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${customMode === mode ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                      customMode === mode 
+                        ? (mode === 'texture' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-white text-blue-600 shadow-sm')
+                        : (customMode === 'texture' ? 'text-emerald-700/60 hover:text-emerald-900' : 'text-gray-400 hover:text-gray-600')
+                    }`}
                   >
                     {mode === 'texture' ? 'AI_Texture' : mode === 'logo' ? 'Logo_Lab' : mode === 'color' ? 'Solid_Lab' : 'Image_Upload'}
                   </button>
@@ -1846,13 +1863,16 @@ function CustomizeLabContent() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Describe Your Idea</label>
+                    <div className="flex items-center justify-between">
+                      <label className={`text-[10px] font-black uppercase tracking-widest transition-colors ${customMode === 'texture' ? 'text-emerald-700' : 'text-blue-700'}`}>Describe Your Idea</label>
+                      {customMode === 'texture' && <div className="text-[7px] font-black text-emerald-500 uppercase tracking-widest">Neural_Processor_v2.5</div>}
+                    </div>
                     <textarea
                       placeholder="e.g. minimalist white mailer with gold foil logo..."
                       value={aiPrompt || ""}
                       onChange={(e) => { setAiPrompt(e.target.value); setIsPromptEnhanced(false); }}
                       rows={3}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 text-xs font-medium focus:border-blue-400 outline-none transition-all resize-none"
+                      className={`w-full border rounded-2xl p-4 text-xs font-medium outline-none transition-all resize-none ${customMode === 'texture' ? 'bg-white border-emerald-200 focus:border-emerald-500 text-emerald-950 placeholder:text-emerald-200' : 'bg-gray-50 border-gray-100 focus:border-blue-400'}`}
                     />
                   </div>
                 </div>
@@ -1981,10 +2001,13 @@ function CustomizeLabContent() {
                   {/* Multi-Asset Pool Gallery */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Active Asset Pool ({assetPool.length}/3)</label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[7px] font-black text-gray-300 uppercase tracking-widest">Mix & Match Enabled</span>
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <div className="flex flex-col">
+                        <label className={`text-[10px] font-black uppercase tracking-widest transition-colors ${customMode === 'texture' ? 'text-emerald-700' : 'text-blue-700'}`}>Active Asset Pool ({assetPool.length}/3)</label>
+                        <span className={`text-[7px] font-bold uppercase tracking-widest transition-colors ${customMode === 'texture' ? 'text-emerald-500/50' : 'text-gray-300'}`}>Neural Multi-Asset Management</span>
+                      </div>
+                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full border transition-all ${customMode === 'texture' ? 'bg-emerald-500 text-white border-emerald-400 shadow-lg shadow-emerald-500/20' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
+                        <span className="text-[8px] font-black uppercase tracking-widest">Mix & Match Enabled</span>
+                        <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${customMode === 'texture' ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'bg-emerald-500'}`} />
                       </div>
                     </div>
 
@@ -2123,17 +2146,36 @@ function CustomizeLabContent() {
               <button
                 onClick={generateAITexture}
                 disabled={isGenerating || (!aiPrompt.trim() && selectedChips.length === 0)}
-                className="w-full py-4 sm:py-5 md:py-6 bg-gray-950 text-white rounded-xl sm:rounded-2xl font-black uppercase text-xs sm:text-sm tracking-[0.3em] sm:tracking-[0.45em] flex items-center justify-center gap-3 sm:gap-4 hover:bg-emerald-500 transition-all shadow-lg active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed group relative overflow-hidden"
+                className={`w-full py-4 sm:py-5 md:py-6 rounded-xl sm:rounded-2xl font-black uppercase text-xs sm:text-sm tracking-[0.3em] sm:tracking-[0.45em] flex flex-col items-center justify-center gap-1 transition-all shadow-lg active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed group relative overflow-hidden ${
+                  customMode === 'texture' 
+                    ? 'bg-emerald-500 text-white shadow-emerald-500/40 hover:bg-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.3)]' 
+                    : 'bg-gray-950 text-white hover:bg-emerald-500'
+                }`}
               >
                 {isGenerating ? (
-                  <>
+                  <div className="flex items-center gap-3">
                     <RefreshCw className="animate-spin shrink-0" size={18} />
-                    <span>Generating Design...</span>
-                  </>
+                    <span>Processing Neural Maps...</span>
+                  </div>
                 ) : (
                   <>
-                    <Sparkles size={17} className="group-hover:rotate-12 transition-transform shrink-0" />
-                    <span>Ignite_Forge</span>
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      <Sparkles size={17} className="group-hover:rotate-12 transition-transform shrink-0" />
+                      <span>Ignite_Forge</span>
+                    </div>
+                    {customMode === 'texture' && (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <div className="w-12 h-0.5 bg-white/20 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ x: '-100%' }}
+                            animate={{ x: '100%' }}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                            className="w-full h-full bg-white"
+                          />
+                        </div>
+                        <span className="text-[6px] font-black tracking-[0.2em] opacity-80">Neural_Activation_Ready</span>
+                      </div>
+                    )}
                   </>
                 )}
               </button>

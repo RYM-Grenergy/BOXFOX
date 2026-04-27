@@ -6,28 +6,28 @@ import MatrixBackground from "./MatrixBackground";
 
 const features = [
   {
-    icon: Truck,
-    title: "Fast Delivery",
-    desc: "Quick and reliable shipping for all your orders.",
-    tag: "PRIORITY"
+    icon: Cpu,
+    title: "Ignite Forge",
+    desc: "Generate stunning box patterns and logos with NEURAL_V2.5 AI.",
+    tag: "NEW"
   },
   {
     icon: ShieldCheck,
-    title: "Top Quality",
-    desc: "Durable boxes that protect your goods perfectly.",
+    title: "Premium Quality",
+    desc: "Industrial-grade materials for maximum product protection.",
     tag: "TRUSTED"
   },
   {
-    icon: Cpu,
-    title: "Custom Designs",
-    desc: "Your brand, your design—exactly how you want it.",
-    tag: "UNIQUE"
+    icon: Truck,
+    title: "Eco-Friendly",
+    desc: "Sustainable packaging solutions for your conscious brand.",
+    tag: "PLANET"
   },
   {
     icon: Headphones,
-    title: "24/7 Support",
-    desc: "Our friendly team is always here to help you.",
-    tag: "ONLINE"
+    title: "Brand Vault",
+    desc: "Securely store and reuse your logos and brand assets.",
+    tag: "SECURE"
   },
 ];
 
