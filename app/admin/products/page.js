@@ -103,6 +103,14 @@ export default function ProductsManager() {
                         method: 'POST',
                         body: formDataObj
                     });
+
+                    if (!response.ok) {
+                        if (response.status === 413) {
+                            throw new Error('Image too large for server.');
+                        }
+                        return null;
+                    }
+
                     const data = await response.json();
                     return data.url || null;
                 } catch (err) {
@@ -167,6 +175,15 @@ export default function ProductsManager() {
                 method: 'POST',
                 body: formDataObj
             });
+
+            if (!response.ok) {
+                if (response.status === 413) {
+                    throw new Error('File is too large for the server. Please try a smaller file or compress it further.');
+                }
+                const errorText = await response.text();
+                throw new Error(errorText || `Upload failed with status ${response.status}`);
+            }
+
             const data = await response.json();
             if (data.url) {
                 setFormData(prev => ({
@@ -210,6 +227,15 @@ export default function ProductsManager() {
                 method: 'POST',
                 body: formDataObj
             });
+
+            if (!response.ok) {
+                if (response.status === 413) {
+                    throw new Error('File is too large for the server. Please try a smaller file or compress it further.');
+                }
+                const errorText = await response.text();
+                throw new Error(errorText || `Upload failed with status ${response.status}`);
+            }
+
             const data = await response.json();
             if (data.url) {
                 setFormData(prev => ({
