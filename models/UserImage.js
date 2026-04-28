@@ -7,7 +7,7 @@ const UserImageSchema = new mongoose.Schema({
     name: { type: String },
     format: { type: String }, // e.g., 'jpg', 'png', 'pdf'
     isTemporary: { type: Boolean, default: true },
-    type: { type: String, enum: ['logo', 'pattern', 'texture', 'document', 'other'], default: 'other' }
+    type: { type: String, default: 'other', trim: true }
 }, {
     timestamps: true
 });

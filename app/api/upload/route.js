@@ -11,6 +11,14 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const normalizeImageType = (rawType, fileFormat) => {
+    const normalizedType = String(rawType || 'other').toLowerCase();
+    return {
+        product: 'other',
+        dieline: 'document',
+    }[normalizedType] || (fileFormat === 'pdf' ? 'document' : normalizedType);
+};
+
 export const POST = async (req) => {
     try {
         await dbConnect();
@@ -60,7 +68,7 @@ export const POST = async (req) => {
         });
 
         const fileFormat = result.format || (result.url.endsWith('.pdf') ? 'pdf' : 'unknown');
-        const finalType = fileFormat === 'pdf' ? 'document' : type;
+        const finalType = normalizeImageType(type, fileFormat);
 
         if (userId) {
             await UserImage.create({

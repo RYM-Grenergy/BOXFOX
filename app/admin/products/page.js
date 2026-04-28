@@ -97,7 +97,7 @@ export default function ProductsManager() {
                     
                     const formDataObj = new FormData();
                     formDataObj.append('image', fileToUpload);
-                    formDataObj.append('type', 'product');
+                    formDataObj.append('type', 'other');
 
                     const response = await fetch('/api/upload', {
                         method: 'POST',
@@ -221,7 +221,7 @@ export default function ProductsManager() {
 
             const formDataObj = new FormData();
             formDataObj.append('image', fileToUpload);
-            formDataObj.append('type', 'dieline');
+            formDataObj.append('type', 'document');
 
             const response = await fetch('/api/upload', {
                 method: 'POST',
