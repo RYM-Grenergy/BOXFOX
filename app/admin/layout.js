@@ -20,7 +20,9 @@ import {
     Shield,
     TrendingUp,
     Layers,
-    Activity
+    Activity,
+    Briefcase,
+    File
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -65,11 +67,14 @@ export default function AdminLayout({ children }) {
         { label: 'Products', icon: <Box size={20} />, href: '/admin/products', roles: ['admin'] },
         { label: 'B2B Ops', icon: <Settings size={20} />, href: '/admin/b2b', roles: ['admin', 'staff_fulfillment'] },
         { label: 'B2B Leads', icon: <ClipboardList size={20} />, href: '/admin/b2b/inquiries', roles: ['admin'] },
+        { label: 'Gifting Quotes', icon: <File size={20} />, href: '/admin/quotes', roles: ['admin', 'staff_fulfillment'] },
         { label: 'General Queries', icon: <MessageSquare size={20} />, href: '/admin/queries', roles: ['admin', 'staff_fulfillment'] },
         { label: 'Promo Vault', icon: <Ticket size={20} />, href: '/admin/coupons', roles: ['admin'] },
         { label: 'Best Sellers', icon: <TrendingUp size={20} />, href: '/admin/best-sellers', roles: ['admin', 'staff_fulfillment'] },
         { label: 'Orders', icon: <ShoppingBag size={20} />, href: '/admin/orders', roles: ['admin', 'staff_fulfillment'] },
         { label: 'Customers', icon: <Users size={20} />, href: '/admin/customers', roles: ['admin'] },
+        { label: 'Partners', icon: <Briefcase size={20} />, href: '/admin/vendors', roles: ['admin'] },
+        { label: 'Support Chat', icon: <MessageSquare size={20} />, href: '/admin/chat', roles: ['admin'] },
         { label: 'Staff Roles', icon: <Shield size={20} />, href: '/admin/staff', roles: ['admin'] },
         { label: 'Analytics', icon: <BarChart3 size={20} />, href: '/admin/analytics', roles: ['admin'] },
         { label: 'Lab Config', icon: <Layers size={20} />, href: '/admin/lab-config', roles: ['admin'] },
@@ -170,7 +175,7 @@ export default function AdminLayout({ children }) {
                         </button>
                         <div className="flex items-center gap-3 pl-6 border-l border-gray-100">
                             <div className="text-right hidden sm:block">
-                                <p className="text-sm font-black text-gray-950 truncate max-w-[120px]">{user?.name || 'Admin User'}</p>
+                                <p className="text-sm font-black text-gray-950 truncate max-w-30">{user?.name || 'Admin User'}</p>
                                 <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{user?.role === 'admin' ? 'Super Admin' : 'Admin'}</p>
                             </div>
                             <div className="w-10 h-10 rounded-xl bg-gray-950 text-white flex items-center justify-center font-black uppercase">

@@ -41,6 +41,14 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
         }
 
+        if (user.role === 'vendor' && user.vendorStatus === 'pending') {
+            return NextResponse.json({ error: 'Your vendor application is pending approval.' }, { status: 403 });
+        }
+        
+        if (user.role === 'vendor' && user.vendorStatus === 'rejected') {
+            return NextResponse.json({ error: 'Your vendor application has been rejected.' }, { status: 403 });
+        }
+
         const isMatch = await bcryptjs.compare(password, user.password);
 
         if (!isMatch) {

@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Gift, ArrowRight, CheckCircle2, Star, Zap, Shield, Heart } from "lucide-react";
 import Link from "next/link";
@@ -118,41 +118,96 @@ export default function GiftsPage() {
         ))}
       </div>
 
-      {/* Final CTA Section */}
-      <section className="py-32 px-6 lg:px-14 bg-gray-50 border-t border-gray-100">
-        <div className="max-w-5xl mx-auto">
-          <div className="bg-gray-950 rounded-[3rem] sm:rounded-[4.5rem] p-12 lg:p-24 text-center relative overflow-hidden shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 opacity-50" />
-            <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')] opacity-20 pointer-events-none mix-blend-overlay" />
-            
-            <div className="relative z-10">
-              <h2 className="text-4xl lg:text-7xl font-black text-white uppercase tracking-tighter mb-8 leading-[0.9]">
-                Ready to Create <br />
-                <span className="text-emerald-400">Something Unique?</span>
-              </h2>
-              <p className="max-w-xl mx-auto text-gray-400 text-base lg:text-lg font-medium mb-12">
-                Consult with our structural packaging experts to design the perfect box for your brand.
-              </p>
-              <div className="flex flex-wrap justify-center gap-6">
-                <Link 
-                  href="/contact"
-                  className="px-12 py-6 bg-white text-gray-950 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-emerald-400 hover:text-white transition-all shadow-xl active:scale-95"
-                >
-                  Consult Expert
-                </Link>
-                <Link 
-                  href="/shop"
-                  className="px-12 py-6 bg-transparent border border-white/20 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-white/5 transition-all active:scale-95"
-                >
-                  Explore All
-                </Link>
-              </div>
+      <section className="py-32 px-6 lg:px-14 bg-gray-50 border-t border-gray-100" id="quote">
+        <div className="max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-20">
+                <div className="space-y-8">
+                    <div>
+                        <span className="text-emerald-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 block italic">Custom Gifting</span>
+                        <h2 className="text-6xl lg:text-8xl font-black text-gray-950 uppercase tracking-tighter leading-[0.85]">Request a<br /><span className="text-emerald-500 italic">Quotation.</span></h2>
+                    </div>
+                    <p className="text-gray-500 text-lg font-medium leading-relaxed max-w-md">Our gifting concierge will prepare a tailored proposal for your brand requirements. Expect a response within 4 working hours.</p>
+                    <div className="pt-12 border-t border-gray-200">
+                        <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 rounded-[2rem] bg-emerald-500 flex items-center justify-center text-white shadow-xl shadow-emerald-500/20 italic font-black text-2xl">B</div>
+                            <div>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Direct Assistance</p>
+                                <p className="text-lg font-black uppercase tracking-tight text-gray-950">concierge@boxfox.in</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-[3rem] p-10 lg:p-16 shadow-2xl shadow-gray-200/50 border border-gray-100">
+                    <QuoteForm />
+                </div>
             </div>
-          </div>
         </div>
       </section>
     </div>
   );
+}
+
+function QuoteForm() {
+    const [formData, setFormData] = useState({
+        name: "", email: "", phone: "", company: "", 
+        items: [{ productName: "", quantity: "" }]
+    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [success, setSuccess] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            const res = await fetch("/api/quotes", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user: formData, items: formData.items })
+            });
+            if (res.ok) setSuccess(true);
+        } catch (err) { console.error(err); }
+        finally { setIsSubmitting(false); }
+    };
+
+    if (success) return (
+        <div className="text-center py-20 space-y-6">
+            <div className="w-20 h-20 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/20"><CheckCircle2 size={40} /></div>
+            <h3 className="text-3xl font-black uppercase tracking-tighter">Request Received.</h3>
+            <p className="text-gray-400 text-xs font-black uppercase tracking-widest">Our team will reach out shortly.</p>
+        </div>
+    );
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+                <input type="text" placeholder="Full Name" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+                <input type="email" placeholder="Business Email" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} required />
+                <input type="tel" placeholder="Phone Number" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required />
+                <input type="text" placeholder="Company Name" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={formData.company} onChange={e => setFormData({...formData, company: e.target.value})} />
+            </div>
+            <div className="space-y-4">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic underline decoration-emerald-500/30 underline-offset-4">Gift Specifications</p>
+                {formData.items.map((item, i) => (
+                    <div key={i} className="grid grid-cols-3 gap-4">
+                        <input type="text" placeholder="Product Name" className="col-span-2 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={item.productName} onChange={e => {
+                            const newItems = [...formData.items];
+                            newItems[i].productName = e.target.value;
+                            setFormData({...formData, items: newItems});
+                        }} required />
+                        <input type="number" placeholder="Qty" className="bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={item.quantity} onChange={e => {
+                            const newItems = [...formData.items];
+                            newItems[i].quantity = e.target.value;
+                            setFormData({...formData, items: newItems});
+                        }} required />
+                    </div>
+                ))}
+            </div>
+            <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-gray-950 text-white rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-emerald-500 transition-all shadow-xl active:scale-95 disabled:opacity-70">
+                {isSubmitting ? "Sending..." : "Submit Inquiry"}
+            </button>
+        </form>
+    );
 }
 
 function GiftSection({ gift, index }) {

@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import hierarchyData from "@/lib/b2b-hierarchy.json";
+import { useToast } from '@/app/context/ToastContext';
+import ConfirmModal from '@/app/components/ConfirmModal';
 
 const categories = [
     { id: 'material', label: 'Material Library', icon: <Layers size={18} />, desc: 'Configure board types like SBS, FBB, etc.' },
@@ -23,7 +25,17 @@ export default function B2BOpsAdvanced() {
     const [activeTab, setActiveTab] = useState('material');
     const [newItem, setNewItem] = useState({ label: '', value: '' });
     const [viewMode, setViewMode] = useState('config'); // 'config' or 'hierarchy'
+    const { showToast } = useToast();
     
+    // Confirmation modal state
+    const [confirm, setConfirm] = useState({ open: false, title: '', subText: '', onConfirm: null, confirmLabel: 'Confirm' });
+
+    const openConfirm = ({ title, subText = '', confirmLabel = 'Confirm', onConfirm }) => {
+        setConfirm({ open: true, title, subText, onConfirm, confirmLabel });
+    };
+
+    const closeConfirm = () => setConfirm({ open: false, title: '', subText: '', onConfirm: null });
+
     // Hierarchy Search
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState(null);
@@ -44,6 +56,7 @@ export default function B2BOpsAdvanced() {
         }
     };
 
+
     const handleAdd = async () => {
         if (!newItem.label || !newItem.value) return;
         try {
@@ -62,15 +75,24 @@ export default function B2BOpsAdvanced() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm("Are you sure? This will remove this option from the B2B form.")) return;
-        try {
-            const res = await fetch(`/api/admin/b2b/config?id=${id}`, {
-                method: 'DELETE'
-            });
-            if (res.ok) fetchConfigs();
-        } catch (err) {
-            console.error("Delete error", err);
-        }
+        openConfirm({
+            title: 'Remove option from B2B form?',
+            subText: 'This action cannot be undone. Proceed?',
+            confirmLabel: 'Delete',
+            onConfirm: async () => {
+                try {
+                    const res = await fetch(`/api/admin/b2b/config?id=${id}`, {
+                        method: 'DELETE'
+                    });
+                    if (res.ok) fetchConfigs();
+                } catch (err) {
+                    console.error("Delete error", err);
+                    showToast('Delete failed', 'error');
+                } finally {
+                    closeConfirm();
+                }
+            }
+        });
     };
 
     const filteredConfigs = configs.filter(c => c.category === activeTab);
@@ -269,6 +291,7 @@ export default function B2BOpsAdvanced() {
                                         </div>
                                     )}
                                 </div>
+
                             </section>
                         </motion.div>
                     ) : (
@@ -372,6 +395,14 @@ export default function B2BOpsAdvanced() {
                     )}
                 </AnimatePresence>
             </main>
+            <ConfirmModal
+                open={confirm.open}
+                title={confirm.title}
+                subText={confirm.subText}
+                confirmLabel={confirm.confirmLabel}
+                onConfirm={() => { if (confirm.onConfirm) confirm.onConfirm(); }}
+                onCancel={closeConfirm}
+            />
         </div>
     );
 }

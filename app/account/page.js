@@ -2,7 +2,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { LogOut, User as UserIcon, Settings, Search, Package, MapPin, Phone, Mail, Lock, Heart, Trash2, ChevronRight, RotateCw, Layers, Ruler, Type, Palette, Eye, RefreshCw, Box, Share2, Link2, Copy, Check, Pencil, Sparkles, Plus, Upload, Shield, FileText, ExternalLink, Download } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, Search, Package, MapPin, Phone, Mail, Lock, Heart, Trash2, ChevronRight, RotateCw, Layers, Ruler, Type, Palette, Eye, RefreshCw, Box, Share2, Link2, Copy, Check, Pencil, Sparkles, Plus, Upload, Shield, FileText, ExternalLink, Download, X } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { useToast } from "@/app/context/ToastContext";
 import { useSearchParams } from "next/navigation";
@@ -25,6 +25,11 @@ function AccountManagementContent() {
     const [newName, setNewName] = useState("");
     const [isUploading, setIsUploading] = useState(false);
     const [orderSearch, setOrderSearch] = useState("");
+    const [quotes, setQuotes] = useState([]);
+    const [quoteSearch, setQuoteSearch] = useState("");
+    const [selectedQuote, setSelectedQuote] = useState(null);
+    const [chatOpen, setChatOpen] = useState(false);
+    const [message, setMessage] = useState("");
 
     // Missing state from previous version
     const [errorMsg, setErrorMsg] = useState("");
@@ -86,6 +91,13 @@ function AccountManagementContent() {
                         setSavedDesigns(designsData.designs || []);
                     }
 
+                    // Fetch quotes
+                    const quotesRes = await fetch("/api/quotes");
+                    if (quotesRes.ok) {
+                        const quotesData = await quotesRes.json();
+                        setQuotes(quotesData.quotes || []);
+                    }
+
                 } else {
                     router.push("/login");
                 }
@@ -132,6 +144,29 @@ function AccountManagementContent() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const sendMessage = async () => {
+        if (!message.trim() || !selectedQuote) return;
+        try {
+            const res = await fetch("/api/quotes/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ quoteId: selectedQuote._id, text: message })
+            });
+            if (res.ok) {
+                setMessage("");
+                // Refresh quotes to show new message
+                const quotesRes = await fetch("/api/quotes");
+                if (quotesRes.ok) {
+                    const quotesData = await quotesRes.json();
+                    setQuotes(quotesData.quotes || []);
+                    // Update selected quote view
+                    const updated = quotesData.quotes.find(q => q._id === selectedQuote._id);
+                    if (updated) setSelectedQuote(updated);
+                }
+            }
+        } catch (err) { console.error(err); }
     };
 
     const handlePasswordChange = async (e) => {
@@ -367,6 +402,60 @@ function AccountManagementContent() {
         <div className="min-h-screen bg-gray-50/50 text-gray-950">
             <AnimatePresence>
                 {selectedOrder && renderOrderDetail(selectedOrder)}
+                
+                {/* Chat Modal */}
+                {chatOpen && selectedQuote && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-xl flex items-center justify-center p-6"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+                            className="bg-white border border-gray-100 w-full max-w-2xl h-[80vh] rounded-[3rem] overflow-hidden flex flex-col shadow-2xl"
+                        >
+                            <div className="p-8 border-b border-gray-50 flex items-center justify-between">
+                                <div>
+                                    <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest italic">Direct Support Channel</p>
+                                    <h3 className="text-2xl font-black uppercase tracking-tighter italic text-gray-950">Quote Discussion</h3>
+                                </div>
+                                <button onClick={() => setChatOpen(false)} className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center hover:bg-gray-100 transition-all text-gray-400">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar bg-gray-50/30">
+                                {selectedQuote.messages?.map((msg, i) => (
+                                    <div key={i} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                        <div className={`max-w-[80%] p-6 rounded-[2rem] ${msg.sender === 'user' ? 'bg-gray-950 text-white rounded-tr-none' : 'bg-white text-gray-600 rounded-tl-none border border-gray-100 shadow-sm'}`}>
+                                            <p className="text-sm font-bold leading-relaxed">{msg.text}</p>
+                                            <p className={`text-[8px] font-black uppercase tracking-widest mt-2 opacity-50`}>{msg.sender === 'user' ? 'You' : 'Admin'} • {new Date(msg.createdAt).toLocaleTimeString()}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                                {(!selectedQuote.messages || selectedQuote.messages.length === 0) && (
+                                    <div className="h-full flex flex-col items-center justify-center text-center opacity-20 py-20">
+                                        <Mail size={40} className="mb-4 text-gray-400" />
+                                        <p className="text-sm font-black uppercase tracking-widest italic text-gray-400">Waiting for first message...</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="p-8 border-t border-gray-50 flex gap-4 bg-white">
+                                <input 
+                                    type="text" 
+                                    placeholder="Type your message..."
+                                    value={message}
+                                    onChange={(e) => setMessage(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                                    className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 outline-none focus:border-emerald-500 text-sm font-bold text-gray-950"
+                                />
+                                <button onClick={sendMessage} className="px-8 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all">
+                                    Send
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
             </AnimatePresence>
 
             <main className="max-w-7xl mx-auto px-6 lg:px-16 pt-24 sm:pt-32 pb-20">
@@ -397,6 +486,7 @@ function AccountManagementContent() {
                             {[
                                 { id: "dashboard", label: "Overview", icon: Settings },
                                 { id: "orders", label: "Manifests", icon: Package },
+                                { id: "quotes", label: "Gifting Quotes", icon: FileText, badge: quotes.length },
                                 { id: "addresses", label: "Logistics", icon: MapPin },
                                 { id: "details", label: "Identity", icon: UserIcon },
                                 { id: "wishlist", label: "Wishlist", icon: Heart },
@@ -859,6 +949,84 @@ function AccountManagementContent() {
                                             ).length === 0 && (
                                                 <div className="py-20 text-center italic text-gray-400 text-sm">No matches found for "{orderSearch}"</div>
                                             )}
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+
+                            {activeTab === 'quotes' && (
+                                <motion.div
+                                    key="quotes"
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="bg-white rounded-[2rem] p-8 sm:p-10 shadow-sm border border-gray-100 min-h-[400px]"
+                                >
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                                        <h2 className="text-3xl font-black uppercase tracking-tighter text-gray-950">
+                                            Gifting Quotations
+                                        </h2>
+                                        <div className="relative flex-1 max-w-sm">
+                                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search quotations..." 
+                                                value={quoteSearch}
+                                                onChange={(e) => setQuoteSearch(e.target.value)}
+                                                className="w-full pl-12 pr-6 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-medium outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {quotes.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-20 text-center">
+                                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-4">
+                                                <FileText size={32} />
+                                            </div>
+                                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">No quotations requested yet.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {quotes
+                                                .filter(q => q._id.toLowerCase().includes(quoteSearch.toLowerCase()))
+                                                .map(quote => (
+                                                <div
+                                                    key={quote._id}
+                                                    className="p-6 sm:p-8 rounded-[2rem] border border-gray-100 bg-gray-50/50 hover:bg-white transition-all relative overflow-hidden"
+                                                >
+                                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 relative z-10">
+                                                        <div className="flex items-center gap-6">
+                                                            <div className="w-16 h-16 rounded-[1.25rem] bg-white border border-gray-100 p-2 shrink-0 flex items-center justify-center shadow-sm text-emerald-500">
+                                                                <FileText size={24} />
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Quote Reference</p>
+                                                                <h4 className="text-lg font-black text-gray-950 uppercase">#{quote._id.slice(-6).toUpperCase()}</h4>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <div className={`w-1.5 h-1.5 rounded-full ${quote.status === 'pending' ? 'bg-orange-500' : 'bg-emerald-500'}`}></div>
+                                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status: {quote.status}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex flex-wrap items-center gap-4">
+                                                            <div className="text-right">
+                                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Estimated Cost</p>
+                                                                <p className="text-xl font-black text-gray-950">₹{quote.totalAmount || "TBD"}</p>
+                                                            </div>
+                                                            <button 
+                                                                onClick={() => { setSelectedQuote(quote); setChatOpen(true); }}
+                                                                className="px-6 py-3 bg-gray-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all flex items-center gap-2"
+                                                            >
+                                                                <Mail size={14} /> Discuss with Admin
+                                                                {quote.messages?.filter(m => m.sender === 'admin').length > 0 && (
+                                                                    <span className="w-4 h-4 bg-emerald-500 rounded-full text-[8px] flex items-center justify-center">{quote.messages.filter(m => m.sender === 'admin').length}</span>
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
                                 </motion.div>

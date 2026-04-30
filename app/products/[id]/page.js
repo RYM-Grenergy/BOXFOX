@@ -13,7 +13,8 @@ import {
     Heart,
     RefreshCw,
     Eye,
-    EyeOff
+    EyeOff,
+    BadgeCheck
 } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
 import { useCart } from '@/app/context/CartContext';
@@ -86,6 +87,7 @@ export default function ProductPage() {
 
     const images = product.images && product.images.length > 0 ? product.images : [product.img];
     const displayImage = images[activeImg];
+    const allowWishlist = product.allowWishlist !== false;
 
     // ─── ACCURATE PRICING ENGINE ─────────────────────────────────────────────
     const unit = product.dimensions?.unit || 'in';
@@ -105,7 +107,7 @@ export default function ProductPage() {
 
     const pricingResult = calculateBoxPrice({
         spec: selectedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
-        qty: quantity,
+        qty: parseInt(quantity) || 10,
         gsm: 300,
         material: 'SBS',
         brand: 'Normal',
@@ -158,44 +160,55 @@ export default function ProductPage() {
                         <div className="lg:col-span-5 space-y-5">
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
-                                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[9px] font-black tracking-widest uppercase">Premium Series</span>
+                                    <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[9px] font-black tracking-widest uppercase">
+                                        Premium Series
+                                    </span>
                                     {product.inStock && <span className="text-[9px] font-black text-emerald-500 uppercase flex items-center gap-1"><CheckCircle2 size={10} /> In Stock</span>}
                                 </div>
                                 <div className="flex items-start justify-between gap-4">
-                                    <h1 className="text-4xl md:text-5xl font-black text-gray-950 tracking-tighter uppercase">{product.name}</h1>
-                                    <button
-                                        onClick={async () => {
-                                            if (wishlistBusy) return;
-                                            setWishlistBusy(true);
-                                            try {
-                                                const res = await fetch('/api/wishlist', {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/json' },
-                                                    body: JSON.stringify({ productId: product._id || product.id })
-                                                });
-                                                if (res.status === 401) {
-                                                    window.location.href = '/login';
-                                                    return;
+                                    <div>
+                                        <h1 className="text-4xl md:text-5xl font-black text-gray-950 tracking-tighter uppercase">{product.name}</h1>
+                                        {product.brand && (
+                                            <p className="mt-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                                                Sold by <span className="text-emerald-600">{product.brand}</span>
+                                            </p>
+                                        )}
+                                    </div>
+                                    {allowWishlist && (
+                                        <button
+                                            onClick={async () => {
+                                                if (wishlistBusy) return;
+                                                setWishlistBusy(true);
+                                                try {
+                                                    const res = await fetch('/api/wishlist', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ productId: product._id || product.id })
+                                                    });
+                                                    if (res.status === 401) {
+                                                        window.location.href = '/login';
+                                                        return;
+                                                    }
+                                                    const data = await res.json();
+                                                    if (res.ok) {
+                                                        const nextWishlisted = data?.action === 'added';
+                                                        setIsWishlisted(nextWishlisted);
+                                                        showToast(data?.message || (nextWishlisted ? 'Added to wishlist' : 'Removed from wishlist'));
+                                                    } else {
+                                                        showToast(data?.error || 'Failed to update wishlist', 'error');
+                                                    }
+                                                } catch (err) {
+                                                    console.error(err);
+                                                    showToast('Connection error', 'error');
+                                                } finally {
+                                                    setWishlistBusy(false);
                                                 }
-                                                const data = await res.json();
-                                                if (res.ok) {
-                                                    const nextWishlisted = data?.action === 'added';
-                                                    setIsWishlisted(nextWishlisted);
-                                                    showToast(data?.message || (nextWishlisted ? 'Added to wishlist' : 'Removed from wishlist'));
-                                                } else {
-                                                    showToast(data?.error || 'Failed to update wishlist', 'error');
-                                                }
-                                            } catch (err) {
-                                                console.error(err);
-                                                showToast('Connection error', 'error');
-                                            } finally {
-                                                setWishlistBusy(false);
-                                            }
-                                        }}
-                                        className={`p-4 rounded-full transition-all border border-gray-100 shadow-sm shrink-0 ${isWishlisted ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50'} ${wishlistBusy ? 'opacity-60' : ''}`}
-                                    >
-                                        <Heart size={24} fill={isWishlisted ? 'currentColor' : 'none'} />
-                                    </button>
+                                            }}
+                                            className={`p-4 rounded-full transition-all border border-gray-100 shadow-sm shrink-0 ${isWishlisted ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50'} ${wishlistBusy ? 'opacity-60' : ''}`}
+                                        >
+                                            <Heart size={24} fill={isWishlisted ? 'currentColor' : 'none'} />
+                                        </button>
+                                    )}
                                 </div>
                                 <p className="text-sm text-gray-500 leading-relaxed font-medium">{product.description || "The ultimate professional packaging solution for your premium brand. Structural integrity meets aesthetic perfection."}</p>
                             </div>
@@ -227,7 +240,17 @@ export default function ProductPage() {
                                                 <input
                                                     type="number"
                                                     value={quantity}
-                                                    onChange={(e) => setQuantity(Math.max(10, parseInt(e.target.value) || 10))}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === "") {
+                                                            setQuantity("");
+                                                        } else {
+                                                            setQuantity(parseInt(val) || "");
+                                                        }
+                                                    }}
+                                                    onBlur={() => {
+                                                        if (!quantity || quantity < 10) setQuantity(10);
+                                                    }}
                                                     className="w-full py-4 px-6 rounded-2xl bg-white border-2 border-gray-100 font-black text-sm text-gray-950 focus:border-emerald-500 focus:bg-emerald-50/10 outline-none transition-all pr-20"
                                                     min={10}
                                                 />

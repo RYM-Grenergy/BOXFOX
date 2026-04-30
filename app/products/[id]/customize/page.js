@@ -243,7 +243,7 @@ export default function CustomizePage() {
                     </div>
 
                     <div
-                        className="relative h-[780px] bg-white rounded-[4rem] border border-slate-100 shadow-[0_40px_100px_rgba(0,0,0,0.05)] overflow-hidden cursor-grab active:cursor-grabbing group"
+                        className="relative h-[780px] bg-white rounded-[4rem] border border-slate-100 shadow-[0_40px_100px_rgba(0,0,0,0.05)] overflow-hidden group"
                         style={{ background: 'radial-gradient(circle at center, #ffffff 0%, #f8fafc 100%)' }}
                         onMouseDown={() => { isDragging.current = true; }}
                         onMouseMove={(e) => {

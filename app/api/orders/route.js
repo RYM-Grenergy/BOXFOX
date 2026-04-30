@@ -13,6 +13,16 @@ import {
     getStatusUpdateTemplate
 } from '@/lib/mail';
 
+const parseMoney = (value) => {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+        const parsed = parseFloat(value.replace(/[^0-9.]/g, ''));
+        return Number.isFinite(parsed) ? parsed : 0;
+    }
+    return 0;
+};
+
+
 export async function GET(req) {
     try {
         await dbConnect();
@@ -39,7 +49,6 @@ export async function POST(req) {
     try {
         await dbConnect();
         const orderData = await req.json();
-
         // Generate a clean numeric order ID
         const count = await Order.countDocuments();
         const orderId = `ORD-${1001 + count}`;
@@ -145,17 +154,16 @@ export async function PATCH(req) {
         const currentOrder = await Order.findOne(query);
         const prevStatus = currentOrder?.status;
 
-        let updateData = {};
-        if (status !== undefined) updateData.status = status;
-        if (labNotes !== undefined) updateData.labNotes = labNotes;
-
-        const order = await Order.findOneAndUpdate(
-            query,
-            updateData,
-            { returnDocument: 'after' }
-        );
+        const order = await Order.findOne(query);
 
         if (order) {
+            if (status !== undefined) order.status = status;
+            if (labNotes !== undefined) order.labNotes = labNotes;
+
+
+
+            await order.save();
+
             // Trigger status update email if it changed
             if (status && status !== prevStatus && order.customer?.email) {
                 await sendEmail({

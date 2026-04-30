@@ -17,6 +17,54 @@ async function invalidateProductCache() {
   }
 }
 
+function formatCurrencyPrice(item) {
+  return item.minPrice
+    ? (item.maxPrice ? `₹${item.minPrice} - ₹${item.maxPrice}` : `₹${item.minPrice}`)
+    : (item.price ? (String(item.price).startsWith('₹') ? item.price : `₹${item.price}`) : "Price on Request");
+}
+
+function toStoreProduct(product, source = 'core') {
+  const category = (product.categories && product.categories.length > 0)
+    ? (product.categories[product.categories.length - 1] || "Packaging")
+    : (product.category || "Packaging");
+
+  return {
+    _id: product._id,
+    id: product._id,
+    source,
+    name: product.name,
+    sku: product.sku || '',
+    category,
+    price: formatCurrencyPrice(product),
+    minPrice: product.minPrice,
+    maxPrice: product.maxPrice,
+    originalPrice: product.regular_price,
+    discount: product.sale_price ? "Sale" : null,
+    status: product.stock_status,
+    images: product.images || [],
+    img: product.img || product.images?.[0] || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
+    outOfStock: product.stock_status === "outofstock",
+    badge: product.badge || (product.isFeatured ? "Featured" : null),
+    hasVariants: product.type === "variable",
+    description: product.description || '',
+    short_description: product.short_description || '',
+    brand: product.brand || 'BoxFox',
+    minOrderQuantity: product.minOrderQuantity || 10,
+    tags: product.tags || [],
+    specifications: product.specifications || [],
+    dimensions: product.dimensions,
+    pacdoraId: product.pacdoraId,
+    patternImg: product.patternImg,
+    patternFormat: product.patternFormat,
+    dielineImg: product.dielineImg,
+    dielineFormat: product.dielineFormat,
+    isActive: product.isActive !== false,
+    allowWishlist: true,
+  };
+}
+
+
+
 export async function GET(req) {
   try {
     await dbConnect();
@@ -65,56 +113,22 @@ export async function GET(req) {
       let cursor = Product.find(query, projection).sort({ createdAt: -1 });
 
       const products = await cursor
-        .skip(skip)
-        .limit(searchParams.get("all") === "true" ? 0 : limit)
-        .lean();
+          .skip(skip)
+          .limit(searchParams.get("all") === "true" ? 0 : limit)
+          .lean();
+
+      const combinedProducts = products.map((product) => toStoreProduct(product, 'core'));
 
       // Transform into the sections structure or flat list for admin
       if (isAdmin) {
-        return products.map((p) => {
-          const formattedPrice = p.minPrice
-            ? (p.maxPrice ? `₹${p.minPrice} - ₹${p.maxPrice}` : `₹${p.minPrice}`)
-            : (p.price ? (String(p.price).startsWith('₹') ? p.price : `₹${p.price}`) : "Price on Request");
-
-          return {
-            _id: p._id,
-            id: p.wpId,
-            name: p.name,
-            sku: p.sku || '',
-            category: (p.categories && p.categories.length > 0) ? (p.categories[p.categories.length - 1] || "Uncategorized") : "Uncategorized",
-            price: formattedPrice,
-            minPrice: p.minPrice,
-            maxPrice: p.maxPrice,
-            originalPrice: p.regular_price,
-            discount: p.sale_price ? "Sale" : null,
-            status: p.stock_status,
-            images: p.images,
-            img: p.images[0] || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
-            outOfStock: p.stock_status === "outofstock",
-            badge: p.badge || (p.isFeatured ? "Featured" : null),
-            hasVariants: p.type === "variable",
-            description: p.description || '',
-            short_description: p.short_description || '',
-            brand: p.brand || 'BoxFox',
-            minOrderQuantity: p.minOrderQuantity || 10,
-            tags: p.tags || [],
-            specifications: p.specifications || [],
-            dimensions: p.dimensions,
-            pacdoraId: p.pacdoraId,
-            patternImg: p.patternImg,
-            patternFormat: p.patternFormat,
-            dielineImg: p.dielineImg,
-            dielineFormat: p.dielineFormat,
-            isActive: p.isActive !== false
-          };
-        });
+        return combinedProducts;
       }
 
       // For main site - Grouped by Category
       const sectionsMap = {};
 
-      products.forEach((p) => {
-        const primaryCat = (p.categories && p.categories.length > 0) ? (p.categories[p.categories.length - 1] || "Packaging") : "Packaging";
+      combinedProducts.forEach((p) => {
+        const primaryCat = p.category || ((p.categories && p.categories.length > 0) ? (p.categories[p.categories.length - 1] || "Packaging") : "Packaging");
 
         if (!sectionsMap[primaryCat]) {
           sectionsMap[primaryCat] = {
@@ -124,25 +138,8 @@ export async function GET(req) {
           };
         }
 
-        const formattedPrice = p.minPrice
-          ? (p.maxPrice ? `₹${p.minPrice} - ₹${p.maxPrice}` : `₹${p.minPrice}`)
-          : (p.price ? (String(p.price).startsWith('₹') ? p.price : `₹${p.price}`) : "Price on Request");
-
         sectionsMap[primaryCat].items.push({
-          _id: p._id,
-          id: p.wpId,
-          name: p.name,
-          price: formattedPrice,
-          minPrice: p.minPrice,
-          maxPrice: p.maxPrice,
-          badge: p.badge || (p.isFeatured ? "Featured" : null),
-          img: p.images[0] || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
-          images: p.images,
-          hasVariants: p.type === "variable",
-          outOfStock: p.stock_status === "outofstock",
-          dimensions: p.dimensions,
-          categories: p.categories,
-          pacdoraId: p.pacdoraId
+          ...p,
         });
       });
 
@@ -210,10 +207,10 @@ export async function POST(req) {
       };
 
       const catCode = CATEGORY_MAP[category] || (category || "GEN").substring(0, 3).toUpperCase();
-      
+
       // Find the highest current sequence for this category
       const lastProduct = await Product.findOne({ sku: new RegExp(`^BFX-${catCode}-`) }).sort({ sku: -1 }).lean();
-      
+
       let nextNum = 1;
       if (lastProduct && lastProduct.sku) {
         const parts = lastProduct.sku.split('-');

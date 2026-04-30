@@ -43,25 +43,6 @@
     margin: 0;
   }
 
-  /* Premium Custom Cursor Support */
-  @media (min-width: 768px) {
-    html:not(:has(.admin-panel)), body:not(:has(.admin-panel)) {
-      cursor: none !important;
-    }
-    
-    html:not(:has(.admin-panel)) a, 
-    html:not(:has(.admin-panel)) button, 
-    html:not(:has(.admin-panel)) [role="button"], 
-    html:not(:has(.admin-panel)) input, 
-    html:not(:has(.admin-panel)) select, 
-    html:not(:has(.admin-panel)) textarea, 
-    html:not(:has(.admin-panel)) [onClick], 
-    html:not(:has(.admin-panel)) label, 
-    html:not(:has(.admin-panel)) [draggable] {
-      cursor: none !important;
-    }
-  }
-
   h1,
   h2,
   h3,
@@ -186,6 +167,7 @@
   0% {
     transform: translateX(-50%);
   }
+
   100% {
     transform: translateX(0);
   }

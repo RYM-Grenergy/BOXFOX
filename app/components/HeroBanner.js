@@ -129,7 +129,7 @@ export default function HeroBanner() {
               if (swipe < -swipeConfidenceThreshold) paginate(1);
               else if (swipe > swipeConfidenceThreshold) paginate(-1);
             }}
-            className="absolute inset-0 w-full h-full cursor-grab active:cursor-grabbing"
+            className="absolute inset-0 w-full h-full"
           >
             {currentBanner && currentBanner.type === "image" ? (
               <>

@@ -129,7 +129,7 @@ function MiniBox3D({ customDesign, size = 160 }) {
     };
 
     return (
-        <div style={{ width: size + 60, height: size + 60, perspective: 1800, cursor: "grab", userSelect: "none", touchAction: "none" }}
+        <div style={{ width: size + 60, height: size + 60, perspective: 1800, userSelect: "none", touchAction: "none" }}
             onMouseDown={() => { dragging.current = true; }}
             onMouseMove={e => { if (dragging.current) setRot(r => ({ x: r.x - e.movementY * 0.5, y: r.y + e.movementX * 0.5 })); }}
             onMouseUp={() => { dragging.current = false; }}

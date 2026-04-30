@@ -279,7 +279,7 @@ export default function Box3D({ type = "pizza", size = { w: 12, h: 1.5, d: 12 },
     }, [openness]);
 
     return (
-        <div className="w-full h-full min-h-[400px] bg-gray-50 rounded-[2rem] overflow-hidden relative cursor-grab active:cursor-grabbing">
+        <div className="w-full h-full min-h-[400px] bg-gray-50 rounded-[2rem] overflow-hidden relative">
             <div className="absolute top-6 left-6 z-10">
                 <span className="px-3 py-1 bg-white/80 backdrop-blur-md border border-gray-200 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-500 shadow-sm">
                     {type.toUpperCase()} BOX STRUCTURE

@@ -23,12 +23,6 @@ export default function ContactPage() {
             icon: <Briefcase className="text-orange-500" />,
             email: "career@iopl.co",
             phone: "Send your CV to our email"
-        },
-        {
-            title: "Vendor Support",
-            icon: <Users className="text-purple-500" />,
-            email: "vendorsupport@iopl.co",
-            phone: "+91 124 4144 188"
         }
     ];
 

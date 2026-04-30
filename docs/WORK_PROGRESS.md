@@ -34,7 +34,7 @@ The BOXFOX e-commerce platform has reached a stable **Beta/Pre-Production** phas
 - [x] **Dreamflux Hero Section**: Masonry grid with glassmorphic effects and premium typography.
 - [x] **3D Customizer**: Integration of the **Pacdora 3D Engine**. Users can view 3D models and enter the 3D editor directly.
 - [x] **Dynamic Shop UI**: Real-time filtering by category and smart searching for products.
-- [x] **Smooth Onboarding**: Premium SiteLoader and custom cursors for an immersive brand experience.
+- [x] **Smooth Onboarding**: Premium SiteLoader for an immersive brand experience.
 
 ### 3.2 Admin Panel (The Command Center)
 - [x] **Management Dashboard**: Real-time sales growth tracking and category distribution charts using dynamic aggregation.

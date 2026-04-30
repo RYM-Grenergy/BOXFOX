@@ -141,7 +141,7 @@ function CustomizeLabContent() {
         setUnit(defaultSpec.unit || "mm");
       }
     }
-  }, [labConfig.specifications, selectedCategory, selectedSubCategory, selectedSpec]);
+  }, [labConfig.specifications, selectedCategory, selectedSubCategory]);
 
   const FINISH_OPTIONS = Object.keys(LAM_RATES);
   const PRINT_OPTIONS = Object.keys(COLOUR_FACTORS);
@@ -163,6 +163,31 @@ function CustomizeLabContent() {
   const [unit, setUnit] = useState("in"); // "in" or "mm"
   const [designName, setDesignName] = useState("Untitled Design");
   const [activeDesignId, setActiveDesignId] = useState(null);
+
+  // Handle Deep Linking from Product Catalog
+  useEffect(() => {
+    const cat = searchParams.get('category');
+    const subCat = searchParams.get('subCategory');
+    const l = searchParams.get('l');
+    const w = searchParams.get('w');
+    const h = searchParams.get('h');
+    const u = searchParams.get('unit');
+
+    if (cat && cat !== "All") setSelectedCategory(cat);
+    if (subCat && subCat !== "All") setSelectedSubCategory(subCat);
+    if (l && w && h) {
+      setDimensions({
+        l: parseFloat(l) || 12,
+        w: parseFloat(w) || 8,
+        h: parseFloat(h) || 4
+      });
+      setSelectedSpec(null); // Switch to manual mode for precise matching
+    }
+    if (u) setUnit(u);
+    
+    // Set higher default quantity for enterprise customization
+    setQuantity(500);
+  }, [searchParams]);
 
   const [showPremiumModal, setShowPremiumModal] = useState(false);
 
@@ -589,19 +614,22 @@ function CustomizeLabContent() {
     }
   };
 
-  // Automatically match dimensions with Lab Specifications for pricing/estimation ONLY
   useEffect(() => {
+    const l = parseFloat(dimensions.l) || 0;
+    const w = parseFloat(dimensions.w) || 0;
+    const h = parseFloat(dimensions.h) || 0;
+
     const match = labConfig.specifications.find(s =>
-      s.l === dimensions.l &&
-      s.w === dimensions.w &&
-      s.h === dimensions.h &&
-      s.unit === (s.unit || 'mm')
+      s.l === l &&
+      s.w === w &&
+      s.h === h &&
+      (s.unit || 'mm') === (s.unit || 'mm') // Basic unit check
     );
 
     if (match) {
       setEstimatedSpec(match);
     } else {
-      const closest = findClosestSpec(dimensions.l, dimensions.w, dimensions.h, selectedCategory);
+      const closest = findClosestSpec(l, w, h, selectedCategory);
       setEstimatedSpec(closest);
     }
   }, [dimensions, unit, labConfig.specifications, selectedCategory]);
@@ -1106,7 +1134,6 @@ function CustomizeLabContent() {
       backgroundRepeat: "no-repeat",
       transition: isSpatialPanning.current ? "none" : "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
       transformStyle: "preserve-3d",
-      cursor: boxTextures[face] ? (isActive ? "move" : "crosshair") : "pointer",
       boxShadow: isActive ? "inset 0 0 0 4px #10b981, 0 0 40px rgba(16, 185, 129, 0.2)" : "none",
     };
   };
@@ -1267,7 +1294,7 @@ function CustomizeLabContent() {
           </div>
 
           <div
-            className="relative h-[42vh] sm:h-[52vh] md:h-[60vh] lg:flex-1 lg:h-auto shrink-0 min-h-[350px] lg:min-h-[500px] bg-gradient-to-br from-gray-50 via-white to-emerald-50/30 rounded-2xl sm:rounded-[3rem] md:rounded-[4rem] lg:rounded-[5rem] border border-gray-200 shadow-xl overflow-hidden cursor-grab active:cursor-grabbing group touch-none"
+            className="relative h-[42vh] sm:h-[52vh] md:h-[60vh] lg:flex-1 lg:h-auto shrink-0 min-h-[350px] lg:min-h-[500px] bg-gradient-to-br from-gray-50 via-white to-emerald-50/30 rounded-2xl sm:rounded-[3rem] md:rounded-[4rem] lg:rounded-[5rem] border border-gray-200 shadow-xl overflow-hidden group touch-none"
             onMouseDown={() => {
               isDragging.current = true;
             }}
@@ -1765,9 +1792,10 @@ function CustomizeLabContent() {
                         value={dimensions[d] === "" ? "" : dimensions[d]}
                         onChange={(e) => {
                           const val = e.target.value;
+                          // Allow numbers and decimal point for fluid typing
                           if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
-                            setDimensions({ ...dimensions, [d]: val === "" ? "" : parseFloat(val) || 0 });
-                            setSelectedSpec(null); // Force WhatsApp for custom sizes
+                            setDimensions({ ...dimensions, [d]: val });
+                            setSelectedSpec(null); // Mark as custom
                           }
                         }}
                         className="w-full h-12 bg-white border border-gray-200 rounded-xl px-2 text-lg font-black text-center focus:border-emerald-500 outline-none transition-all"

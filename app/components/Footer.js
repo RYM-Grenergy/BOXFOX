@@ -65,6 +65,7 @@ export default function Footer() {
             <ul className="space-y-3">
               {[
                 { name: "Track Order", href: "/track-order" },
+                { name: "Partner Portal", href: "/vendor/register" },
                 { name: "Shipping Policy", href: "/shipping" },
                 { name: "Domestic Shipping", href: "/domestic-shipping" },
                 { name: "Return & Exchange", href: "/exchange" }
@@ -73,9 +74,6 @@ export default function Footer() {
                   <Link href={item.href} className="text-[12px] font-black text-gray-950 hover:text-emerald-600 transition-all uppercase tracking-wider">{item.name}</Link>
                 </li>
               ))}
-              <li>
-                <Link href="/partnership" className="text-[12px] font-black text-emerald-600 hover:text-gray-950 transition-all uppercase tracking-wider">Be with BoxFox</Link>
-              </li>
             </ul>
           </div>
 

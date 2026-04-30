@@ -78,7 +78,7 @@ export default function GeneralQueriesAdmin() {
                 </div>
 
                 <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-2xl border border-gray-100 self-start md:self-center">
-                    {['all', 'partnership', 'contact'].map((f) => (
+                    {['all', 'contact'].map((f) => (
                         <button
                             key={f}
                             onClick={() => setFilter(f)}

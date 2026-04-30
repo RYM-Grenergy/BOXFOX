@@ -9,7 +9,6 @@ export async function GET(req, { params }) {
         const { id } = await params;
         console.log(`🔍 Fetching product with ID: ${id}`);
         let product = null;
-
         // Try to find by wpId (number) if it's a valid integer
         const wpIdNum = parseInt(id);
         if (!isNaN(wpIdNum)) {
@@ -28,40 +27,41 @@ export async function GET(req, { params }) {
             return NextResponse.json({ error: "Product not found" }, { status: 404 });
         }
 
-        // Transform for frontend
         const result = {
-            id: product.wpId,
-            _id: product._id,
-            name: product.name,
-            price: product.minPrice
-                ? (product.maxPrice ? `₹${product.minPrice} - ₹${product.maxPrice}` : `₹${product.minPrice}`)
-                : (product.price ? (String(product.price).startsWith('₹') ? product.price : `₹${product.price}`) : "Price on Request"),
-            badge: product.badge,
-            regular_price: product.regular_price,
-            sale_price: product.sale_price,
-            description: product.description,
-            short_description: product.short_description,
-            img: product.images[0] || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
-            images: product.images,
-            category: (product.categories && product.categories.length > 0) ? (product.categories[product.categories.length - 1] || "Packaging") : "Packaging",
-            stock_status: product.stock_status,
-            type: product.type,
-            weight: product.weight,
-            dimensions: product.dimensions,
-            attributes: product.attributes,
-            brand: product.brand || 'BoxFox',
-            minOrderQuantity: product.minOrderQuantity || 10,
-            minPrice: product.minPrice,
-            maxPrice: product.maxPrice,
-            tags: product.tags || [],
-            specifications: product.specifications || [],
-            meta: product.meta,
-            pacdoraId: product.pacdoraId,
-            patternImg: product.patternImg,
-            patternFormat: product.patternFormat,
-            dielineImg: product.dielineImg,
-            dielineFormat: product.dielineFormat
-        };
+                id: product.wpId,
+                _id: product._id,
+                source: 'core',
+                allowWishlist: true,
+                name: product.name,
+                price: product.minPrice
+                    ? (product.maxPrice ? `₹${product.minPrice} - ₹${product.maxPrice}` : `₹${product.minPrice}`)
+                    : (product.price ? (String(product.price).startsWith('₹') ? product.price : `₹${product.price}`) : "Price on Request"),
+                badge: product.badge,
+                regular_price: product.regular_price,
+                sale_price: product.sale_price,
+                description: product.description,
+                short_description: product.short_description,
+                img: product.images[0] || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
+                images: product.images,
+                category: (product.categories && product.categories.length > 0) ? (product.categories[product.categories.length - 1] || "Packaging") : "Packaging",
+                stock_status: product.stock_status,
+                type: product.type,
+                weight: product.weight,
+                dimensions: product.dimensions,
+                attributes: product.attributes,
+                brand: product.brand || 'BoxFox',
+                minOrderQuantity: product.minOrderQuantity || 10,
+                minPrice: product.minPrice,
+                maxPrice: product.maxPrice,
+                tags: product.tags || [],
+                specifications: product.specifications || [],
+                meta: product.meta,
+                pacdoraId: product.pacdoraId,
+                patternImg: product.patternImg,
+                patternFormat: product.patternFormat,
+                dielineImg: product.dielineImg,
+                dielineFormat: product.dielineFormat
+            };
 
         return NextResponse.json(result);
     } catch (e) {

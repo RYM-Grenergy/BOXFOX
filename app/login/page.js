@@ -28,6 +28,8 @@ function LoginContent() {
             if (result.success) {
                 if (result.user?.role === 'admin') {
                     router.push("/admin");
+                } else if (result.user?.role === 'vendor') {
+                    router.push("/vendor");
                 } else {
                     router.push(redirect);
                 }
@@ -241,11 +243,18 @@ function LoginContent() {
                                         </button>
                                     </form>
 
-                                    <div className="mt-12 text-center">
+                                    <div className="mt-12 text-center space-y-4">
                                         <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
                                             New to Boxfox?{" "}
                                             <Link href={`/signup?redirect=${encodeURIComponent(redirect)}`} className="text-emerald-500 hover:text-emerald-600 ml-2 border-b-2 border-emerald-500/10 hover:border-emerald-500 transition-all">
                                                 Create Account
+                                            </Link>
+                                        </p>
+                                        <div className="h-px bg-gray-50 w-20 mx-auto" />
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic">
+                                            Manufacturing Partner?{" "}
+                                            <Link href="/vendor/register" className="text-gray-950 hover:text-emerald-500 transition-all border-b border-gray-200 hover:border-emerald-500">
+                                                Join Network
                                             </Link>
                                         </p>
                                     </div>

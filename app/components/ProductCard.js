@@ -62,6 +62,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
     badge,
     pacdoraId,
     images,
+    allowWishlist = true,
   } = product;
 
   const productId = _id || id;
@@ -95,7 +96,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
     return (
       <Link
         href={`/products/${routeId}`}
-        className="group relative block aspect-[4/5] overflow-hidden rounded-[2rem] bg-gray-50 bg-white shadow-sm transition-all hover:shadow-2xl hover:-translate-y-2"
+        className="group relative block aspect-4/5 overflow-hidden rounded-4xl bg-white shadow-sm transition-all hover:shadow-2xl hover:-translate-y-2"
         aria-label={name}
       >
         <Image
@@ -120,7 +121,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
             priority={priority}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 bg-linear-to-t from-gray-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="absolute inset-x-0 bottom-0 p-6 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-300 flex items-end justify-between">
           <div className="max-w-[70%]">
             <h4 className="text-white font-black text-sm leading-tight line-clamp-2 uppercase tracking-tight">{name}</h4>
@@ -135,7 +136,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
 
   return (
     <Link href={`/products/${routeId}`} className="group flex flex-col h-full relative">
-      <div className="relative mb-4 sm:mb-5 aspect-[4/5] overflow-hidden rounded-[1.2rem] sm:rounded-[2rem] bg-gray-50 border border-gray-950/[0.08] shadow-sm transition-all group-hover:shadow-2xl group-hover:shadow-emerald-500/10 group-hover:border-gray-950/20">
+      <div className="relative mb-4 sm:mb-5 aspect-4/5 overflow-hidden rounded-2xl sm:rounded-4xl bg-gray-50 border border-gray-950/8 shadow-sm transition-all group-hover:shadow-2xl group-hover:shadow-emerald-500/10 group-hover:border-gray-950/20">
         <Image
           src={img || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg"}
           alt={name}
@@ -156,7 +157,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
             priority={priority}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute inset-0 bg-linear-to-t from-gray-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
         <div className="absolute top-2 left-2 sm:top-6 sm:left-6 flex flex-col gap-1 sm:gap-2 pointer-events-none">
           {discount && !outOfStock && (
@@ -171,6 +172,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           )}
         </div>
 
+        {allowWishlist !== false && (
         <button
           onClick={async (e) => {
             e.preventDefault();
@@ -216,11 +218,12 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           className={`absolute top-2 right-2 sm:top-4 sm:right-4 p-2 sm:p-2.5 rounded-full transition-all shadow-md z-10 ${isWishlisted ? 'bg-red-50 text-red-500' : 'bg-white text-gray-400 hover:bg-red-50 hover:text-red-500'} ${wishlistBusy ? 'opacity-60' : ''}`}
           title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
         >
-          <Heart size={16} fill={isWishlisted ? 'currentColor' : 'none'} className="sm:w-[18px] sm:h-[18px]" />
+          <Heart size={16} fill={isWishlisted ? 'currentColor' : 'none'} className="sm:w-4.5 sm:h-4.5" />
         </button>
+        )}
       </div>
 
-      <div className="flex flex-col flex-grow px-1.5 pb-2">
+      <div className="flex flex-col grow px-1.5 pb-2">
         <h3 className="text-[12px] sm:text-lg font-black text-gray-950 leading-[1.1] tracking-tighter uppercase line-clamp-2 group-hover:text-emerald-500 transition-colors">
           {name}
         </h3>
@@ -245,7 +248,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           <div className="flex items-center justify-center gap-1 px-2 sm:px-4 py-1.5 sm:py-2 bg-emerald-50 text-emerald-600 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm border border-emerald-100/50 shrink-0">
             <span className="hidden xs:inline">View Details</span>
             <span className="xs:hidden">Details</span>
-            <ArrowUpRight size={11} className="sm:w-[14px] sm:h-[14px]" />
+            <ArrowUpRight size={11} className="sm:w-3.5 sm:h-3.5" />
           </div>
         </div>
       </div>
