@@ -28,7 +28,7 @@ export async function GET(req) {
         await dbConnect();
         if (!await verifyAdmin(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const quotes = await Quotation.find({}).sort({ createdAt: -1 });
+        const quotes = await Quotation.find({}).sort({ createdAt: -1 }).populate('assignedVendor', 'name email phone vendorCategory vendorStatus');
         return NextResponse.json({ success: true, quotes });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch quotes' }, { status: 500 });

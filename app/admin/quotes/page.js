@@ -189,8 +189,16 @@ export default function AdminQuotesPage() {
 
                                 <div className="space-y-8 border-l border-white/5 pl-12 flex flex-col justify-between">
                                     <div className="space-y-4">
-                                        <label className="text-[10px] font-black text-white/30 uppercase tracking-widest block">Assign Manufacturing Partner</label>
-                                        <select 
+                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-widest block">Assign Manufacturing Partner</label>
+                                            {quote.assignedVendor && typeof quote.assignedVendor === 'object' && (
+                                                <div className="mb-4 p-4 bg-white/3 rounded-2xl border border-white/5">
+                                                    <p className="text-sm font-black">{quote.assignedVendor.name} <span className="text-[10px] text-white/40">({quote.assignedVendor.vendorCategory || 'Vendor'})</span></p>
+                                                    <p className="text-[10px] font-bold text-white/30 flex items-center gap-2 mt-2"><Mail size={12} /> {quote.assignedVendor.email}</p>
+                                                    <p className="text-[10px] font-bold text-white/30 flex items-center gap-2"><Phone size={12} /> {quote.assignedVendor.phone}</p>
+                                                    <p className="text-[10px] font-bold text-white/30 mt-2">Status: <span className="font-black">{quote.assignedVendor.vendorStatus}</span></p>
+                                                </div>
+                                            )}
+                                            <select 
                                             className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-xs font-black italic outline-none focus:border-emerald-500 appearance-none"
                                             value={quote.assignedVendor || ""}
                                             onChange={(e) => updateQuote(quote._id, { assignedVendor: e.target.value, status: 'allotted' })}
