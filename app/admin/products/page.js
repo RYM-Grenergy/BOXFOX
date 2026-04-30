@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Plus,
     Search,
@@ -15,9 +15,104 @@ import {
     Copy,
     Download,
     Star,
-    FileText
+    FileText,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+// Memoized ProductRow component to prevent unnecessary re-renders
+const ProductRow = React.memo(({ product, onEdit, onDelete, onDuplicate, onNormalizeSku, onToggleFeatured, formatDimensions }) => (
+    <tr className="hover:bg-gray-50/50 transition-colors group">
+        <td className="px-8 py-5">
+            <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
+                    <img src={product.img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                </div>
+                <div>
+                    <div className="flex items-center gap-2">
+                        <p className="text-sm font-black text-gray-950 line-clamp-1">{product.name}</p>
+                        {product.badge && (
+                            <span className="px-1.5 py-0.5 bg-accent/10 text-accent rounded text-[8px] font-black uppercase tracking-tighter">
+                                {product.badge}
+                            </span>
+                        )}
+                    </div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">ID: {product.id}</p>
+                    <div className="flex gap-2 mt-1">
+                        {product.patternImg && (
+                            <span title="Internal Pattern Attached" className="flex items-center gap-1 text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                                <FileText size={10} /> Pattern
+                            </span>
+                        )}
+                        {product.dielineImg && (
+                            <span title="Dieline Attached" className="flex items-center gap-1 text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                                <Download size={10} /> Dieline
+                            </span>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </td>
+        <td className="px-8 py-5">
+            <span className="text-[11px] font-black text-gray-950 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm whitespace-nowrap block w-fit">
+                {product.sku || 'PENDING'}
+            </span>
+        </td>
+        <td className="px-8 py-5">
+            <div className="flex flex-col gap-1">
+                <span className="px-3 py-1 bg-gray-100 text-gray-500 rounded-lg text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">
+                    {product.category}
+                </span>
+                {product.pacdoraId && (
+                    <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-lg text-[8px] font-black uppercase tracking-widest text-center">
+                        3D READY
+                    </span>
+                )}
+            </div>
+        </td>
+        <td className="px-8 py-5 text-sm font-black text-gray-950">{product.price}</td>
+        <td className="px-8 py-5">
+            {(() => {
+                const d = formatDimensions(product.dimensions);
+                if (!d) return <span className="text-[10px] text-gray-300 font-bold">—</span>;
+                return (
+                    <div className="flex flex-col gap-0.5">
+                        <span className="text-[10px] font-bold text-gray-700 whitespace-nowrap">{d.inch}</span>
+                        <span className="text-[10px] font-bold text-gray-400 whitespace-nowrap">{d.cm}</span>
+                        <span className="text-[10px] font-bold text-gray-300 whitespace-nowrap">{d.mm}</span>
+                    </div>
+                );
+            })()}
+        </td>
+        <td className="px-8 py-5">
+            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${product.isActive === false ? 'bg-gray-100 text-gray-400' : (product.outOfStock ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600')
+                }`}>
+                {product.isActive === false ? 'Inactive' : (product.outOfStock ? 'Out of Stock' : 'Active')}
+            </span>
+        </td>
+        <td className="px-8 py-5">
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => onEdit(product)} title="Edit" className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><Edit size={16} /></button>
+                {product.patternImg && (
+                    <button onClick={() => window.open(product.patternImg, '_blank')} title="View Internal Pattern" className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all">
+                        <FileText size={16} />
+                    </button>
+                )}
+                {product.dielineImg && (
+                    <button onClick={() => window.open(product.dielineImg, '_blank')} title="View Dieline" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                        <Download size={16} />
+                    </button>
+                )}
+                <button onClick={() => onDuplicate(product)} title="Duplicate" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all"><Copy size={16} /></button>
+                <button onClick={() => onNormalizeSku(product)} title="Normalize SKU" className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><RefreshCw size={16} /></button>
+                <button onClick={() => onDelete(product._id || product.id)} title="Delete" className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
+            </div>
+        </td>
+    </tr>
+));
+
+ProductRow.displayName = 'ProductRow';
 
 export default function ProductsManager() {
     const [products, setProducts] = useState([]);
@@ -30,6 +125,8 @@ export default function ProductsManager() {
     const [successMsg, setSuccessMsg] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 20;
 
     const [formData, setFormData] = useState({
         name: '',
@@ -66,11 +163,13 @@ export default function ProductsManager() {
 
     const fetchProducts = () => {
         setLoading(true);
+        // Load all products at once (backend can paginate if needed for future)
         fetch('/api/products?admin=true&all=true')
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
                     setProducts(data);
+                    setCurrentPage(1); // Reset to first page on refresh
                 } else {
                     console.error("Admin: Failed to fetch products", data);
                     setProducts([]);
@@ -581,18 +680,27 @@ export default function ProductsManager() {
         };
     };
 
-    const flatProducts = products.filter(p => {
-        const matchesSearch = searchQuery.trim() === '' ||
-            (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            (p.categories && p.categories.some(c => c.toLowerCase().includes(searchQuery.toLowerCase())));
-        const matchesCategory = selectedCategory === 'All'
-            ? true
-            : selectedCategory === 'Pending SKU'
-                ? (!p.sku || !p.sku.startsWith('BFX-'))
-                : p.category === selectedCategory;
-        return matchesSearch && matchesCategory;
-    });
+    // Memoized filtered products with pagination to prevent unnecessary recalculations
+    const { filteredProducts, totalPages, totalFiltered } = useMemo(() => {
+        const filtered = products.filter(p => {
+            const matchesSearch = searchQuery.trim() === '' ||
+                (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (p.categories && p.categories.some(c => c.toLowerCase().includes(searchQuery.toLowerCase())));
+            const matchesCategory = selectedCategory === 'All'
+                ? true
+                : selectedCategory === 'Pending SKU'
+                    ? (!p.sku || !p.sku.startsWith('BFX-'))
+                    : p.category === selectedCategory;
+            return matchesSearch && matchesCategory;
+        });
+
+        const pages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+        const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+        const paginated = filtered.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+        
+        return { filteredProducts: paginated, totalPages: pages, totalFiltered: filtered.length };
+    }, [products, searchQuery, selectedCategory, currentPage]);
 
     return (
         <div className="space-y-8">
@@ -602,7 +710,7 @@ export default function ProductsManager() {
                     <h1 className="text-4xl font-black text-gray-950 tracking-tighter flex items-center gap-4">
                         Product Inventory
                         <span className="text-sm bg-gray-100 px-4 py-2 rounded-2xl text-gray-400 font-black">
-                            {flatProducts.length}
+                            {totalFiltered}
                         </span>
                     </h1>
                     <p className="text-gray-400 font-medium tracking-tight">Manage your real-time packaging catalog synced with the backend.</p>
@@ -674,7 +782,7 @@ export default function ProductsManager() {
                             <div className="w-12 h-12 bg-gray-100 rounded-full mx-auto" />
                             <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Loading Live Inventory...</p>
                         </div>
-                    ) : flatProducts.length === 0 ? (
+                    ) : filteredProducts.length === 0 ? (
                         <div className="p-20 text-center space-y-6">
                             <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-300">
                                 <Plus size={40} />
@@ -698,100 +806,54 @@ export default function ProductsManager() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-50">
-                                {flatProducts.map((product) => (
-                                    <tr key={product.id} className="hover:bg-gray-50/50 transition-colors group">
-                                        <td className="px-8 py-5">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
-                                                    <img src={product.img} alt="" className="w-full h-full object-cover" />
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="text-sm font-black text-gray-950 line-clamp-1">{product.name}</p>
-                                                        {product.badge && (
-                                                            <span className="px-1.5 py-0.5 bg-accent/10 text-accent rounded text-[8px] font-black uppercase tracking-tighter">
-                                                                {product.badge}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase">ID: {product.id}</p>
-                                                    <div className="flex gap-2 mt-1">
-                                                        {product.patternImg && (
-                                                            <span title="Internal Pattern Attached" className="flex items-center gap-1 text-[8px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
-                                                                <FileText size={10} /> Pattern
-                                                            </span>
-                                                        )}
-                                                        {product.dielineImg && (
-                                                            <span title="Dieline Attached" className="flex items-center gap-1 text-[8px] font-black text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
-                                                                <Download size={10} /> Dieline
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-5">
-                                            <span className="text-[11px] font-black text-gray-950 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm whitespace-nowrap block w-fit">
-                                                {product.sku || 'PENDING'}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-5">
-                                            <div className="flex flex-col gap-1">
-                                                <span className="px-3 py-1 bg-gray-100 text-gray-500 rounded-lg text-[10px] font-bold uppercase tracking-widest whitespace-nowrap">
-                                                    {product.category}
-                                                </span>
-                                                {product.pacdoraId && (
-                                                    <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 rounded-lg text-[8px] font-black uppercase tracking-widest text-center">
-                                                        3D READY
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-5 text-sm font-black text-gray-950">{product.price}</td>
-                                        <td className="px-8 py-5">
-                                            {(() => {
-                                                const d = formatDimensions(product.dimensions);
-                                                if (!d) return <span className="text-[10px] text-gray-300 font-bold">—</span>;
-                                                return (
-                                                    <div className="flex flex-col gap-0.5">
-                                                        <span className="text-[10px] font-bold text-gray-700 whitespace-nowrap">{d.inch}</span>
-                                                        <span className="text-[10px] font-bold text-gray-400 whitespace-nowrap">{d.cm}</span>
-                                                        <span className="text-[10px] font-bold text-gray-300 whitespace-nowrap">{d.mm}</span>
-                                                    </div>
-                                                );
-                                            })()}
-                                        </td>
-                                        <td className="px-8 py-5">
-                                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${product.isActive === false ? 'bg-gray-100 text-gray-400' : (product.outOfStock ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600')
-                                                }`}>
-                                                {product.isActive === false ? 'Inactive' : (product.outOfStock ? 'Out of Stock' : 'Active')}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-5">
-                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => handleEdit(product)} title="Edit" className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><Edit size={16} /></button>
-                                                {product.patternImg && (
-                                                    <button onClick={() => window.open(product.patternImg, '_blank')} title="View Internal Pattern" className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all">
-                                                        <FileText size={16} />
-                                                    </button>
-                                                )}
-                                                {product.dielineImg && (
-                                                    <button onClick={() => window.open(product.dielineImg, '_blank')} title="View Dieline" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
-                                                        <Download size={16} />
-                                                    </button>
-                                                )}
-                                                {/* per-product Excel removed — use Download All Products (Excel) in header */}
-                                                <button onClick={() => handleDuplicate(product)} title="Duplicate" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all"><Copy size={16} /></button>
-                                                <button onClick={() => handleNormalizeSku(product)} title="Normalize SKU" className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><RefreshCw size={16} /></button>
-                                                <button onClick={() => handleDelete(product._id || product.id)} title="Delete" className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                {filteredProducts.map((product) => (
+                                    <ProductRow
+                                        key={product._id || product.id}
+                                        product={product}
+                                        onEdit={handleEdit}
+                                        onDelete={handleDelete}
+                                        onDuplicate={handleDuplicate}
+                                        onNormalizeSku={handleNormalizeSku}
+                                        onToggleFeatured={handleToggleFeatured}
+                                        formatDimensions={formatDimensions}
+                                    />
                                 ))}
                             </tbody>
                         </table>
                     )}
                 </div>
+                
+                {/* Pagination Controls */}
+                {!loading && filteredProducts.length > 0 && totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-4 p-6 border-t border-gray-100 bg-gray-50/50">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-950 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            title="Previous page"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-gray-700">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                                ({(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, totalFiltered)} of {totalFiltered})
+                            </span>
+                        </div>
+                        
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-950 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            title="Next page"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Modal */}
