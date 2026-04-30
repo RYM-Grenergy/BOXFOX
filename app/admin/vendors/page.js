@@ -38,11 +38,11 @@ export default function AdminVendorsPage() {
     return (
         <div className="min-h-screen bg-[#080d14] text-white selection:bg-emerald-500/30">
             <Navbar />
-            <div className="max-w-[1400px] mx-auto px-6 py-32">
+            <div className="max-w-350 mx-auto px-6 py-32">
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16">
                     <div>
                         <p className="text-emerald-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 italic">Manufacturing Partners</p>
-                        <h1 className="text-6xl font-black uppercase tracking-tighter italic">Vendor <br /> Directory</h1>
+                        <h1 className="text-6xl text-white font-black uppercase tracking-tighter italic">Vendor <br /> Directory</h1>
                     </div>
                     <button onClick={loadData} className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3">
                         <RefreshCw className={refreshing ? 'animate-spin' : ''} size={16} /> Refresh Feed
@@ -58,12 +58,12 @@ export default function AdminVendorsPage() {
                                         <div className="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-white font-black italic">V</div>
                                         <div>
                                             <p className="text-sm font-black uppercase italic tracking-tight">{vendor.name}</p>
-                                            <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">{vendor.businessName}</p>
+                                            <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">{vendor.businessName}</p>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <p className="text-[10px] font-black text-white/30 uppercase tracking-widest flex items-center gap-2"><Mail size={12} /> {vendor.email}</p>
-                                        <p className="text-[10px] font-black text-white/30 uppercase tracking-widest flex items-center gap-2"><Phone size={12} /> {vendor.phone}</p>
+                                        <p className="text-[10px] font-black text-white/70 uppercase tracking-widest flex items-center gap-2"><Mail size={12} /> {vendor.email}</p>
+                                        <p className="text-[10px] font-black text-white/70 uppercase tracking-widest flex items-center gap-2"><Phone size={12} /> {vendor.phone}</p>
                                     </div>
                                 </div>
 

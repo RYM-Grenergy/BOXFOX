@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
@@ -105,7 +106,7 @@ export default function GiftsPage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="max-w-3xl mx-auto text-gray-500 text-base lg:text-xl font-medium leading-relaxed"
           >
-            Premium packaging solutions engineered for the world's most discerning brands. 
+            Premium packaging solutions engineered for the world&apos;s most discerning brands.
             Discover boxes that protect, impress, and endure.
           </motion.p>
         </div>
@@ -129,7 +130,7 @@ export default function GiftsPage() {
                     <p className="text-gray-500 text-lg font-medium leading-relaxed max-w-md">Our gifting concierge will prepare a tailored proposal for your brand requirements. Expect a response within 4 working hours.</p>
                     <div className="pt-12 border-t border-gray-200">
                         <div className="flex items-center gap-6">
-                            <div className="w-16 h-16 rounded-[2rem] bg-emerald-500 flex items-center justify-center text-white shadow-xl shadow-emerald-500/20 italic font-black text-2xl">B</div>
+                            <div className="w-16 h-16 rounded-4xl bg-emerald-500 flex items-center justify-center text-white shadow-xl shadow-emerald-500/20 italic font-black text-2xl">B</div>
                             <div>
                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Direct Assistance</p>
                                 <p className="text-lg font-black uppercase tracking-tight text-gray-950">concierge@boxfox.in</p>
@@ -150,8 +151,8 @@ export default function GiftsPage() {
 
 function QuoteForm() {
     const [formData, setFormData] = useState({
-        name: "", email: "", phone: "", company: "", 
-        items: [{ productName: "", quantity: "" }]
+      name: "", email: "", phone: "", whatsapp: "", company: "", message: "",
+      items: [{ productName: "", quantity: "" }]
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -160,11 +161,11 @@ function QuoteForm() {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const res = await fetch("/api/quotes", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user: formData, items: formData.items })
-            });
+          const res = await fetch("/api/quotes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user: formData, items: formData.items, message: formData.message })
+          });
             if (res.ok) setSuccess(true);
         } catch (err) { console.error(err); }
         finally { setIsSubmitting(false); }
@@ -203,8 +204,13 @@ function QuoteForm() {
                     </div>
                 ))}
             </div>
+            <div className="space-y-4">
+              <input type="tel" placeholder="WhatsApp Number (with country code, e.g. 9198xxxx...)" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} required />
+              <textarea placeholder="Optional message / brief requirement" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} rows={3} />
+            </div>
+
             <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-gray-950 text-white rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-emerald-500 transition-all shadow-xl active:scale-95 disabled:opacity-70">
-                {isSubmitting ? "Sending..." : "Submit Inquiry"}
+              {isSubmitting ? "Sending..." : "Submit Inquiry"}
             </button>
         </form>
     );
@@ -226,14 +232,14 @@ function GiftSection({ gift, index }) {
             transition={{ duration: 0.8, ease: "circOut" }}
             className="w-full lg:w-1/2"
           >
-            <div className={`relative aspect-[4/3] sm:aspect-square lg:aspect-[4/5] rounded-[3rem] lg:rounded-[5rem] overflow-hidden bg-gradient-to-br ${gift.color} flex items-center justify-center p-8 sm:p-16 group shadow-2xl shadow-gray-200/50`}>
+            <div className={`relative aspect-4/3 sm:aspect-square lg:aspect-4/5 rounded-3xl lg:rounded-5xl overflow-hidden bg-linear-to-br ${gift.color} flex items-center justify-center p-8 sm:p-16 group shadow-2xl shadow-gray-200/50`}>
               <img 
                 src={gift.image} 
                 alt={gift.name} 
                 className="w-full h-full object-contain drop-shadow-[0_35px_60px_rgba(0,0,0,0.3)] group-hover:scale-110 transition-transform duration-1000 ease-out"
               />
               {/* Floating Icon Decoration */}
-              <div className="absolute top-8 right-8 lg:top-12 lg:right-12 bg-white/90 backdrop-blur-xl p-5 lg:p-7 rounded-[2rem] shadow-xl border border-white/50 animate-float">
+              <div className="absolute top-8 right-8 lg:top-12 lg:right-12 bg-white/90 backdrop-blur-xl p-5 lg:p-7 rounded-4xl shadow-xl border border-white/50 animate-float">
                 {gift.icon}
               </div>
             </div>

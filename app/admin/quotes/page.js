@@ -78,6 +78,13 @@ export default function AdminQuotesPage() {
         }
     };
 
+    const openWhatsApp = (rawNumber, text) => {
+        if (!rawNumber) return;
+        const digits = String(rawNumber).replace(/[^0-9]/g, '');
+        const url = `https://wa.me/${digits}?text=${encodeURIComponent(text || '')}`;
+        window.open(url, '_blank');
+    };
+
     const sendMessage = async () => {
         if (!message.trim() || !selectedQuote) return;
         await fetch("/api/quotes/chat", {
@@ -155,7 +162,7 @@ export default function AdminQuotesPage() {
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16">
                     <div>
                         <p className="text-emerald-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 italic">Quotation Desk</p>
-                        <h1 className="text-6xl font-black uppercase tracking-tighter italic">Gifting Quotes</h1>
+                        <h1 className="text-6xl text-white font-black uppercase tracking-tighter italic">Gifting Quotes</h1>
                     </div>
                     <button onClick={loadData} className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3">
                         <RefreshCw className={refreshing ? 'animate-spin' : ''} size={16} /> Refresh Feed
@@ -176,18 +183,26 @@ export default function AdminQuotesPage() {
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <p className="text-[10px] font-black text-white/30 uppercase tracking-widest flex items-center gap-2"><Mail size={12} /> {quote.user?.email}</p>
-                                        <p className="text-[10px] font-black text-white/30 uppercase tracking-widest flex items-center gap-2"><Phone size={12} /> {quote.user?.phone}</p>
+                                            <p className="text-[10px] font-black text-white/70 uppercase tracking-widest flex items-center gap-2"><Mail size={12} /> {quote.user?.email}</p>
+                                        <p className="text-[10px] font-black text-white/70 uppercase tracking-widest flex items-center gap-2"><Phone size={12} /> {quote.user?.phone}</p>
                                     </div>
                                     <div className={`inline-flex items-center px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-[0.2em] ${statusClass(getAdminQuoteStatus(quote.status, quote.assignedVendor))}`}>
                                         {getAdminQuoteStatus(quote.status, quote.assignedVendor)}
                                     </div>
-                                    <button 
-                                        onClick={() => { setSelectedQuote(quote); setChatOpen(true); }}
-                                        className="w-full py-3 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <Mail size={14} /> Open User Chat {quote.messages?.length > 0 && `(${quote.messages.length})`}
-                                    </button>
+                                    <div className="flex flex-col gap-3">
+                                        <button 
+                                            onClick={() => { setSelectedQuote(quote); setChatOpen(true); }}
+                                            className="w-full py-3 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <Mail size={14} /> Open User Chat {quote.messages?.length > 0 && `(${quote.messages.length})`}
+                                        </button>
+                                        <button
+                                            onClick={() => openWhatsApp(quote.user?.whatsapp || quote.user?.phone, `Hello ${quote.user?.name || ''}, regarding your BoxFox gift request (Ref: ${quote._id.slice(-6)}).`)}
+                                            className="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <Phone size={14} /> Contact via WhatsApp
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-6 border-l border-white/5 pl-12">
@@ -208,8 +223,13 @@ export default function AdminQuotesPage() {
                                             {quote.assignedVendor && typeof quote.assignedVendor === 'object' && (
                                                 <div className="mb-4 p-4 bg-white/3 rounded-2xl border border-white/5">
                                                     <p className="text-sm font-black">{quote.assignedVendor.name} <span className="text-[10px] text-white/40">({quote.assignedVendor.vendorCategory || 'Vendor'})</span></p>
-                                                    <p className="text-[10px] font-bold text-white/30 flex items-center gap-2 mt-2"><Mail size={12} /> {quote.assignedVendor.email}</p>
-                                                    <p className="text-[10px] font-bold text-white/30 flex items-center gap-2"><Phone size={12} /> {quote.assignedVendor.phone}</p>
+                                                            <p className="text-[10px] font-bold text-white/30 flex items-center gap-2 mt-2"><Mail size={12} /> {quote.assignedVendor.email}</p>
+                                                            <p className="text-[10px] font-bold text-white/30 flex items-center gap-2"><Phone size={12} /> {quote.assignedVendor.phone}</p>
+                                                            <div className="mt-3">
+                                                                <button onClick={() => openWhatsApp(quote.assignedVendor?.phone, `Hello ${quote.assignedVendor?.name || ''}, a new gift request (Ref: ${quote._id.slice(-6)}) has been assigned to you. Please respond to confirm.`)} className="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+                                                                    <Phone size={12} /> Contact Vendor via WhatsApp
+                                                                </button>
+                                                            </div>
                                                     <p className="text-[10px] font-bold text-white/30 mt-2">Status: <span className="font-black">{quote.assignedVendor.vendorStatus}</span></p>
                                                 </div>
                                             )}
@@ -251,7 +271,7 @@ export default function AdminQuotesPage() {
                                                     type="number"
                                                     className="w-full pl-12 pr-6 py-4 bg-white/6 border border-white/10 rounded-2xl text-lg font-black italic outline-none focus:border-emerald-500"
                                                     defaultValue={quote.totalAmount}
-                                                    onBlur={(e) => updateQuote(quote._1d, { amount: e.target.value })}
+                                                    onBlur={(e) => updateQuote(quote._id, { amount: e.target.value })}
                                                 />
                                             </div>
                                         </div>

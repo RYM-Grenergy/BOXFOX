@@ -58,7 +58,7 @@ export default function VendorDashboard() {
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16">
                     <div>
                         <p className="text-emerald-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 italic">Manufacturing Portal</p>
-                        <h1 className="text-6xl font-black uppercase tracking-tighter italic">Allocated <br /> Projects</h1>
+                        <h1 className="text-6xl text-white font-black uppercase tracking-tighter italic">Allocated <br /> Projects</h1>
                     </div>
                     <button onClick={loadData} className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3">
                         <RefreshCw className={refreshing ? 'animate-spin' : ''} size={16} /> Refresh Feed
@@ -75,7 +75,7 @@ export default function VendorDashboard() {
                                         <div className="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-white font-black italic">O</div>
                                         <div>
                                             <p className="text-sm font-black uppercase italic tracking-tight">Order #{quote._id.slice(-6).toUpperCase()}</p>
-                                            <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Workflow: {getVendorQuoteStatus(quote.status)}</p>
+                                            <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">Workflow: {getVendorQuoteStatus(quote.status)}</p>
                                         </div>
                                     </div>
                                     <div className={`inline-flex items-center px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-[0.2em] ${statusClass(getVendorQuoteStatus(quote.status))}`}>
@@ -104,9 +104,9 @@ export default function VendorDashboard() {
                                         <label className="text-[10px] font-black text-white/30 uppercase tracking-widest block">Settlement Amount</label>
                                         <div className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl">
                                             <p className="text-4xl font-black italic text-emerald-500 flex items-center gap-2">
-                                                <DollarSign size={32} /> {quote.vendorAmount || 0}
+                                                ₹ {quote.vendorAmount || 0}
                                             </p>
-                                            <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em] mt-2">Payout for this fulfillment</p>
+                                            <p className="text-[10px] font-bold text-white/70 uppercase tracking-[0.2em] mt-2">Payout for this fulfillment</p>
                                         </div>
                                     </div>
 
