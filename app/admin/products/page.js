@@ -404,6 +404,34 @@ export default function ProductsManager() {
         XLSX.writeFile(wb, fileName);
     };
 
+    const handleDownloadAll = async () => {
+        try {
+            const XLSX = await import('xlsx');
+            const rows = products.map(p => ({
+                Name: p.name || '',
+                SKU: p.sku || '',
+                Category: p.category || '',
+                Price: p.price || '',
+                MinPrice: p.minPrice || '',
+                MaxPrice: p.maxPrice || '',
+                ID: p.id || p._id || '',
+                Active: p.isActive === false ? 'No' : 'Yes',
+                Featured: p.isFeatured ? 'Yes' : 'No',
+                Dimensions_in: p.dimensions ? `${p.dimensions.length || ''} × ${p.dimensions.width || ''} × ${p.dimensions.height || ''}` : '',
+                Dimensions_mm: p.dimensions ? `${Math.round((p.dimensions.length || 0) * 25.4)} × ${Math.round((p.dimensions.width || 0) * 25.4)} × ${Math.round((p.dimensions.height || 0) * 25.4)}` : '',
+                Images: Array.isArray(p.images) ? p.images.length : (typeof p.images === 'string' ? p.images.split(',').filter(Boolean).length : 0)
+            }));
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, 'Products');
+            XLSX.writeFile(wb, 'BoxFox_All_Products.xlsx');
+        } catch (err) {
+            console.error('Download all products failed:', err);
+            alert('Failed to generate Excel for all products');
+        }
+    };
+
 
     const handleEdit = (product) => {
         setFormData({
@@ -440,9 +468,24 @@ export default function ProductsManager() {
     };
 
     const handleDuplicate = (product) => {
+        // Normalize SKU when creating a duplicate: remove repeated -copy sequences and ensure uniqueness
+        const existingSkus = products.map(p => p.sku).filter(Boolean);
+        const normalizeBaseSku = (sku) => {
+            if (!sku) return '';
+            // strip any trailing -copy or -copy-<num> sequences
+            return sku.replace(/(-copy(?:-\d+)?)+$/i, '');
+        };
+        const baseSku = normalizeBaseSku(product.sku || '');
+        let candidate = baseSku ? `${baseSku}-copy` : '';
+        let counter = 1;
+        while (candidate && existingSkus.includes(candidate)) {
+            counter += 1;
+            candidate = `${baseSku}-copy-${counter}`;
+        }
+
         setFormData({
             name: product.name + " (Copy)",
-            sku: (product.sku ? product.sku + "-copy" : ''),
+            sku: candidate,
             patternImg: product.patternImg || '',
             patternFormat: product.patternFormat || '',
             dielineImg: product.dielineImg || '',
@@ -536,6 +579,13 @@ export default function ProductsManager() {
                         className="p-4 bg-gray-100 text-gray-400 rounded-2xl hover:text-gray-950 transition-all active:rotate-180"
                     >
                         <RefreshCw size={20} />
+                    </button>
+                    <button
+                        onClick={() => handleDownloadAll()}
+                        className="p-4 bg-white border border-gray-200 text-gray-700 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all flex items-center gap-2"
+                        title="Download All Products (Excel)"
+                    >
+                        <Download size={16} /> All Excel
                     </button>
                     <button
                         onClick={() => setIsModalOpen(true)}
@@ -696,13 +746,7 @@ export default function ProductsManager() {
                                                         <Download size={16} />
                                                     </button>
                                                 )}
-                                                <button
-                                                    onClick={() => handleDownloadExcel(product)}
-                                                    title="Download Excel"
-                                                    className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all flex items-center gap-2"
-                                                >
-                                                    <Download size={15} /> Excel
-                                                </button>
+                                                {/* per-product Excel removed — use Download All Products (Excel) in header */}
                                                 <button onClick={() => handleDuplicate(product)} title="Duplicate" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all"><Copy size={16} /></button>
                                                 <button onClick={() => handleDelete(product._id || product.id)} title="Delete" className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
                                             </div>
