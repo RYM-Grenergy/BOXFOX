@@ -131,7 +131,7 @@ export default function AdminLayout({ children }) {
                         </button>
                     </div>
 
-                    <nav className="flex-1 px-4 py-6 space-y-2">
+                    <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto pr-2">
                         {menuItems.map((item) => (
                             <Link
                                 key={item.label}
