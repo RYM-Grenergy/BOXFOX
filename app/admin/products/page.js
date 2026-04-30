@@ -522,6 +522,33 @@ export default function ProductsManager() {
         setIsModalOpen(true);
     };
 
+    const normalizeSkuString = (sku) => {
+        if (!sku) return '';
+        return sku.replace(/(-copy(?:-\d+)?)+$/i, '');
+    };
+
+    const handleNormalizeSku = async (product) => {
+        if (!product || !product._id) return;
+        const clean = normalizeSkuString(product.sku || '');
+        if (!clean || clean === product.sku) {
+            alert('SKU is already normalized');
+            return;
+        }
+        try {
+            const res = await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...product, sku: clean })
+            });
+            if (!res.ok) throw new Error('Failed to update');
+            fetchProducts();
+            alert(`SKU updated to ${clean}`);
+        } catch (err) {
+            console.error('Normalize SKU failed', err);
+            alert('Failed to normalize SKU');
+        }
+    };
+
     const handleToggleFeatured = async (product) => {
         try {
             const res = await fetch('/api/products', {
@@ -755,6 +782,7 @@ export default function ProductsManager() {
                                                 )}
                                                 {/* per-product Excel removed — use Download All Products (Excel) in header */}
                                                 <button onClick={() => handleDuplicate(product)} title="Duplicate" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all"><Copy size={16} /></button>
+                                                <button onClick={() => handleNormalizeSku(product)} title="Normalize SKU" className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><RefreshCw size={16} /></button>
                                                 <button onClick={() => handleDelete(product._id || product.id)} title="Delete" className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
                                             </div>
                                         </td>
