@@ -35,6 +35,10 @@ const productSchema = new mongoose.Schema({
         height: Number,
         unit: { type: String, default: 'inch' }
     },
+    // Optional explicit tiered prices provided by admin
+    priceAt1: { type: Number },
+    priceAt100: { type: Number },
+    priceAt500: { type: Number },
     attributes: [{
         name: String,
         options: [String]

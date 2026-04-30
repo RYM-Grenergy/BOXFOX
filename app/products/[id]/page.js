@@ -22,7 +22,7 @@ import { useCart } from '@/app/context/CartContext';
 import { useToast } from '@/app/context/ToastContext';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { calculateBoxPrice, MARKUP_TYPES } from '@/lib/boxfoxPricing';
+import { calculateBoxPrice, MARKUP_TYPES, unitPriceFromThreePoints } from '@/lib/boxfoxPricing';
 import { BOX_SPECIFICATIONS } from '@/lib/box-specifications';
 
 export default function ProductPage() {
@@ -106,17 +106,26 @@ export default function ProductPage() {
         s.unit === unit
     );
 
-    const pricingResult = calculateBoxPrice({
-        spec: selectedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
-        qty: parseInt(quantity) || 10,
-        gsm: 300,
-        material: 'SBS',
-        brand: 'Normal',
-        colours: 'Four Colour',
-        lamination: 'Plain',
-        markupType: 'Retail',
-        dieCutting: true
-    });
+    // If admin has supplied explicit tier prices (1,100,500), prefer that pricing curve
+    const tierUnitPrice = unitPriceFromThreePoints({
+        priceAt1: product.priceAt1,
+        priceAt100: product.priceAt100,
+        priceAt500: product.priceAt500
+    }, parseInt(quantity) || 10);
+
+    const pricingResult = tierUnitPrice
+        ? { finalPerUnit: tierUnitPrice, finalTotal: Math.ceil(tierUnitPrice * (parseInt(quantity) || 10)) }
+        : calculateBoxPrice({
+              spec: selectedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
+              qty: parseInt(quantity) || 10,
+              gsm: 300,
+              material: 'SBS',
+              brand: 'Normal',
+              colours: 'Four Colour',
+              lamination: 'Plain',
+              markupType: 'Retail',
+              dieCutting: true
+          });
 
     const unitPrice = pricingResult.finalPerUnit.toFixed(2);
     const totalPrice = pricingResult.finalTotal.toLocaleString('en-IN');

@@ -50,6 +50,9 @@ export default function ProductsManager() {
         short_description: '',
         brand: 'BoxFox',
         minOrderQuantity: 10,
+        priceAt1: '',
+        priceAt100: '',
+        priceAt500: '',
         tags: '',
         specifications: [],
         length: '',
@@ -463,6 +466,10 @@ export default function ProductsManager() {
             pacdoraId: product.pacdoraId || '',
             isActive: product.isActive !== false,
             isFeatured: product.isFeatured || false
+            ,
+            priceAt1: product.priceAt1 || '',
+            priceAt100: product.priceAt100 || '',
+            priceAt500: product.priceAt500 || ''
         });
         setIsModalOpen(true);
     };
@@ -1069,6 +1076,42 @@ export default function ProductsManager() {
                                                         <option value="cm">CM</option>
                                                         <option value="mm">MM</option>
                                                     </select>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-3 gap-6">
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Unit Price @1</label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        value={formData.priceAt1}
+                                                        onChange={e => setFormData({ ...formData, priceAt1: e.target.value })}
+                                                        placeholder="e.g. 9"
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Unit Price @100</label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        value={formData.priceAt100}
+                                                        onChange={e => setFormData({ ...formData, priceAt100: e.target.value })}
+                                                        placeholder="e.g. 7"
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Unit Price @500</label>
+                                                    <input
+                                                        type="number"
+                                                        step="0.01"
+                                                        value={formData.priceAt500}
+                                                        onChange={e => setFormData({ ...formData, priceAt500: e.target.value })}
+                                                        placeholder="e.g. 5"
+                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
+                                                    />
                                                 </div>
                                             </div>
 
