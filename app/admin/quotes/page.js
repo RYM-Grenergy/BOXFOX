@@ -63,6 +63,21 @@ export default function AdminQuotesPage() {
         loadData();
     };
 
+    const finalizeQuote = async (quoteId) => {
+        try {
+            await fetch('/api/admin/quotes/finalize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ quoteId })
+            });
+            loadData();
+            alert('Quotation finalized and emailed to client');
+        } catch (err) {
+            console.error(err);
+            alert('Failed to finalize quotation');
+        }
+    };
+
     const sendMessage = async () => {
         if (!message.trim() || !selectedQuote) return;
         await fetch("/api/quotes/chat", {
@@ -229,24 +244,24 @@ export default function AdminQuotesPage() {
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-4">
-                                            <label className="text-[10px] font-black text-white/30 uppercase tracking-widest block">User Amount</label>
+                                            <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block">User Amount</label>
                                             <div className="relative">
-                                                <div className="absolute inset-y-0 left-6 flex items-center text-emerald-500"><DollarSign size={16} /></div>
+                                                <div className="absolute inset-y-0 left-6 flex items-center text-emerald-500">₹</div>
                                                 <input
                                                     type="number"
-                                                    className="w-full pl-14 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-lg font-black italic outline-none focus:border-emerald-500"
+                                                    className="w-full pl-12 pr-6 py-4 bg-white/6 border border-white/10 rounded-2xl text-lg font-black italic outline-none focus:border-emerald-500"
                                                     defaultValue={quote.totalAmount}
-                                                    onBlur={(e) => updateQuote(quote._id, { amount: e.target.value })}
+                                                    onBlur={(e) => updateQuote(quote._1d, { amount: e.target.value })}
                                                 />
                                             </div>
                                         </div>
                                         <div className="space-y-4">
-                                            <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest block">Vendor Payout</label>
+                                            <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block">Vendor Payout</label>
                                             <div className="relative">
-                                                <div className="absolute inset-y-0 left-6 flex items-center text-emerald-500"><DollarSign size={16} /></div>
+                                                <div className="absolute inset-y-0 left-6 flex items-center text-emerald-500">₹</div>
                                                 <input
                                                     type="number"
-                                                    className="w-full pl-14 pr-6 py-4 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl text-lg font-black italic outline-none focus:border-emerald-500"
+                                                    className="w-full pl-12 pr-6 py-4 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl text-lg font-black italic outline-none focus:border-emerald-500"
                                                     defaultValue={quote.vendorAmount}
                                                     onBlur={(e) => updateQuote(quote._id, { vendorAmount: e.target.value })}
                                                 />
@@ -259,6 +274,11 @@ export default function AdminQuotesPage() {
                                             Vendor payout exceeds client amount
                                         </div>
                                     )}
+
+                                    <div className="flex gap-3 pt-4">
+                                        <button onClick={() => finalizeQuote(quote._id)} className="flex-1 py-3 bg-emerald-500 text-white rounded-xl text-[12px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all">Finalize & Email</button>
+                                        <button onClick={() => { setSelectedQuote(quote); setChatOpen(true); }} className="py-3 px-6 bg-white/5 border border-white/10 rounded-xl text-[12px] font-black uppercase tracking-widest hover:bg-white/10 transition-all">Open Chat</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
