@@ -340,23 +340,68 @@ export default function ProductsManager() {
         }
     };
 
-    const handleDownloadProductAssets = async (p) => {
-        const images = Array.isArray(p.images) ? p.images : (typeof p.images === 'string' ? p.images.split(',').map(i => i.trim()).filter(Boolean) : []);
+    const handleDownloadExcel = async (product) => {
+        const XLSX = await import('xlsx');
 
-        // Product Images
-        for (let i = 0; i < images.length; i++) {
-            await handleDownload(images[i], `${p.name.replace(/\s+/g, '_')}_p${i + 1}`);
-        }
+        const images = Array.isArray(product.images)
+            ? product.images
+            : (typeof product.images === 'string' ? product.images.split(',').map((item) => item.trim()).filter(Boolean) : []);
 
-        // Pattern
-        if (p.patternImg) {
-            await handleDownload(p.patternImg, `${p.name.replace(/\s+/g, '_')}_pattern`);
-        }
+        const overview = [{
+            Name: product.name || '',
+            SKU: product.sku || '',
+            Category: product.category || '',
+            Brand: product.brand || '',
+            Badge: product.badge || '',
+            Active: product.isActive === false ? 'No' : 'Yes',
+            Featured: product.isFeatured ? 'Yes' : 'No',
+            MinOrderQuantity: product.minOrderQuantity || '',
+            Price: product.price || '',
+            MinPrice: product.minPrice || '',
+            MaxPrice: product.maxPrice || '',
+            OriginalPrice: product.originalPrice || '',
+            Discount: product.discount || '',
+            Length: product.dimensions?.length || '',
+            Width: product.dimensions?.width || '',
+            Height: product.dimensions?.height || '',
+            Unit: product.dimensions?.unit || 'inch',
+            Pattern: product.patternImg ? 'Included' : 'Not attached',
+            Dieline: product.dielineImg ? 'Included' : 'Not attached',
+            Images: images.length,
+            Description: product.description || product.short_description || ''
+        }];
 
-        // Dieline
-        if (p.dielineImg) {
-            await handleDownload(p.dielineImg, `${p.name.replace(/\s+/g, '_')}_dieline`);
-        }
+        const pricingRows = [
+            {
+                Tier: 'List Price',
+                Value: product.price || ''
+            },
+            {
+                Tier: 'Minimum Price',
+                Value: product.minPrice || ''
+            },
+            {
+                Tier: 'Maximum Price',
+                Value: product.maxPrice || ''
+            },
+            {
+                Tier: 'Original Price',
+                Value: product.originalPrice || ''
+            },
+            {
+                Tier: 'Discount',
+                Value: product.discount || ''
+            }
+        ];
+
+        const wb = XLSX.utils.book_new();
+        const ws1 = XLSX.utils.json_to_sheet(overview);
+        const ws2 = XLSX.utils.json_to_sheet(pricingRows);
+        XLSX.utils.book_append_sheet(wb, ws1, 'Product Details');
+        XLSX.utils.book_append_sheet(wb, ws2, 'Pricing Tiers');
+
+        const fileName = `${(product.name || 'product').replace(/\s+/g, '_')}_BoxFox.xlsx`;
+        XLSX.writeFile(wb, fileName);
     };
 
 
@@ -651,7 +696,13 @@ export default function ProductsManager() {
                                                         <Download size={16} />
                                                     </button>
                                                 )}
-                                                <button onClick={() => handleDownloadProductAssets(product)} title="Download All Assets" className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Download size={16} /></button>
+                                                <button
+                                                    onClick={() => handleDownloadExcel(product)}
+                                                    title="Download Excel"
+                                                    className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all flex items-center gap-2"
+                                                >
+                                                    <Download size={15} /> Excel
+                                                </button>
                                                 <button onClick={() => handleDuplicate(product)} title="Duplicate" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all"><Copy size={16} /></button>
                                                 <button onClick={() => handleDelete(product._id || product.id)} title="Delete" className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
                                             </div>
@@ -667,7 +718,7 @@ export default function ProductsManager() {
             {/* Modal */}
             <AnimatePresence>
                 {isModalOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-end">
+                    <div className="fixed inset-0 z-100 flex items-center justify-end">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -777,7 +828,7 @@ export default function ProductsManager() {
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-[2rem] border border-gray-100">
+                                            <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-4xl border border-gray-100">
                                                 <div className="flex items-center justify-between">
                                                     <div>
                                                         <p className="text-sm font-black text-gray-950 uppercase tracking-tighter">Active Status</p>
@@ -1230,7 +1281,7 @@ export default function ProductsManager() {
                                             </button>
                                             <button
                                                 disabled={isSaving}
-                                                className="flex-[2] py-5 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-gray-200 disabled:opacity-50"
+                                                className="flex-2 py-5 bg-gray-950 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-gray-200 disabled:opacity-50"
                                             >
                                                 {isSaving ? 'Saving...' : 'Save Product'}
                                             </button>

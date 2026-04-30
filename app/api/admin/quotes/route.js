@@ -4,6 +4,8 @@ import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
 import Quotation from '@/models/Quotation';
 
+const VALID_STATUSES = ['requested', 'assigned', 'fulfilled', 'allotted', 'in-progress', 'completed', 'pending', 'cancelled'];
+
 function getAdminId(req) {
     const token = req.cookies.get('token')?.value;
     if (!token) return null;
@@ -43,10 +45,32 @@ export async function PATCH(req) {
 
         if (!quote) return NextResponse.json({ error: 'Quote not found' }, { status: 404 });
 
+        if (assignedVendor !== undefined && assignedVendor) {
+            const vendor = await User.findById(assignedVendor);
+            if (!vendor || vendor.role !== 'vendor' || vendor.vendorStatus !== 'approved') {
+                return NextResponse.json({ error: 'Only approved vendors can be assigned' }, { status: 400 });
+            }
+        }
+
+        const nextAmount = amount !== undefined ? Number(amount) : quote.totalAmount;
+        const nextVendorAmount = vendorAmount !== undefined ? Number(vendorAmount) : quote.vendorAmount;
+        if (Number.isFinite(nextAmount) && Number.isFinite(nextVendorAmount) && nextVendorAmount > nextAmount) {
+            return NextResponse.json({ error: 'Vendor payout cannot exceed client amount' }, { status: 400 });
+        }
+
         if (amount !== undefined) quote.totalAmount = amount;
-        if (status !== undefined) quote.status = status;
+        if (status !== undefined) {
+            if (!VALID_STATUSES.includes(status)) {
+                return NextResponse.json({ error: 'Invalid quote status' }, { status: 400 });
+            }
+            quote.status = status;
+        }
         if (assignedVendor !== undefined) quote.assignedVendor = assignedVendor;
         if (vendorAmount !== undefined) quote.vendorAmount = vendorAmount;
+
+        if (assignedVendor !== undefined && assignedVendor && status === undefined) {
+            quote.status = 'assigned';
+        }
 
         await quote.save();
         return NextResponse.json({ success: true, quote });

@@ -1,8 +1,24 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCw, Search, ChevronRight, CheckCircle2, User, Mail, Phone, Package, DollarSign, X } from "lucide-react";
 import Navbar from "../../components/Navbar";
+
+function getAdminQuoteStatus(status, assignedVendor) {
+    if (status === 'cancelled') return 'cancelled';
+    if (status === 'fulfilled' || status === 'completed') return 'fulfilled';
+    if (status === 'assigned' || status === 'allotted' || status === 'in-progress' || assignedVendor) return 'assigned';
+    return 'requested';
+}
+
+function statusClass(status) {
+    switch (status) {
+        case 'assigned': return 'bg-blue-500/15 text-blue-300 border-blue-500/20';
+        case 'fulfilled': return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/20';
+        case 'cancelled': return 'bg-red-500/15 text-red-300 border-red-500/20';
+        default: return 'bg-amber-500/15 text-amber-300 border-amber-500/20';
+    }
+}
 
 export default function AdminQuotesPage() {
     const [quotes, setQuotes] = useState([]);
@@ -13,7 +29,7 @@ export default function AdminQuotesPage() {
     const [chatOpen, setChatOpen] = useState(false);
     const [message, setMessage] = useState("");
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         setRefreshing(true);
         try {
             const [qRes, vRes] = await Promise.all([
@@ -24,21 +40,19 @@ export default function AdminQuotesPage() {
             const vData = await vRes.json();
             setQuotes(qData.quotes || []);
             setVendors(vData.vendors?.filter(v => v.vendorStatus === 'approved') || []);
-            
-            // Update selected quote if chat is open
-            if (selectedQuote) {
-                const updated = qData.quotes.find(q => q._id === selectedQuote._id);
-                if (updated) setSelectedQuote(updated);
-            }
+            setSelectedQuote((current) => {
+                if (!current) return current;
+                return qData.quotes.find(q => q._id === current._id) || current;
+            });
         } catch (err) {
             console.error(err);
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, []);
 
-    useEffect(() => { loadData(); }, []);
+    useEffect(() => { loadData(); }, [loadData]);
 
     const updateQuote = async (quoteId, updates) => {
         await fetch("/api/admin/quotes", {
@@ -71,7 +85,7 @@ export default function AdminQuotesPage() {
                 {chatOpen && selectedQuote && (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-xl flex items-center justify-center p-6"
+                        className="fixed inset-0 z-200 bg-black/80 backdrop-blur-xl flex items-center justify-center p-6"
                     >
                         <motion.div 
                             initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
@@ -90,7 +104,7 @@ export default function AdminQuotesPage() {
                             <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
                                 {selectedQuote.messages?.map((msg, i) => (
                                     <div key={i} className={`flex ${msg.sender === 'admin' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[80%] p-6 rounded-[2rem] ${msg.sender === 'admin' ? 'bg-emerald-500 text-white rounded-tr-none' : 'bg-white/5 text-white/80 rounded-tl-none border border-white/5'}`}>
+                                        <div className={`max-w-[80%] p-6 rounded-4xl ${msg.sender === 'admin' ? 'bg-emerald-500 text-white rounded-tr-none' : 'bg-white/5 text-white/80 rounded-tl-none border border-white/5'}`}>
                                             <p className="text-sm font-bold leading-relaxed">{msg.text}</p>
                                             <p className={`text-[8px] font-black uppercase tracking-widest mt-2 opacity-50`}>{msg.sender} • {new Date(msg.createdAt).toLocaleTimeString()}</p>
                                         </div>
@@ -122,7 +136,7 @@ export default function AdminQuotesPage() {
                 )}
             </AnimatePresence>
 
-            <div className="max-w-[1400px] mx-auto px-6 py-32">
+            <div className="max-w-350 mx-auto px-6 py-32">
                 <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16">
                     <div>
                         <p className="text-emerald-500 text-[10px] font-black uppercase tracking-[0.4em] mb-4 italic">Quotation Desk</p>
@@ -135,7 +149,8 @@ export default function AdminQuotesPage() {
 
                 <div className="grid gap-8">
                     {quotes.map((quote) => (
-                        <div key={quote._id} className="bg-white/5 border border-white/10 rounded-[3rem] p-8 lg:p-12 hover:bg-white/[0.07] transition-all">
+                        <div key={quote._id} className="bg-white/5 border border-white/10 rounded-[3rem] p-8 lg:p-12 hover:bg-white/[0.07] transition-all relative overflow-hidden">
+                            <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-emerald-400/40 to-transparent" />
                             <div className="grid lg:grid-cols-3 gap-12">
                                 <div className="space-y-6">
                                     <div className="flex items-center gap-3">
@@ -148,6 +163,9 @@ export default function AdminQuotesPage() {
                                     <div className="space-y-2">
                                         <p className="text-[10px] font-black text-white/30 uppercase tracking-widest flex items-center gap-2"><Mail size={12} /> {quote.user?.email}</p>
                                         <p className="text-[10px] font-black text-white/30 uppercase tracking-widest flex items-center gap-2"><Phone size={12} /> {quote.user?.phone}</p>
+                                    </div>
+                                    <div className={`inline-flex items-center px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-[0.2em] ${statusClass(getAdminQuoteStatus(quote.status, quote.assignedVendor))}`}>
+                                        {getAdminQuoteStatus(quote.status, quote.assignedVendor)}
                                     </div>
                                     <button 
                                         onClick={() => { setSelectedQuote(quote); setChatOpen(true); }}
@@ -184,6 +202,23 @@ export default function AdminQuotesPage() {
                                         </select>
                                     </div>
 
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black text-white/30 uppercase tracking-widest block">Workflow Status</label>
+                                        <select
+                                            className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-xs font-black italic outline-none focus:border-emerald-500 appearance-none"
+                                            value={quote.status}
+                                            onChange={(e) => updateQuote(quote._id, { status: e.target.value })}
+                                        >
+                                            <option value="requested">Requested</option>
+                                            <option value="assigned">Assigned</option>
+                                            <option value="fulfilled">Fulfilled</option>
+                                            <option value="allotted">Allotted</option>
+                                            <option value="in-progress">In Progress</option>
+                                            <option value="completed">Completed</option>
+                                            <option value="cancelled">Cancelled</option>
+                                        </select>
+                                    </div>
+
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-4">
                                             <label className="text-[10px] font-black text-white/30 uppercase tracking-widest block">User Amount</label>
@@ -210,6 +245,12 @@ export default function AdminQuotesPage() {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {Number(quote.vendorAmount || 0) > Number(quote.totalAmount || 0) && (
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-red-300 bg-red-500/10 border border-red-500/20 rounded-2xl px-4 py-3">
+                                            Vendor payout exceeds client amount
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

@@ -14,11 +14,12 @@ const QuotationSchema = new mongoose.Schema({
     }],
     totalAmount: { type: Number, default: 0 },
     vendorAmount: { type: Number, default: 0 },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     assignedVendor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     status: {
         type: String,
-        enum: ['pending', 'completed', 'cancelled', 'allotted'],
-        default: 'pending',
+        enum: ['requested', 'assigned', 'fulfilled', 'allotted', 'in-progress', 'completed', 'pending', 'cancelled'],
+        default: 'requested',
     },
     adminNotes: { type: String },
     messages: [{

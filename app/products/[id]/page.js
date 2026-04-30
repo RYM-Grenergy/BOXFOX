@@ -14,7 +14,8 @@ import {
     RefreshCw,
     Eye,
     EyeOff,
-    BadgeCheck
+    BadgeCheck,
+    Download
 } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
 import { useCart } from '@/app/context/CartContext';
@@ -119,6 +120,61 @@ export default function ProductPage() {
 
     const unitPrice = pricingResult.finalPerUnit.toFixed(2);
     const totalPrice = pricingResult.finalTotal.toLocaleString('en-IN');
+
+    // ─── EXCEL DOWNLOAD ───────────────────────────────────────────────────────
+    const handleDownloadExcel = async () => {
+        const XLSX = await import('xlsx');
+
+        // Generate pricing at multiple quantity tiers
+        const tiers = [10, 25, 50, 100, 250, 500, 1000];
+        const pricingRows = tiers.map((qty) => {
+            const result = calculateBoxPrice({
+                spec: selectedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
+                qty,
+                gsm: 300,
+                material: 'SBS',
+                brand: 'Normal',
+                colours: 'Four Colour',
+                lamination: 'Plain',
+                markupType: 'Retail',
+                dieCutting: true
+            });
+            return {
+                'Quantity (Units)': qty,
+                'Unit Price (₹)': parseFloat(result.finalPerUnit.toFixed(2)),
+                'Total Price (₹)': parseFloat(result.finalTotal.toFixed(2))
+            };
+        });
+
+        // Product overview sheet
+        const overview = [
+            { 'Field': 'Product Name', 'Value': product.name || '' },
+            { 'Field': 'Description', 'Value': product.description || '' },
+            { 'Field': 'Brand', 'Value': product.brand || 'BoxFox' },
+            { 'Field': 'Dimensions (L×W×H)', 'Value': `${product.dimensions?.length}×${product.dimensions?.width}×${product.dimensions?.height} ${product.dimensions?.unit || 'in'}` },
+            { 'Field': 'Minimum Order Qty', 'Value': Math.max(10, product.minOrderQuantity || 10) },
+            { 'Field': 'In Stock', 'Value': product.inStock ? 'Yes' : 'No' },
+            { 'Field': 'Material', 'Value': 'SBS 300 GSM' },
+            { 'Field': 'Print', 'Value': 'Four Colour Offset' },
+            { 'Field': 'Lamination', 'Value': 'Plain' },
+            { 'Field': 'SKU / ID', 'Value': product._id || product.id || '' },
+        ];
+
+        const wb = XLSX.utils.book_new();
+
+        // Sheet 1: Overview
+        const ws1 = XLSX.utils.json_to_sheet(overview);
+        ws1['!cols'] = [{ wch: 28 }, { wch: 50 }];
+        XLSX.utils.book_append_sheet(wb, ws1, 'Product Details');
+
+        // Sheet 2: Pricing Tiers
+        const ws2 = XLSX.utils.json_to_sheet(pricingRows);
+        ws2['!cols'] = [{ wch: 20 }, { wch: 20 }, { wch: 20 }];
+        XLSX.utils.book_append_sheet(wb, ws2, 'Pricing Tiers');
+
+        const fileName = `${(product.name || 'product').replace(/\s+/g, '_')}_BoxFox.xlsx`;
+        XLSX.writeFile(wb, fileName);
+    };
 
     return (
         <div className="min-h-screen bg-white">
@@ -265,6 +321,13 @@ export default function ProductPage() {
                                             className="w-full py-5 bg-gray-950 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-emerald-600 transition-all flex items-center justify-center gap-3 shadow-xl shadow-gray-200 group"
                                         >
                                             <ShoppingCart size={18} className="group-hover:scale-110 transition-transform" /> Add to Basket
+                                        </button>
+
+                                        <button
+                                            onClick={handleDownloadExcel}
+                                            className="w-full py-4 bg-white text-gray-700 border-2 border-gray-200 rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all flex items-center justify-center gap-3 group"
+                                        >
+                                            <Download size={16} className="group-hover:scale-110 transition-transform" /> Download Product Details (Excel)
                                         </button>
 
                                     </div>

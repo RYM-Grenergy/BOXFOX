@@ -24,8 +24,12 @@ export async function GET(req) {
         const user = await User.findById(userId);
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-        const quotes = await Quotation.find({ 
-            "user.email": { $regex: new RegExp(`^${user.email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } 
+        const escapedEmail = user.email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const quotes = await Quotation.find({
+            $or: [
+                { userId: user._id },
+                { "user.email": { $regex: new RegExp(`^${escapedEmail}$`, 'i') } }
+            ]
         }).sort({ createdAt: -1 });
 
         return NextResponse.json({ success: true, quotes });
@@ -39,6 +43,7 @@ export async function POST(req) {
         await dbConnect();
         const body = await req.json();
         const { user, items } = body;
+        const authenticatedUserId = getUserId(req);
 
         if (!user || !user.name || !user.email || !user.phone || !items || items.length === 0) {
             return NextResponse.json({ error: 'Incomplete information' }, { status: 400 });
@@ -47,7 +52,8 @@ export async function POST(req) {
         const quotation = await Quotation.create({
             user,
             items,
-            status: 'pending'
+            ...(authenticatedUserId ? { userId: authenticatedUserId } : {}),
+            status: 'requested'
         });
 
         return NextResponse.json({ success: true, message: 'Quote requested successfully', quotation }, { status: 201 });

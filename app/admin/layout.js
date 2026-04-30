@@ -25,6 +25,7 @@ import {
     File
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import PortalAIAssistant from '@/app/components/PortalAIAssistant';
 
 export default function AdminLayout({ children }) {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
@@ -189,6 +190,9 @@ export default function AdminLayout({ children }) {
                     {children}
                 </div>
             </main>
+
+            {/* Portal AI Assistant */}
+            <PortalAIAssistant />
         </div>
     );
 }

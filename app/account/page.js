@@ -8,6 +8,24 @@ import { useToast } from "@/app/context/ToastContext";
 import { useSearchParams } from "next/navigation";
 import { BoxFacePreview, MiniBox3D } from "@/app/components/BoxPreview3D";
 
+const QUOTE_PHASES = ['requested', 'assigned', 'fulfilled'];
+
+function getClientQuoteStatus(status, assignedVendor) {
+    if (status === 'cancelled') return 'cancelled';
+    if (status === 'fulfilled' || status === 'completed') return 'fulfilled';
+    if (status === 'assigned' || status === 'allotted' || status === 'in-progress' || assignedVendor) return 'assigned';
+    return 'requested';
+}
+
+function getQuoteBadgeClasses(status) {
+    switch (status) {
+        case 'assigned': return 'bg-blue-100 text-blue-700 border-blue-200';
+        case 'fulfilled': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+        case 'cancelled': return 'bg-red-100 text-red-700 border-red-200';
+        default: return 'bg-amber-100 text-amber-700 border-amber-200';
+    }
+}
+
 function AccountManagementContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -92,7 +110,7 @@ function AccountManagementContent() {
                     }
 
                     // Fetch quotes
-                    const quotesRes = await fetch("/api/quotes");
+                    const quotesRes = await fetch("/api/quotes", { cache: "no-store" });
                     if (quotesRes.ok) {
                         const quotesData = await quotesRes.json();
                         setQuotes(quotesData.quotes || []);
@@ -157,12 +175,13 @@ function AccountManagementContent() {
             if (res.ok) {
                 setMessage("");
                 // Refresh quotes to show new message
-                const quotesRes = await fetch("/api/quotes");
+                const quotesRes = await fetch("/api/quotes", { cache: "no-store" });
                 if (quotesRes.ok) {
                     const quotesData = await quotesRes.json();
-                    setQuotes(quotesData.quotes || []);
+                    const refreshedQuotes = quotesData.quotes || [];
+                    setQuotes(refreshedQuotes);
                     // Update selected quote view
-                    const updated = quotesData.quotes.find(q => q._id === selectedQuote._id);
+                    const updated = refreshedQuotes.find(q => q._id === selectedQuote._id);
                     if (updated) setSelectedQuote(updated);
                 }
             }
@@ -216,6 +235,17 @@ function AccountManagementContent() {
         } catch (e) { console.error('Failed to store reorder data:', e); }
         router.push(`/customize?${params.toString()}`);
     };
+
+    const visibleQuotes = quotes.filter((quote) => {
+        const term = quoteSearch.toLowerCase();
+        return [
+            quote._id,
+            quote.user?.name,
+            quote.user?.email,
+            quote.status,
+            quote.items?.map((item) => item.productName).join(' ')
+        ].filter(Boolean).some((value) => String(value).toLowerCase().includes(term));
+    });
 
     const FACES = ['front', 'back', 'top', 'bottom', 'left', 'right'];
 
@@ -978,6 +1008,18 @@ function AccountManagementContent() {
                                         </div>
                                     </div>
 
+                                        <div className="grid grid-cols-3 gap-3 mb-8">
+                                            {QUOTE_PHASES.map((phase) => {
+                                                const count = quotes.filter((quote) => getClientQuoteStatus(quote.status, quote.assignedVendor) === phase).length;
+                                                return (
+                                                    <div key={phase} className={`rounded-2xl border px-4 py-3 ${getQuoteBadgeClasses(phase)} bg-opacity-60`}>
+                                                        <p className="text-[10px] font-black uppercase tracking-[0.2em]">{phase}</p>
+                                                        <p className="text-lg font-black tracking-tight mt-1">{count}</p>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
                                     {quotes.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center py-20 text-center">
                                             <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-4">
@@ -987,12 +1029,15 @@ function AccountManagementContent() {
                                         </div>
                                     ) : (
                                         <div className="space-y-4">
-                                            {quotes
-                                                .filter(q => q._id.toLowerCase().includes(quoteSearch.toLowerCase()))
-                                                .map(quote => (
+                                            {visibleQuotes.length === 0 ? (
+                                                <div className="py-20 text-center italic text-gray-400 text-sm">No matches found for "{quoteSearch}"</div>
+                                            ) : visibleQuotes.map(quote => {
+                                                const clientStatus = getClientQuoteStatus(quote.status, quote.assignedVendor);
+                                                const statusLabel = clientStatus.charAt(0).toUpperCase() + clientStatus.slice(1);
+                                                return (
                                                 <div
                                                     key={quote._id}
-                                                    className="p-6 sm:p-8 rounded-[2rem] border border-gray-100 bg-gray-50/50 hover:bg-white transition-all relative overflow-hidden"
+                                                    className="p-6 sm:p-8 rounded-[2rem] border border-gray-100 bg-gradient-to-br from-white via-gray-50/60 to-emerald-50/30 hover:bg-white transition-all relative overflow-hidden"
                                                 >
                                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 relative z-10">
                                                         <div className="flex items-center gap-6">
@@ -1002,21 +1047,27 @@ function AccountManagementContent() {
                                                             <div>
                                                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Quote Reference</p>
                                                                 <h4 className="text-lg font-black text-gray-950 uppercase">#{quote._id.slice(-6).toUpperCase()}</h4>
-                                                                <div className="flex items-center gap-2 mt-1">
-                                                                    <div className={`w-1.5 h-1.5 rounded-full ${quote.status === 'pending' ? 'bg-orange-500' : 'bg-emerald-500'}`}></div>
-                                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status: {quote.status}</p>
+                                                                <div className="flex items-center gap-2 mt-2">
+                                                                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-[0.2em] ${getQuoteBadgeClasses(clientStatus)}`}>
+                                                                        {statusLabel}
+                                                                    </span>
+                                                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{quote.assignedVendor ? 'Partner assigned' : 'Awaiting assignment'}</p>
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex flex-wrap items-center gap-4">
-                                                            <div className="text-right">
-                                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Estimated Cost</p>
-                                                                <p className="text-xl font-black text-gray-950">₹{quote.totalAmount || "TBD"}</p>
+                                                        <div className="grid grid-cols-2 gap-4 min-w-[260px]">
+                                                            <div className="text-right bg-white rounded-2xl border border-gray-100 p-4">
+                                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Client Amount</p>
+                                                                <p className="text-xl font-black text-gray-950">₹{quote.totalAmount || 'TBD'}</p>
+                                                            </div>
+                                                            <div className="text-right bg-emerald-50 rounded-2xl border border-emerald-100 p-4">
+                                                                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-1">Vendor Payout</p>
+                                                                <p className="text-xl font-black text-emerald-700">₹{quote.vendorAmount || 'TBD'}</p>
                                                             </div>
                                                             <button 
+                                                                className="col-span-2 px-6 py-3 bg-gray-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all flex items-center justify-center gap-2"
                                                                 onClick={() => { setSelectedQuote(quote); setChatOpen(true); }}
-                                                                className="px-6 py-3 bg-gray-950 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all flex items-center gap-2"
                                                             >
                                                                 <Mail size={14} /> Discuss with Admin
                                                                 {quote.messages?.filter(m => m.sender === 'admin').length > 0 && (
@@ -1026,7 +1077,7 @@ function AccountManagementContent() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                            ))}
+                                            );})}
                                         </div>
                                     )}
                                 </motion.div>
