@@ -1,16 +1,18 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCard from "./ProductCard";
 
 const PAGE_SIZE = 20;
 
-// Memoized ProductCard wrapper to prevent unnecessary re-renders
-const MemoizedProductCard = React.memo(ProductCard);
+// Memoized ProductCard to prevent re-renders when parent updates
+const MemoProductCard = React.memo(ProductCard, (prev, next) => {
+  return prev.product === next.product;
+});
 
 export default function ProductSection({ searchQuery = "", category = "All", priceRange = "all", sortBy = "default" }) {
-  const [sections, setSections] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
 
@@ -27,24 +29,25 @@ export default function ProductSection({ searchQuery = "", category = "All", pri
     if (searchQuery) params.append('search', searchQuery);
     if (category && category !== "All") params.append('category', category);
 
-    // Efficient server-side fetching with scaling support
+    // Efficient server-side fetching
     fetch(url + (params.toString() ? `?${params.toString()}` : ''))
       .then(res => res.json())
       .then(data => {
+        // API returns array of products directly, not sections
         if (Array.isArray(data)) {
-          if (category !== "All") {
-            setSections(data.filter(s => s.category === category));
-          } else {
-            setSections(data);
-          }
+          setProducts(data);
+        } else if (data && Array.isArray(data.items)) {
+          // Fallback for section format
+          setProducts(data.items.flatMap(s => s.items || []));
         } else {
-          console.warn("ProductSection: API returned non-array data", data);
-          setSections([]);
+          console.warn("ProductSection: API returned unexpected format", data);
+          setProducts([]);
         }
         setLoading(false);
       })
       .catch(err => {
         console.error("Failed to fetch products:", err);
+        setProducts([]);
         setLoading(false);
       });
   }, [searchQuery, category]);
@@ -63,38 +66,37 @@ export default function ProductSection({ searchQuery = "", category = "All", pri
     );
   }
 
-  // Flatten all products from all sections into one array
-  let allProducts = sections.reduce((acc, section) => [...acc, ...section.items], []);
+  // Filter products by price range and sort — memoized to prevent recalculation
+  const { filteredProducts, totalPages, pageProducts } = useMemo(() => {
+    let filtered = [...products];
+    
+    if (priceRange !== "all") {
+      filtered = filtered.filter((p) => {
+        const price = parseFloat(p.price) || 0;
+        if (priceRange === "0-100")    return price < 100;
+        if (priceRange === "100-300")  return price >= 100 && price < 300;
+        if (priceRange === "300-500")  return price >= 300 && price < 500;
+        if (priceRange === "500-1000") return price >= 500 && price < 1000;
+        if (priceRange === "1000+")    return price >= 1000;
+        return true;
+      });
+    }
 
-  // Price range filter
-  if (priceRange !== "all") {
-    allProducts = allProducts.filter((p) => {
-      const price = parseFloat(p.price) || 0;
-      if (priceRange === "0-100")    return price < 100;
-      if (priceRange === "100-300")  return price >= 100 && price < 300;
-      if (priceRange === "300-500")  return price >= 300 && price < 500;
-      if (priceRange === "500-1000") return price >= 500 && price < 1000;
-      if (priceRange === "1000+")    return price >= 1000;
-      return true;
-    });
-  }
+    // Sort products
+    if (sortBy === "price-asc")  filtered.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+    if (sortBy === "price-desc") filtered.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+    if (sortBy === "name-asc")   filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    if (sortBy === "name-desc")  filtered.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
 
-  // Sort
-  if (sortBy === "price-asc")  allProducts = [...allProducts].sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
-  if (sortBy === "price-desc") allProducts = [...allProducts].sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
-  if (sortBy === "name-asc")   allProducts = [...allProducts].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-  if (sortBy === "name-desc")  allProducts = [...allProducts].sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+    const pages = Math.ceil(filtered.length / PAGE_SIZE);
+    const validPage = Math.min(page, Math.max(1, pages));
+    const paginated = filtered.slice((validPage - 1) * PAGE_SIZE, validPage * PAGE_SIZE);
 
-  const totalPages = Math.ceil(allProducts.length / PAGE_SIZE);
-  const pageProducts = allProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    return { filteredProducts: filtered, totalPages: pages, pageProducts: paginated };
+  }, [products, priceRange, sortBy, page]);
 
-  function goToPage(p) {
-    setPage(p);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  // Build page number array with ellipsis logic
-  function getPageNumbers() {
+  // Memoize pagination page numbers to prevent recalculation
+  const pageNumbers = useMemo(() => {
     if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
     const pages = [];
     pages.push(1);
@@ -103,12 +105,21 @@ export default function ProductSection({ searchQuery = "", category = "All", pri
     if (page < totalPages - 2) pages.push("...");
     pages.push(totalPages);
     return pages;
-  }
+  }, [page, totalPages]);
+
+  // Debounced scroll to prevent janky animations
+  const goToPage = useCallback((p) => {
+    setPage(p);
+    // Defer scroll to next frame to avoid layout thrashing
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
+  }, []);
 
   return (
     <section id="products" className="py-4 md:py-8 px-4 sm:px-6 md:px-12 bg-white min-h-[600px]">
       <div className="max-w-[1600px] mx-auto">
-        {allProducts.length === 0 ? (
+        {filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 md:py-40 text-center px-4">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6 sm:mb-8">
               <Search className="text-gray-200" size={24} />
@@ -121,7 +132,7 @@ export default function ProductSection({ searchQuery = "", category = "All", pri
             {/* Results info */}
             <div className="flex items-center justify-between mb-6 px-2 sm:px-0">
               <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-400">
-                Showing <span className="text-gray-950">{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, allProducts.length)}</span> of <span className="text-emerald-600">{allProducts.length}</span> products
+                Showing <span className="text-gray-950">{(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredProducts.length)}</span> of <span className="text-emerald-600">{filteredProducts.length}</span> products
               </p>
               {totalPages > 1 && (
                 <p className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-400">
@@ -130,19 +141,12 @@ export default function ProductSection({ searchQuery = "", category = "All", pri
               )}
             </div>
 
-            {/* Product Grid */}
+            {/* Product Grid - Removed heavy Framer Motion animations for better performance */}
             <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 sm:gap-x-8 gap-y-8 sm:gap-y-12 px-2 sm:px-0">
-              {pageProducts.map((product, idx) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 40 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.04, duration: 0.6 }}
-                  className="h-full"
-                >
-                  <MemoizedProductCard product={product} />
-                </motion.div>
+              {pageProducts.map((product) => (
+                <div key={product.id || product._id} className="h-full">
+                  <MemoProductCard product={product} />
+                </div>
               ))}
             </div>
 
@@ -161,7 +165,7 @@ export default function ProductSection({ searchQuery = "", category = "All", pri
 
                 {/* Page Numbers */}
                 <div className="flex items-center gap-1 sm:gap-2">
-                  {getPageNumbers().map((p, i) =>
+                  {pageNumbers.map((p, i) =>
                     p === "..." ? (
                       <span key={`ellipsis-${i}`} className="px-2 text-gray-300 font-black text-xs">···</span>
                     ) : (
