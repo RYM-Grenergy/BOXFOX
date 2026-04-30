@@ -22,6 +22,57 @@ const parseMoney = (value) => {
     return 0;
 };
 
+const normalizeCouponCode = (value) => {
+    if (typeof value !== 'string') return '';
+    return value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+};
+
+const buildShippingAddress = (shipping = {}) => {
+    const parts = [shipping.address, shipping.city, shipping.state].filter(Boolean);
+    return parts.join(', ');
+};
+
+const validateOrderPayload = (orderData) => {
+    if (!orderData || typeof orderData !== 'object') {
+        return 'Invalid order payload';
+    }
+
+    const items = Array.isArray(orderData.items) ? orderData.items : [];
+    if (items.length === 0) {
+        return 'Order must contain at least one item';
+    }
+
+    const validItems = items.every((item) => {
+        if (!item || typeof item !== 'object') return false;
+        if (!item.productId) return false;
+
+        const quantity = Number(item.quantity || 0);
+        const unitPrice = parseMoney(item.price);
+
+        return Number.isFinite(quantity) && quantity > 0 && Number.isFinite(unitPrice) && unitPrice >= 0;
+    });
+
+    if (!validItems) {
+        return 'One or more order items are invalid';
+    }
+
+    const total = parseMoney(orderData.total);
+    if (!Number.isFinite(total) || total < 0) {
+        return 'Order total is invalid';
+    }
+
+    const shipping = orderData.shipping || orderData.shippingAddress || {};
+    const street = shipping.street || shipping.address;
+    const city = shipping.city;
+    const zipCode = shipping.zipCode || shipping.postalCode;
+
+    if (!street || !city || !zipCode) {
+        return 'Shipping details are incomplete';
+    }
+
+    return null;
+};
+
 
 export async function GET(req) {
     try {
@@ -49,21 +100,39 @@ export async function POST(req) {
     try {
         await dbConnect();
         const orderData = await req.json();
+        const validationError = validateOrderPayload(orderData);
+
+        if (validationError) {
+            return NextResponse.json({ success: false, error: validationError }, { status: 400 });
+        }
+
         // Generate a clean numeric order ID
         const count = await Order.countDocuments();
         const orderId = `ORD-${1001 + count}`;
+        const normalizedCouponCode = normalizeCouponCode(orderData.couponCode);
+        const shipping = orderData.shipping || orderData.shippingAddress || {};
+        const total = Math.round(parseMoney(orderData.total) * 100) / 100;
+
+        if (normalizedCouponCode) {
+            const couponExists = await Coupon.findOne({ code: normalizedCouponCode }).select('_id');
+            if (!couponExists) {
+                return NextResponse.json({ success: false, error: 'Invalid coupon code' }, { status: 400 });
+            }
+        }
 
         const newOrder = await Order.create({
             ...orderData,
-            total: Math.round((orderData.total || 0) * 100) / 100, // Round to 2 decimal places
+            couponCode: normalizedCouponCode || undefined,
+            shipping,
+            total,
             orderId,
             status: 'Pending'
         });
 
         // 1. If coupon was used, increment usage count
-        if (orderData.couponCode) {
+        if (normalizedCouponCode) {
             await Coupon.findOneAndUpdate(
-                { code: orderData.couponCode.toUpperCase() },
+                { code: normalizedCouponCode },
                 { $inc: { usageCount: 1 } }
             );
         }
@@ -99,7 +168,7 @@ export async function POST(req) {
             customerEmail: newOrder.customer?.email,
             totalAmount: newOrder.total || 0,
             discount: newOrder.discount || 0,
-            shippingAddress: newOrder.shipping?.address + ', ' + newOrder.shipping?.city + ', ' + newOrder.shipping?.state,
+            shippingAddress: buildShippingAddress(newOrder.shipping),
             status: newOrder.status,
             items: newOrder.items || [],
         };

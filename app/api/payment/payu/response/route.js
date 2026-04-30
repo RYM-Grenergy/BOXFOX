@@ -18,12 +18,17 @@ export async function POST(req) {
         const hashSequence = `${salt}|${status}||||||${data.udf5 || ''}|${data.udf4 || ''}|${data.udf3 || ''}|${data.udf2 || ''}|${udf1 || ''}|${email}|${firstname}|${productinfo}|${amount}|${txnid}|${key}`;
         const generatedHash = crypto.createHash('sha512').update(hashSequence).digest('hex');
 
-        if (generatedHash !== hash) {
+        if (!generatedHash || generatedHash !== hash) {
             console.error("Hash Mismatch! Potential Tampering.");
-            // We can still handle it but with caution
+            return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 });
         }
 
         const orderId = txnid; // We used order's numeric ID or a unique txn ID
+        const order = await Order.findOne({ orderId });
+
+        if (!order) {
+            return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+        }
 
         if (status === 'success') {
             await Order.findOneAndUpdate(

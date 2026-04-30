@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
     LayoutDashboard,
@@ -33,12 +34,10 @@ export default function AdminLayout({ children }) {
     const [loading, setLoading] = useState(true);
     const pathname = usePathname();
     const router = useRouter();
+    const isLoginPage = pathname === '/admin/login';
 
     useEffect(() => {
-        if (pathname === '/admin/login') {
-            setLoading(false);
-            return;
-        }
+        if (isLoginPage) return;
 
         fetch('/api/auth/me')
             .then(res => {
@@ -53,10 +52,11 @@ export default function AdminLayout({ children }) {
                 setUser(data.user);
                 setLoading(false);
             })
-            .catch(() => {
-                window.location.href = '/admin/login';
+            .catch((error) => {
+                console.error('Admin auth check failed:', error);
+                router.replace('/admin/login');
             });
-    }, [pathname]);
+    }, [isLoginPage, router]);
 
     const handleLogout = async () => {
         await fetch('/api/auth/logout', { method: 'POST' });
@@ -82,14 +82,14 @@ export default function AdminLayout({ children }) {
         { label: 'Settings', icon: <Settings size={20} />, href: '/admin/settings', roles: ['admin'] },
     ].filter(item => !user || item.roles.includes(user.role));
 
-    if (pathname === '/admin/login') {
+    if (isLoginPage) {
         return <>{children}</>;
     }
 
     if (loading) return (
         <div className="min-h-screen bg-gray-950 flex items-center justify-center">
             <div className="flex flex-col items-center gap-4">
-                <img src="/BOXFOX-1.png" alt="Logo" className="h-12 w-auto animate-pulse" />
+                <Image src="/BOXFOX-1.png" alt="Logo" width={160} height={48} priority className="h-12 w-auto animate-pulse" />
                 <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
                     <motion.div
                         initial={{ x: '-100%' }}
@@ -118,7 +118,7 @@ export default function AdminLayout({ children }) {
                                     exit={{ opacity: 0, x: -10 }}
                                     className="flex items-center gap-2"
                                 >
-                                    <img src="/BOXFOX-1.png" alt="Logo" className="h-6 w-auto object-contain" />
+                                    <Image src="/BOXFOX-1.png" alt="Logo" width={120} height={36} className="h-6 w-auto object-contain" />
                                     <span className="text-xs font-black tracking-widest text-emerald-500">ADMIN</span>
                                 </motion.div>
                             )}
