@@ -25,10 +25,16 @@ export async function GET(req) {
         if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
         const escapedEmail = user.email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedPhone = (user.phone || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedName = (user.name || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedBusiness = (user.businessName || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const quotes = await Quotation.find({
             $or: [
                 { userId: user._id },
                 { "user.email": { $regex: new RegExp(`^${escapedEmail}$`, 'i') } }
+                ,{ "user.phone": { $regex: new RegExp(`^${escapedPhone}$`, 'i') } }
+                ,{ "user.name": { $regex: new RegExp(`^${escapedName}$`, 'i') } }
+                ,{ "user.company": { $regex: new RegExp(`^${escapedBusiness}$`, 'i') } }
             ]
         }).sort({ createdAt: -1 });
 
