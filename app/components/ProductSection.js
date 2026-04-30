@@ -1,10 +1,13 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCard from "./ProductCard";
 
 const PAGE_SIZE = 20;
+
+// Memoized ProductCard wrapper to prevent unnecessary re-renders
+const MemoizedProductCard = React.memo(ProductCard);
 
 export default function ProductSection({ searchQuery = "", category = "All", priceRange = "all", sortBy = "default" }) {
   const [sections, setSections] = useState([]);
@@ -60,30 +63,35 @@ export default function ProductSection({ searchQuery = "", category = "All", pri
     );
   }
 
-  // Flatten all products from all sections into one array
-  let allProducts = sections.reduce((acc, section) => [...acc, ...section.items], []);
+  // Memoized filter, sort, and paginate logic — only recalculates when dependencies change
+  const { allProducts, totalPages, pageProducts } = useMemo(() => {
+    // Flatten all products from all sections into one array
+    let products = sections.reduce((acc, section) => [...acc, ...section.items], []);
 
-  // Price range filter
-  if (priceRange !== "all") {
-    allProducts = allProducts.filter((p) => {
-      const price = parseFloat(p.price) || 0;
-      if (priceRange === "0-100")    return price < 100;
-      if (priceRange === "100-300")  return price >= 100 && price < 300;
-      if (priceRange === "300-500")  return price >= 300 && price < 500;
-      if (priceRange === "500-1000") return price >= 500 && price < 1000;
-      if (priceRange === "1000+")    return price >= 1000;
-      return true;
-    });
-  }
+    // Price range filter
+    if (priceRange !== "all") {
+      products = products.filter((p) => {
+        const price = parseFloat(p.price) || 0;
+        if (priceRange === "0-100")    return price < 100;
+        if (priceRange === "100-300")  return price >= 100 && price < 300;
+        if (priceRange === "300-500")  return price >= 300 && price < 500;
+        if (priceRange === "500-1000") return price >= 500 && price < 1000;
+        if (priceRange === "1000+")    return price >= 1000;
+        return true;
+      });
+    }
 
-  // Sort
-  if (sortBy === "price-asc")  allProducts = [...allProducts].sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
-  if (sortBy === "price-desc") allProducts = [...allProducts].sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
-  if (sortBy === "name-asc")   allProducts = [...allProducts].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-  if (sortBy === "name-desc")  allProducts = [...allProducts].sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+    // Sort
+    if (sortBy === "price-asc")  products = [...products].sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+    if (sortBy === "price-desc") products = [...products].sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+    if (sortBy === "name-asc")   products = [...products].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    if (sortBy === "name-desc")  products = [...products].sort((a, b) => (b.name || "").localeCompare(a.name || ""));
 
-  const totalPages = Math.ceil(allProducts.length / PAGE_SIZE);
-  const pageProducts = allProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const pages = Math.ceil(products.length / PAGE_SIZE);
+    const paginatedProducts = products.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    return { allProducts: products, totalPages: pages, pageProducts: paginatedProducts };
+  }, [sections, priceRange, sortBy, page]);
 
   function goToPage(p) {
     setPage(p);
@@ -138,7 +146,7 @@ export default function ProductSection({ searchQuery = "", category = "All", pri
                   transition={{ delay: idx * 0.04, duration: 0.6 }}
                   className="h-full"
                 >
-                  <ProductCard product={product} />
+                  <MemoizedProductCard product={product} />
                 </motion.div>
               ))}
             </div>
