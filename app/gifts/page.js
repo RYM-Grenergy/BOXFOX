@@ -155,13 +155,14 @@ function QuoteForm() {
     const [formData, setFormData] = useState({
       name: "", email: "", phone: "", whatsapp: "", company: "", message: "",
       giftType: "",
-      items: [{ productName: "", quantity: "" }]
+      items: [{ productName: "", quantity: "", gift: "" }]
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [products, setProducts] = useState([]);
     const [openDropdown, setOpenDropdown] = useState(null);
     const [openGiftDropdown, setOpenGiftDropdown] = useState(false);
+    const [openGiftDropdownIndex, setOpenGiftDropdownIndex] = useState(null);
 
     useEffect(() => {
       // Fetch products for dropdown
@@ -262,7 +263,8 @@ function QuoteForm() {
             <div className="space-y-4">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic underline decoration-emerald-500/30 underline-offset-4">Gift Specifications</p>
                 {formData.items.map((item, i) => (
-                    <div key={i} className="grid grid-cols-3 gap-4">
+                  <div key={i} className="space-y-3">
+                    <div className="grid grid-cols-3 gap-4">
                         {/* Product Name Dropdown */}
                         <div className="col-span-2 relative">
                           <button
@@ -308,6 +310,41 @@ function QuoteForm() {
                             newItems[i].quantity = e.target.value;
                             setFormData({...formData, items: newItems});
                         }} required />
+                      </div>
+
+                      {/* Per-item Gift Selection (optional) */}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setOpenGiftDropdownIndex(openGiftDropdownIndex === i ? null : i)}
+                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-3 text-xs font-bold outline-none focus:border-emerald-500 text-left flex items-center justify-between hover:border-emerald-300 transition-colors"
+                        >
+                          <span className={item.gift ? 'text-gray-900' : 'text-gray-400'}>
+                            {item.gift || 'Select Gift Option (optional)'}
+                          </span>
+                          <ChevronDown size={16} className={`transition-transform ${openGiftDropdownIndex === i ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {openGiftDropdownIndex === i && (
+                          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-2xl shadow-lg z-10 max-h-60 overflow-y-auto">
+                            {giftTypes.map((type) => (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={() => {
+                                  const newItems = [...formData.items];
+                                  newItems[i].gift = type;
+                                  setFormData({...formData, items: newItems});
+                                  setOpenGiftDropdownIndex(null);
+                                }}
+                                className="w-full text-left px-6 py-3 text-xs font-bold hover:bg-emerald-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                              >
+                                {type}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                 ))}
             </div>
