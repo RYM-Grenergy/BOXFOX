@@ -172,6 +172,10 @@ function CustomizeLabContent() {
     const w = searchParams.get('w');
     const h = searchParams.get('h');
     const u = searchParams.get('unit');
+    const autoQuote = searchParams.get('autoQuote');
+    const mat = searchParams.get('material');
+    const finish = searchParams.get('finish');
+    const gsm = searchParams.get('gsm');
 
     if (cat && cat !== "All") setSelectedCategory(cat);
     if (subCat && subCat !== "All") setSelectedSubCategory(subCat);
@@ -184,9 +188,22 @@ function CustomizeLabContent() {
       setSelectedSpec(null); // Switch to manual mode for precise matching
     }
     if (u) setUnit(u);
+    if (mat) setSelectedMaterial(mat);
+    if (finish) setSelectedFinish(finish);
+    if (gsm) setSelectedGSM(gsm);
     
     // Set higher default quantity for enterprise customization
     setQuantity(500);
+
+    // Auto-scroll to quote if requested
+    if (autoQuote === 'true') {
+      setTimeout(() => {
+        const quoteEl = document.getElementById('live-quote');
+        if (quoteEl) {
+          quoteEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 1000);
+    }
   }, [searchParams]);
 
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -2291,7 +2308,7 @@ function CustomizeLabContent() {
           </div>
 
           {/* Step 4: Live_Quote */}
-          <div className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden group transition-all hover:border-gray-950/10">
+          <div id="live-quote" className="bg-white rounded-[2rem] border border-gray-100 shadow-xl overflow-hidden group transition-all hover:border-gray-950/10">
             <div className="flex items-center justify-between px-6 py-5 bg-gray-50/50 border-b border-gray-100">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-950 text-white text-[10px] font-black">4</div>
