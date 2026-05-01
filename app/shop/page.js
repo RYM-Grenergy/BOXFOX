@@ -26,6 +26,7 @@ const CATEGORY_ORDER = [
     "Wok Box",
     "Wrap Box",
     "Popcorn",
+    "Carry Bag",
 ];
 
 const PRICE_RANGES = [

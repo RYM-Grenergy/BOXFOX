@@ -445,62 +445,54 @@ export default function ProductsManager() {
     const handleDownloadExcel = async (product) => {
         const XLSX = await import('xlsx');
 
-        const images = Array.isArray(product.images)
-            ? product.images
-            : (typeof product.images === 'string' ? product.images.split(',').map((item) => item.trim()).filter(Boolean) : []);
+        // Extract tags
+        const tags = Array.isArray(product.tags) ? product.tags.join(', ') : (product.tags || '');
 
-        const overview = [{
-            Name: product.name || '',
-            SKU: product.sku || '',
-            Category: product.category || '',
-            Brand: product.brand || '',
-            Badge: product.badge || '',
-            Active: product.isActive === false ? 'No' : 'Yes',
-            Featured: product.isFeatured ? 'Yes' : 'No',
-            MinOrderQuantity: product.minOrderQuantity || '',
-            Price: product.price || '',
-            MinPrice: product.minPrice || '',
-            MaxPrice: product.maxPrice || '',
-            OriginalPrice: product.originalPrice || '',
-            Discount: product.discount || '',
-            Length: product.dimensions?.length || '',
-            Width: product.dimensions?.width || '',
-            Height: product.dimensions?.height || '',
-            Unit: product.dimensions?.unit || 'inch',
-            Pattern: product.patternImg ? 'Included' : 'Not attached',
-            Dieline: product.dielineImg ? 'Included' : 'Not attached',
-            Images: images.length,
-            Description: product.description || product.short_description || ''
+        // Extract specifications
+        const specs = product.specifications || [];
+        const specCategory = specs.find(s => s.key === 'Category')?.value || '';
+        const specSubCategory = specs.find(s => s.key === 'Sub Category')?.value || '';
+        const specDetail = specs.find(s => s.key === 'Specification')?.value || '';
+
+        // Extract images
+        const imgs = Array.isArray(product.images) ? product.images : (typeof product.images === 'string' ? product.images.split(',').map(s => s.trim()) : []);
+        const img1 = imgs[0] || '';
+        const img2 = imgs[1] || '';
+
+        const toInch = (val, unit) => {
+            if (!val || isNaN(val)) return '';
+            const v = parseFloat(val);
+            if (unit === 'cm') return parseFloat((v / 2.54).toFixed(2));
+            if (unit === 'mm') return parseFloat((v / 25.4).toFixed(2));
+            return v;
+        };
+
+        const dim = product.dimensions || {};
+        const unit = dim.unit || 'inch';
+
+        const data = [{
+            'Product Name': product.name || '',
+            'Product SKU': product.sku || '',
+            'Category': product.category || (Array.isArray(product.categories) ? product.categories[0] : ''),
+            'Min Order Qty': product.minOrderQuantity || '',
+            'Tags (Comma separated)': tags,
+            'Short Description': product.short_description || '',
+            'Full Description': product.description || '',
+            'Category (Spec)': specCategory,
+            'Sub Category': specSubCategory,
+            'Specification': specDetail,
+            'Length': toInch(dim.length, unit),
+            'Width': toInch(dim.width, unit),
+            'Height': toInch(dim.height, unit),
+            'Unit': 'inch',
+            'Product Images1': img1,
+            'Product Images2': img2,
+            'Dieline': product.dielineImg || ''
         }];
 
-        const pricingRows = [
-            {
-                Tier: 'List Price',
-                Value: product.price || ''
-            },
-            {
-                Tier: 'Minimum Price',
-                Value: product.minPrice || ''
-            },
-            {
-                Tier: 'Maximum Price',
-                Value: product.maxPrice || ''
-            },
-            {
-                Tier: 'Original Price',
-                Value: product.originalPrice || ''
-            },
-            {
-                Tier: 'Discount',
-                Value: product.discount || ''
-            }
-        ];
-
         const wb = XLSX.utils.book_new();
-        const ws1 = XLSX.utils.json_to_sheet(overview);
-        const ws2 = XLSX.utils.json_to_sheet(pricingRows);
-        XLSX.utils.book_append_sheet(wb, ws1, 'Product Details');
-        XLSX.utils.book_append_sheet(wb, ws2, 'Pricing Tiers');
+        const ws = XLSX.utils.json_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, 'Product Details');
 
         const fileName = `${(product.name || 'product').replace(/\s+/g, '_')}_BoxFox.xlsx`;
         XLSX.writeFile(wb, fileName);
@@ -509,20 +501,52 @@ export default function ProductsManager() {
     const handleDownloadAll = async () => {
         try {
             const XLSX = await import('xlsx');
-            const rows = products.map(p => ({
-                Name: p.name || '',
-                SKU: p.sku || '',
-                Category: p.category || '',
-                Price: p.price || '',
-                MinPrice: p.minPrice || '',
-                MaxPrice: p.maxPrice || '',
-                ID: p.id || p._id || '',
-                Active: p.isActive === false ? 'No' : 'Yes',
-                Featured: p.isFeatured ? 'Yes' : 'No',
-                Dimensions_in: p.dimensions ? `${p.dimensions.length || ''} × ${p.dimensions.width || ''} × ${p.dimensions.height || ''}` : '',
-                Dimensions_mm: p.dimensions ? `${Math.round((p.dimensions.length || 0) * 25.4)} × ${Math.round((p.dimensions.width || 0) * 25.4)} × ${Math.round((p.dimensions.height || 0) * 25.4)}` : '',
-                Images: Array.isArray(p.images) ? p.images.length : (typeof p.images === 'string' ? p.images.split(',').filter(Boolean).length : 0)
-            }));
+            const rows = products.map(p => {
+                // Extract tags
+                const tags = Array.isArray(p.tags) ? p.tags.join(', ') : (p.tags || '');
+
+                // Extract specifications
+                const specs = p.specifications || [];
+                const specCategory = specs.find(s => s.key === 'Category')?.value || '';
+                const specSubCategory = specs.find(s => s.key === 'Sub Category')?.value || '';
+                const specDetail = specs.find(s => s.key === 'Specification')?.value || '';
+
+                // Extract images
+                const imgs = Array.isArray(p.images) ? p.images : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : []);
+                const img1 = imgs[0] || '';
+                const img2 = imgs[1] || '';
+
+                const toInch = (val, unit) => {
+                    if (!val || isNaN(val)) return '';
+                    const v = parseFloat(val);
+                    if (unit === 'cm') return parseFloat((v / 2.54).toFixed(2));
+                    if (unit === 'mm') return parseFloat((v / 25.4).toFixed(2));
+                    return v;
+                };
+
+                const dim = p.dimensions || {};
+                const unit = dim.unit || 'inch';
+
+                return {
+                    'Product Name': p.name || '',
+                    'Product SKU': p.sku || '',
+                    'Category': p.category || (Array.isArray(p.categories) ? p.categories[0] : ''),
+                    'Min Order Qty': p.minOrderQuantity || '',
+                    'Tags (Comma separated)': tags,
+                    'Short Description': p.short_description || '',
+                    'Full Description': p.description || '',
+                    'Category (Spec)': specCategory,
+                    'Sub Category (Spec)': specSubCategory,
+                    'Specification': specDetail,
+                    'Length': toInch(dim.length, unit),
+                    'Width': toInch(dim.width, unit),
+                    'Height': toInch(dim.height, unit),
+                    'Unit': 'inch',
+                    'Product Images1': img1,
+                    'Product Images2': img2,
+                    'Dieline': p.dielineImg || ''
+                };
+            });
 
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.json_to_sheet(rows);
@@ -769,6 +793,7 @@ export default function ProductsManager() {
                         <option value="Wok Box">Wok Box</option>
                         <option value="Wrap Box">Wrap Box</option>
                         <option value="Popcorn">Popcorn</option>
+                        <option value="Carry Bag">Carry Bag</option>
                     </select>
                     <Filter size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 </div>
@@ -956,6 +981,7 @@ export default function ProductsManager() {
                                                         <option value="Wok Box">Wok Box</option>
                                                         <option value="Wrap Box">Wrap Box</option>
                                                         <option value="Popcorn">Popcorn</option>
+                                                        <option value="Carry Bag">Carry Bag</option>
                                                     </select>
                                                 </div>
                                                 <div className="space-y-2">

@@ -166,6 +166,16 @@ const categories = [
     icon: <Circle className="w-6 h-6" />,
     stats: "CLASSIC",
     needsBranding: true
+  },
+  {
+    id: 18,
+    index: "18",
+    name: "Carry Bag",
+    desc: "Premium quality carry bags designed for secure transportation and stylish presentation.",
+    img: "/categories/cat_gifting.png",
+    icon: <ShoppingBag className="w-6 h-6" />,
+    stats: "PREMIUM",
+    needsBranding: true
   }
 ];
 export default function CategorySection() {
