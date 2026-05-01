@@ -156,6 +156,34 @@ function QuoteForm() {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [products, setProducts] = useState([]);
+    const [openDropdown, setOpenDropdown] = useState(null);
+
+    useEffect(() => {
+      // Fetch products for dropdown
+      const fetchProducts = async () => {
+        try {
+          const res = await fetch('/api/products?all=true');
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            // Handle both flat array and sections structure
+            let productList = [];
+            if (data.length > 0 && data[0].items) {
+              // Sections structure
+              productList = data.flatMap(section => section.items || []);
+            } else {
+              // Flat array
+              productList = data;
+            }
+            setProducts(productList);
+          }
+        } catch (err) {
+          console.error('Failed to fetch products:', err);
+        }
+      };
+      
+      fetchProducts();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -191,11 +219,46 @@ function QuoteForm() {
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic underline decoration-emerald-500/30 underline-offset-4">Gift Specifications</p>
                 {formData.items.map((item, i) => (
                     <div key={i} className="grid grid-cols-3 gap-4">
-                        <input type="text" placeholder="Product Name" className="col-span-2 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={item.productName} onChange={e => {
-                            const newItems = [...formData.items];
-                            newItems[i].productName = e.target.value;
-                            setFormData({...formData, items: newItems});
-                        }} required />
+                        {/* Product Name Dropdown */}
+                        <div className="col-span-2 relative">
+                          <button
+                            type="button"
+                            onClick={() => setOpenDropdown(openDropdown === i ? null : i)}
+                            className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500 text-left flex items-center justify-between hover:border-emerald-300 transition-colors"
+                          >
+                            <span className={item.productName ? 'text-gray-900' : 'text-gray-400'}>
+                              {item.productName || 'Select Product'}
+                            </span>
+                            <ChevronDown size={16} className={`transition-transform ${openDropdown === i ? 'rotate-180' : ''}`} />
+                          </button>
+                          
+                          {/* Dropdown Menu */}
+                          {openDropdown === i && (
+                            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-2xl shadow-lg z-10 max-h-60 overflow-y-auto">
+                              {products.length > 0 ? (
+                                products.map((product) => (
+                                  <button
+                                    key={product._id || product.id}
+                                    type="button"
+                                    onClick={() => {
+                                      const newItems = [...formData.items];
+                                      newItems[i].productName = product.name;
+                                      setFormData({...formData, items: newItems});
+                                      setOpenDropdown(null);
+                                    }}
+                                    className="w-full text-left px-6 py-3 text-xs font-bold hover:bg-emerald-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                                  >
+                                    {product.name}
+                                  </button>
+                                ))
+                              ) : (
+                                <div className="px-6 py-3 text-xs text-gray-400 font-bold">Loading products...</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Quantity Input */}
                         <input type="number" placeholder="Qty" className="bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={item.quantity} onChange={e => {
                             const newItems = [...formData.items];
                             newItems[i].quantity = e.target.value;
