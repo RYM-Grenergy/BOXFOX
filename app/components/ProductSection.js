@@ -52,21 +52,8 @@ export default function ProductSection({ searchQuery = "", category = "All", pri
       });
   }, [searchQuery, category]);
 
-  if (loading) {
-    return (
-      <section className="py-12 px-6 lg:px-12 bg-white">
-        <div className="max-w-[1600px] mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-8">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(j => (
-              <div key={j} className="animate-pulse aspect-square bg-gray-50 rounded-[2rem]" />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   // Filter products by price range and sort — memoized to prevent recalculation
+  // MUST be before any conditional returns (Rules of Hooks)
   const { filteredProducts, totalPages, pageProducts } = useMemo(() => {
     let filtered = [...products];
     

@@ -82,25 +82,29 @@ export default function AdminLayout({ children }) {
         { label: 'Settings', icon: <Settings size={20} />, href: '/admin/settings', roles: ['admin'] },
     ].filter(item => !user || item.roles.includes(user.role));
 
+    // Show login page without admin layout
     if (isLoginPage) {
         return <>{children}</>;
     }
 
-    if (loading) return (
-        <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-4">
-                <Image src="/BOXFOX-1.png" alt="Logo" width={160} height={48} priority className="h-12 w-auto animate-pulse" />
-                <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
-                    <motion.div
-                        initial={{ x: '-100%' }}
-                        animate={{ x: '100%' }}
-                        transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                        className="w-full h-full bg-emerald-500"
-                    />
+    // Show loading state
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Image src="/BOXFOX-1.png" alt="Logo" width={160} height={48} priority className="h-12 w-auto animate-pulse" />
+                    <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+                        <motion.div
+                            initial={{ x: '-100%' }}
+                            animate={{ x: '100%' }}
+                            transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                            className="w-full h-full bg-emerald-500"
+                        />
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 flex admin-panel">
