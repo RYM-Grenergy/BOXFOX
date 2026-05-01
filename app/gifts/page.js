@@ -150,14 +150,18 @@ export default function GiftsPage() {
 }
 
 function QuoteForm() {
+    const giftTypes = gifts.map(g => g.name);
+    
     const [formData, setFormData] = useState({
       name: "", email: "", phone: "", whatsapp: "", company: "", message: "",
+      giftType: "",
       items: [{ productName: "", quantity: "" }]
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [products, setProducts] = useState([]);
     const [openDropdown, setOpenDropdown] = useState(null);
+    const [openGiftDropdown, setOpenGiftDropdown] = useState(false);
 
     useEffect(() => {
       // Fetch products for dropdown
@@ -192,7 +196,12 @@ function QuoteForm() {
           const res = await fetch("/api/quotes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user: formData, items: formData.items, message: formData.message })
+            body: JSON.stringify({
+              user: formData,
+              items: formData.items,
+              message: formData.message,
+              giftType: formData.giftType,
+            })
           });
             if (res.ok) setSuccess(true);
         } catch (err) { console.error(err); }
@@ -215,6 +224,41 @@ function QuoteForm() {
                 <input type="tel" placeholder="Phone Number" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required />
                 <input type="text" placeholder="Company Name" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={formData.company} onChange={e => setFormData({...formData, company: e.target.value})} />
             </div>
+            <div className="space-y-4">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic underline decoration-emerald-500/30 underline-offset-4">Gift Type</p>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setOpenGiftDropdown(!openGiftDropdown)}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500 text-left flex items-center justify-between hover:border-emerald-300 transition-colors"
+                  >
+                    <span className={formData.giftType ? 'text-gray-900' : 'text-gray-400'}>
+                      {formData.giftType || 'Select Gift Box Type'}
+                    </span>
+                    <ChevronDown size={16} className={`transition-transform ${openGiftDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {openGiftDropdown && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-2xl shadow-lg z-10 max-h-60 overflow-y-auto">
+                      {giftTypes.map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => {
+                            setFormData({...formData, giftType: type});
+                            setOpenGiftDropdown(false);
+                          }}
+                          className="w-full text-left px-6 py-3 text-xs font-bold hover:bg-emerald-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+            </div>
+
             <div className="space-y-4">
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest italic underline decoration-emerald-500/30 underline-offset-4">Gift Specifications</p>
                 {formData.items.map((item, i) => (
