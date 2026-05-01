@@ -55,6 +55,7 @@ function toStoreProduct(product, source = 'core') {
     minPrice: product.minPrice || null,
     maxPrice: product.maxPrice || null,
     priceAt1: product.priceAt1 || null,
+    priceAt50: product.priceAt50 || null,
     priceAt100: product.priceAt100 || null,
     priceAt500: product.priceAt500 || null,
     originalPrice: product.regular_price || null,
@@ -129,7 +130,7 @@ export async function GET(req) {
         ? {} // Return ALL fields for complete product data on shop page
         : (isAdmin ? {} : {
           _id: 1, wpId: 1, name: 1, sku: 1, price: 1, minPrice: 1, maxPrice: 1,
-          priceAt1: 1, priceAt100: 1, priceAt500: 1, regular_price: 1, sale_price: 1,
+          priceAt1: 1, priceAt50: 1, priceAt100: 1, priceAt500: 1, regular_price: 1, sale_price: 1,
           images: 1, img: 1, type: 1, stock_status: 1, stock_quantity: 1,
           dimensions: 1, pacdoraId: 1, badge: 1, isFeatured: 1, categories: 1, category: 1,
           minOrderQuantity: 1, brand: 1, description: 1, short_description: 1,
@@ -266,7 +267,7 @@ export async function POST(req) {
     if (data._id) {
       // UPDATE
       const existingProduct = await Product.findById(data._id);
-      const sku = data.sku || existingProduct?.sku || await generateSKU(data.category);
+      const sku = data.generateSku ? await generateSKU(data.category) : (data.sku || existingProduct?.sku || await generateSKU(data.category));
 
       const updatedProduct = await Product.findByIdAndUpdate(data._id, {
         ...data,
@@ -329,6 +330,17 @@ export async function POST(req) {
     return NextResponse.json({ success: true, product });
   } catch (e) {
     console.error("POST Error:", e);
+    
+    // User-friendly handling for Duplicate SKU errors
+    if (e.code === 11000) {
+      const field = Object.keys(e.keyPattern || {})[0] || 'SKU';
+      const value = Object.values(e.keyValue || {})[0];
+      return NextResponse.json(
+        { success: false, error: `Duplicate ${field}: "${value}" is already in use.` },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       { success: false, error: e.message },
       { status: 500 },

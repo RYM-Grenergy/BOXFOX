@@ -23,7 +23,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { runBoxEngine, calculateTiersFromBase } from '@/lib/boxEngine';
 
 // Memoized ProductRow component to prevent unnecessary re-renders
-const ProductRow = React.memo(({ product, onEdit, onDelete, onDuplicate, onNormalizeSku, onToggleFeatured, onToggleStatus, formatDimensions }) => (
+const ProductRow = React.memo(({ product, onEdit, onDelete, onDuplicate, onRegenerateSku, onToggleFeatured, onToggleStatus, formatDimensions }) => (
     <tr className="hover:bg-gray-50/50 transition-colors group">
         <td className="px-8 py-5">
             <div className="flex items-center gap-4">
@@ -122,7 +122,7 @@ const ProductRow = React.memo(({ product, onEdit, onDelete, onDuplicate, onNorma
                     </button>
                 )}
                 <button onClick={() => onDuplicate(product)} title="Duplicate" className="p-2 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-all"><Copy size={16} /></button>
-                <button onClick={() => onNormalizeSku(product)} title="Normalize SKU" className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><RefreshCw size={16} /></button>
+                <button onClick={() => onRegenerateSku(product)} title="Regenerate SKU" className="p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"><RefreshCw size={16} /></button>
                 <button onClick={() => onDelete(product._id || product.id)} title="Delete" className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={16} /></button>
             </div>
         </td>
@@ -518,7 +518,7 @@ export default function ProductsManager() {
     const handleDownloadAll = async () => {
         try {
             const XLSX = await import('xlsx');
-            const rows = products.map(p => {
+            const rows = products.filter(p => p.isActive !== false).map(p => {
                 // Extract tags
                 const tags = Array.isArray(p.tags) ? p.tags.join(', ') : (p.tags || '');
 
@@ -569,6 +569,53 @@ export default function ProductsManager() {
         } catch (err) {
             console.error('Download all products failed:', err);
             alert('Failed to generate Excel for all products');
+        }
+    };
+    const handleImportExcel = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsSaving(true);
+        try {
+            const XLSX = await import('xlsx');
+            const reader = new FileReader();
+            
+            reader.onload = async (evt) => {
+                const bstr = evt.target.result;
+                const wb = XLSX.read(bstr, { type: 'binary' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data = XLSX.utils.sheet_to_json(ws);
+
+                if (data.length === 0) {
+                    alert("No data found in Excel");
+                    setIsSaving(false);
+                    return;
+                }
+
+                // Call API to bulk update
+                const res = await fetch('/api/admin/import-prices', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ updates: data })
+                });
+
+                const result = await res.json();
+                if (result.success) {
+                    alert(`Successfully updated ${result.updatedCount} products!`);
+                    fetchProducts();
+                } else {
+                    alert(`Import failed: ${result.error}`);
+                }
+                setIsSaving(false);
+            };
+            reader.readAsBinaryString(file);
+        } catch (err) {
+            console.error('Import failed:', err);
+            alert('Failed to import Excel');
+            setIsSaving(false);
+        } finally {
+            e.target.value = '';
         }
     };
 
@@ -662,30 +709,52 @@ export default function ProductsManager() {
         setIsModalOpen(true);
     };
 
-    const normalizeSkuString = (sku) => {
-        if (!sku) return '';
-        return sku.replace(/(-copy(?:-\d+)?)+$/i, '');
+    const handleRegenerateAllSkus = async () => {
+        const confirm1 = confirm('⚠️ DANGER: This will wipe and re-assign EVERY SKU in your database sequentially. This cannot be undone. Are you sure?');
+        if (!confirm1) return;
+        const confirm2 = confirm('Final confirmation: Are you ABSOLUTELY sure you want to re-sequence your entire inventory?');
+        if (!confirm2) return;
+
+        setIsSaving(true);
+        try {
+            const res = await fetch('/api/admin/regenerate-all-skus', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert(result.message);
+                fetchProducts();
+            } else {
+                alert(`Failed: ${result.error}`);
+            }
+        } catch (err) {
+            console.error('Bulk SKU regeneration failed', err);
+            alert('Failed to regenerate SKUs');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
-    const handleNormalizeSku = async (product) => {
+    const handleRegenerateSku = async (product) => {
         if (!product || !product._id) return;
-        const clean = normalizeSkuString(product.sku || '');
-        if (!clean || clean === product.sku) {
-            alert('SKU is already normalized');
-            return;
-        }
+        if (!confirm('This will assign a fresh, unique SKU based on the product category. Proceed?')) return;
+        
         try {
             const res = await fetch('/api/products', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...product, sku: clean })
+                body: JSON.stringify({ ...product, sku: '', generateSku: true })
             });
-            if (!res.ok) throw new Error('Failed to update');
+            const result = await res.json();
+            if (!res.ok || !result.success) {
+                throw new Error(result.error || 'Failed to generate SKU');
+            }
             fetchProducts();
-            alert(`SKU updated to ${clean}`);
+            alert(`New SKU assigned: ${result.product.sku}`);
         } catch (err) {
-            console.error('Normalize SKU failed', err);
-            alert('Failed to normalize SKU');
+            console.error('Regenerate SKU failed', err);
+            alert(`Error: ${err.message}`);
         }
     };
 
@@ -829,6 +898,17 @@ export default function ProductsManager() {
                     >
                         <Download size={16} /> All Excel
                     </button>
+                    <label className="p-4 bg-white border border-gray-200 text-gray-700 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:border-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center gap-2 cursor-pointer">
+                        <Plus size={16} /> Import Prices
+                        <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImportExcel} />
+                    </label>
+                    <button
+                        onClick={handleRegenerateAllSkus}
+                        className="p-4 bg-white border border-gray-200 text-red-400 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:border-red-500 hover:text-red-600 hover:bg-red-50 transition-all flex items-center gap-2"
+                        title="DANGER: Regenerate All SKUs"
+                    >
+                        <RefreshCw size={16} /> Clean All SKUs
+                    </button>
                     <button
                         onClick={() => setIsModalOpen(true)}
                         className="flex items-center gap-2 px-8 py-4 bg-gray-950 text-white rounded-2xl font-black text-sm transition-all hover:scale-105 active:scale-95 shadow-xl shadow-gray-200"
@@ -914,7 +994,7 @@ export default function ProductsManager() {
                                         onEdit={handleEdit}
                                         onDelete={handleDelete}
                                         onDuplicate={handleDuplicate}
-                                        onNormalizeSku={handleNormalizeSku}
+                                        onRegenerateSku={handleRegenerateSku}
                                         onToggleFeatured={handleToggleFeatured}
                                         onToggleStatus={handleToggleStatus}
                                         formatDimensions={formatDimensions}

@@ -37,6 +37,7 @@ const productSchema = new mongoose.Schema({
     },
     // Optional explicit tiered prices provided by admin
     priceAt1: { type: Number },
+    priceAt50: { type: Number },
     priceAt100: { type: Number },
     priceAt500: { type: Number },
     attributes: [{
