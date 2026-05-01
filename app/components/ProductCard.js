@@ -140,7 +140,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
       <div className="relative mb-4 sm:mb-5 aspect-4/5 overflow-hidden rounded-2xl sm:rounded-4xl bg-gray-50 border border-gray-950/8 shadow-sm transition-all group-hover:shadow-2xl group-hover:shadow-emerald-500/10 group-hover:border-gray-950/20">
         <Image
           src={img || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg"}
-          alt={name}
+          alt={name || 'Product image'}
           width={500}
           height={500}
           unoptimized={img?.includes('boxfox.in') || !img}
@@ -150,7 +150,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
         {hoverImage && (
           <Image
             src={hoverImage}
-            alt={`${name} hover`}
+            alt={`${name || 'Product'} hover`}
             width={500}
             height={500}
             unoptimized={hoverImage.includes('boxfox.in')}
@@ -238,15 +238,27 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           <div className="flex flex-col justify-center min-w-0">
             <span className="text-sm sm:text-xl font-black text-gray-950 tracking-tighter leading-none">
               {(() => {
-                const qty = product.minOrderQuantity || 10;
-                const computed = unitPriceFromThreePoints({ priceAt1: product.priceAt1, priceAt100: product.priceAt100, priceAt500: product.priceAt500 }, qty);
-                if (computed) return `₹${Math.round(computed).toLocaleString('en-IN')}`;
-                return typeof price === 'string' ? price : `₹${price?.toLocaleString('en-IN')}`;
+                // Try tiered pricing first
+                if (product.priceAt1 || product.priceAt100 || product.priceAt500) {
+                  const qty = product.minOrderQuantity || 10;
+                  const computed = unitPriceFromThreePoints({ priceAt1: product.priceAt1, priceAt100: product.priceAt100, priceAt500: product.priceAt500 }, qty);
+                  if (computed && computed > 0) return `₹${Math.round(computed).toLocaleString('en-IN')}`;
+                }
+                // Try minPrice
+                if (product.minPrice && !isNaN(product.minPrice) && product.minPrice > 0) {
+                  return `₹${Math.round(Number(product.minPrice)).toLocaleString('en-IN')}`;
+                }
+                // Try base price
+                if (price && !isNaN(price) && price > 0) {
+                  return `₹${Math.round(Number(price)).toLocaleString('en-IN')}`;
+                }
+                // Fallback
+                return 'Price on Request';
               })()}
             </span>
-            {originalPrice && (
+            {originalPrice && !isNaN(originalPrice) && (
               <span className="text-[9px] sm:text-[10px] font-bold text-gray-300 line-through mt-0.5">
-                ₹{originalPrice.toLocaleString('en-IN')}
+                ₹{Math.round(Number(originalPrice)).toLocaleString('en-IN')}
               </span>
             )}
           </div>

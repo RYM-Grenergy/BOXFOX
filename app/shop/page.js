@@ -103,18 +103,30 @@ function ShopPageInner() {
         fetch('/api/products?all=true')
             .then(res => res.json())
             .then(data => {
+                console.log("[ShopPage] API Response:", data);
+                
                 if (Array.isArray(data)) {
-                    // Calculate total product count only — category order is canonical (matches home page)
-                    const total = data.reduce((acc, section) => acc + (section.items?.length || 0), 0);
+                    console.log("[ShopPage] Data is array with length:", data.length);
+                    // Handle both flat array and sections structure
+                    let total = 0;
+                    if (data.length > 0 && data[0].items) {
+                        // Sections structure - sum items from all sections
+                        total = data.reduce((acc, section) => acc + (section.items?.length || 0), 0);
+                        console.log("[ShopPage] Detected sections structure, total:", total);
+                    } else {
+                        // Flat array of products
+                        total = data.length;
+                        console.log("[ShopPage] Detected flat array, total:", total);
+                    }
                     setTotalProducts(total);
                 } else if (data.error) {
-                    console.warn("Shop Filter: API returned connection error, showing empty state.");
+                    console.warn("[ShopPage] API returned connection error:", data.error);
                 } else {
-                    console.error("ShopPage: API returned unexpected format", data);
+                    console.error("[ShopPage] API returned unexpected format:", data);
                 }
             })
             .catch(err => {
-                console.warn("Shop Fetch Blocked:", err);
+                console.error("[ShopPage] Fetch failed:", err);
             });
     }, []);
 
@@ -132,7 +144,7 @@ function ShopPageInner() {
                                 The<br /><span className="text-emerald-500">Shop.</span>
                             </motion.h1>
                             <p className="text-[10px] sm:text-xl text-gray-400 font-medium mt-1 sm:mt-2 leading-relaxed px-4 sm:px-0 max-w-xl">
-                                Engineered for Freshness. Access <span className="text-emerald-600 font-black">{totalProducts}+</span> precision-crafted packaging solutions optimized for food safety and brand dominance.
+                                Discover <span className="text-emerald-600 font-black">{totalProducts}+ precision-crafted</span> packaging solutions. From sustainable food boxes to premium gift packaging, engineered for freshness, durability, and brand excellence.
                             </p>
                         </div>
 

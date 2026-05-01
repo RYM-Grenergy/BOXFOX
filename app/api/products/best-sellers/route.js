@@ -29,15 +29,14 @@ export async function GET() {
 
         // Format similarly to what the frontend expects
         const formattedProducts = products.map((p) => {
-            const formattedPrice = p.minPrice
-                ? (p.maxPrice ? `₹${p.minPrice} - ₹${p.maxPrice}` : `₹${p.minPrice}`)
-                : (p.price ? (String(p.price).startsWith('₹') ? p.price : `₹${p.price}`) : "Price on Request");
-
             return {
                 _id: p._id,
                 id: p.wpId,
                 name: p.name,
-                price: formattedPrice,
+                price: (p.minPrice && !isNaN(p.minPrice)) ? Number(p.minPrice) : (p.price && !isNaN(p.price) ? Number(p.price) : 0),
+                priceAt1: p.priceAt1 || null,
+                priceAt100: p.priceAt100 || null,
+                priceAt500: p.priceAt500 || null,
                 minPrice: p.minPrice,
                 maxPrice: p.maxPrice,
                 badge: p.badge || (p.isFeatured ? "Featured" : null),
@@ -46,7 +45,8 @@ export async function GET() {
                 hasVariants: p.type === "variable",
                 outOfStock: p.stock_status === "outofstock",
                 dimensions: p.dimensions || { length: 8.5, width: 6.5, height: 2, unit: 'inch' },
-                pacdoraId: p.pacdoraId
+                pacdoraId: p.pacdoraId,
+                minOrderQuantity: p.minOrderQuantity || 10
             };
         });
 

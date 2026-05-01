@@ -145,8 +145,8 @@ export default function ProductSection({ searchQuery = "", category = "All", pri
 
             {/* Product Grid - Removed heavy Framer Motion animations for better performance */}
             <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-x-4 sm:gap-x-8 gap-y-8 sm:gap-y-12 px-2 sm:px-0">
-              {pageProducts.map((product) => (
-                <div key={product.id || product._id} className="h-full">
+              {pageProducts.map((product, index) => (
+                <div key={product._id || product.id || `product-${index}`} className="h-full">
                   <MemoProductCard product={product} />
                 </div>
               ))}

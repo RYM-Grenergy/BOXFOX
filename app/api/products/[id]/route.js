@@ -33,9 +33,10 @@ export async function GET(req, { params }) {
                 source: 'core',
                 allowWishlist: true,
                 name: product.name,
-                price: product.minPrice
-                    ? (product.maxPrice ? `₹${product.minPrice} - ₹${product.maxPrice}` : `₹${product.minPrice}`)
-                    : (product.price ? (String(product.price).startsWith('₹') ? product.price : `₹${product.price}`) : "Price on Request"),
+                price: (product.minPrice && !isNaN(product.minPrice)) ? Number(product.minPrice) : (product.price && !isNaN(product.price) ? Number(product.price) : 0),
+                priceAt1: product.priceAt1 || null,
+                priceAt100: product.priceAt100 || null,
+                priceAt500: product.priceAt500 || null,
                 badge: product.badge,
                 regular_price: product.regular_price,
                 sale_price: product.sale_price,
