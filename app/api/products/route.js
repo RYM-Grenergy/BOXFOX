@@ -240,6 +240,7 @@ export async function POST(req) {
         'Wok Box': 'WOK',
         'Wrap Box': 'WRP',
         'Popcorn': 'PCN',
+        'Carry Bag': 'CBG',
         'Packaging': 'PKG',
         'Custom': 'CST'
       };

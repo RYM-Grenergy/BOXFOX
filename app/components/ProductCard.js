@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ShoppingCart, Heart, ArrowUpRight, Plus } from "lucide-react";
 import { useCart } from "@/app/context/CartContext";
 import { unitPriceFromThreePoints } from '@/lib/boxfoxPricing';
+import { calculateDynamicPrice } from '@/lib/boxEngine';
 import { useToast } from "@/app/context/ToastContext";
 
 let wishlistIdsCache = null;
@@ -238,10 +239,10 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           <div className="flex flex-col justify-center min-w-0">
             <span className="text-sm sm:text-xl font-black text-gray-950 tracking-tighter leading-none">
               {(() => {
-                // Try tiered pricing first
-                if (product.priceAt1 || product.priceAt100 || product.priceAt500) {
+                // Try tiered pricing first (New Logic: 1, 50, 100)
+                if (product.priceAt1 || product.priceAt50 || product.priceAt100) {
                   const qty = product.minOrderQuantity || 10;
-                  const computed = unitPriceFromThreePoints({ priceAt1: product.priceAt1, priceAt100: product.priceAt100, priceAt500: product.priceAt500 }, qty);
+                  const computed = calculateDynamicPrice(qty, product.priceAt1, product.priceAt50, product.priceAt100);
                   if (computed && computed > 0) return `₹${Math.round(computed).toLocaleString('en-IN')}`;
                 }
                 // Try minPrice

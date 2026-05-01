@@ -20,9 +20,10 @@ import {
     ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { runBoxEngine, calculateTiersFromBase } from '@/lib/boxEngine';
 
 // Memoized ProductRow component to prevent unnecessary re-renders
-const ProductRow = React.memo(({ product, onEdit, onDelete, onDuplicate, onNormalizeSku, onToggleFeatured, formatDimensions }) => (
+const ProductRow = React.memo(({ product, onEdit, onDelete, onDuplicate, onNormalizeSku, onToggleFeatured, onToggleStatus, formatDimensions }) => (
     <tr className="hover:bg-gray-50/50 transition-colors group">
         <td className="px-8 py-5">
             <div className="flex items-center gap-4">
@@ -71,7 +72,16 @@ const ProductRow = React.memo(({ product, onEdit, onDelete, onDuplicate, onNorma
                 )}
             </div>
         </td>
-        <td className="px-8 py-5 text-sm font-black text-gray-950">{product.price}</td>
+        <td className="px-8 py-5">
+            {product.priceAt1 || product.priceAt100 ? (
+                <div className="flex flex-col">
+                    <span className="text-xs font-black text-gray-950">₹{product.priceAt1 || '0.00'} - ₹{product.priceAt100 || '0.00'}</span>
+                    <span className="text-[9px] text-gray-400 font-medium uppercase tracking-widest">Per Unit (1-100)</span>
+                </div>
+            ) : (
+                <span className="text-sm font-black text-gray-950">₹{product.price || '0'}</span>
+            )}
+        </td>
         <td className="px-8 py-5">
             {(() => {
                 const d = formatDimensions(product.dimensions);
@@ -86,10 +96,17 @@ const ProductRow = React.memo(({ product, onEdit, onDelete, onDuplicate, onNorma
             })()}
         </td>
         <td className="px-8 py-5">
-            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${product.isActive === false ? 'bg-gray-100 text-gray-400' : (product.outOfStock ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600')
-                }`}>
-                {product.isActive === false ? 'Inactive' : (product.outOfStock ? 'Out of Stock' : 'Active')}
-            </span>
+            <div className="flex items-center gap-3">
+                <button
+                    onClick={() => onToggleStatus(product)}
+                    className={`w-10 h-5 rounded-full transition-all duration-300 relative shrink-0 ${product.isActive !== false ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-gray-200'}`}
+                >
+                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm ${product.isActive !== false ? 'right-0.5' : 'left-0.5'}`} />
+                </button>
+                <span className={`text-[10px] font-black uppercase tracking-widest whitespace-nowrap ${product.isActive === false ? 'text-gray-400' : (product.outOfStock ? 'text-red-600' : 'text-emerald-600')}`}>
+                    {product.isActive === false ? 'Inactive' : (product.outOfStock ? 'Out of Stock' : 'Active')}
+                </span>
+            </div>
         </td>
         <td className="px-8 py-5">
             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -148,8 +165,8 @@ export default function ProductsManager() {
         brand: 'BoxFox',
         minOrderQuantity: 10,
         priceAt1: '',
+        priceAt50: '',
         priceAt100: '',
-        priceAt500: '',
         tags: '',
         specifications: [],
         length: '',
@@ -190,13 +207,13 @@ export default function ProductsManager() {
         setIsUploadingImages(true);
         try {
             const { compressFile } = await import('@/lib/compression');
-            
+
             // Parallelize compression and upload
             const uploadPromises = files.map(async (file) => {
                 try {
                     // Compress if needed (even for product images, targeting a reasonable size like 2MB)
                     const fileToUpload = await compressFile(file, 2);
-                    
+
                     const formDataObj = new FormData();
                     formDataObj.append('image', fileToUpload);
                     formDataObj.append('type', 'other');
@@ -263,7 +280,7 @@ export default function ProductsManager() {
                 console.log('File > 9MB, attempting compression...');
                 const { compressFile } = await import('@/lib/compression');
                 fileToUpload = await compressFile(file, 8.5);
-                
+
                 if (fileToUpload.size > 9.5 * 1024 * 1024) {
                     console.warn('File is still over 9MB after optimization. Proceeding with upload as requested...');
                 }
@@ -315,7 +332,7 @@ export default function ProductsManager() {
                 console.log('File > 9MB, attempting compression...');
                 const { compressFile } = await import('@/lib/compression');
                 fileToUpload = await compressFile(file, 8.5);
-                
+
                 if (fileToUpload.size > 9.5 * 1024 * 1024) {
                     console.warn('File is still over 9MB after optimization. Proceeding with upload as requested...');
                 }
@@ -401,6 +418,9 @@ export default function ProductsManager() {
                         height: '',
                         unit: 'inch',
                         pacdoraId: '',
+                        priceAt1: '',
+                        priceAt50: '',
+                        priceAt100: '',
                         isActive: true
                     });
                 }, 1500);
@@ -450,9 +470,6 @@ export default function ProductsManager() {
 
         // Extract specifications
         const specs = product.specifications || [];
-        const specCategory = specs.find(s => s.key === 'Category')?.value || '';
-        const specSubCategory = specs.find(s => s.key === 'Sub Category')?.value || '';
-        const specDetail = specs.find(s => s.key === 'Specification')?.value || '';
 
         // Extract images
         const imgs = Array.isArray(product.images) ? product.images : (typeof product.images === 'string' ? product.images.split(',').map(s => s.trim()) : []);
@@ -478,13 +495,13 @@ export default function ProductsManager() {
             'Tags (Comma separated)': tags,
             'Short Description': product.short_description || '',
             'Full Description': product.description || '',
-            'Category (Spec)': specCategory,
-            'Sub Category': specSubCategory,
-            'Specification': specDetail,
             'Length': toInch(dim.length, unit),
             'Width': toInch(dim.width, unit),
             'Height': toInch(dim.height, unit),
             'Unit': 'inch',
+            'Price @ 1': product.priceAt1,
+            'Price @ 50': product.priceAt50,
+            'Price @ 100': product.priceAt100,
             'Product Images1': img1,
             'Product Images2': img2,
             'Dieline': product.dielineImg || ''
@@ -507,9 +524,6 @@ export default function ProductsManager() {
 
                 // Extract specifications
                 const specs = p.specifications || [];
-                const specCategory = specs.find(s => s.key === 'Category')?.value || '';
-                const specSubCategory = specs.find(s => s.key === 'Sub Category')?.value || '';
-                const specDetail = specs.find(s => s.key === 'Specification')?.value || '';
 
                 // Extract images
                 const imgs = Array.isArray(p.images) ? p.images : (typeof p.images === 'string' ? p.images.split(',').map(s => s.trim()) : []);
@@ -535,13 +549,13 @@ export default function ProductsManager() {
                     'Tags (Comma separated)': tags,
                     'Short Description': p.short_description || '',
                     'Full Description': p.description || '',
-                    'Category (Spec)': specCategory,
-                    'Sub Category (Spec)': specSubCategory,
-                    'Specification': specDetail,
                     'Length': toInch(dim.length, unit),
                     'Width': toInch(dim.width, unit),
                     'Height': toInch(dim.height, unit),
                     'Unit': 'inch',
+                    'Price @ 1': p.priceAt1,
+                    'Price @ 50': p.priceAt50,
+                    'Price @ 100': p.priceAt100,
                     'Product Images1': img1,
                     'Product Images2': img2,
                     'Dieline': p.dielineImg || ''
@@ -591,8 +605,8 @@ export default function ProductsManager() {
             isFeatured: product.isFeatured || false
             ,
             priceAt1: product.priceAt1 || '',
-            priceAt100: product.priceAt100 || '',
-            priceAt500: product.priceAt500 || ''
+            priceAt50: product.priceAt50 || '',
+            priceAt100: product.priceAt100 || ''
         });
         setIsModalOpen(true);
     };
@@ -640,7 +654,10 @@ export default function ProductsManager() {
             unit: product.dimensions?.unit || 'inch',
             pacdoraId: product.pacdoraId || '',
             isActive: product.isActive !== false,
-            isFeatured: false
+            isFeatured: false,
+            priceAt1: product.priceAt1 || '',
+            priceAt50: product.priceAt50 || '',
+            priceAt100: product.priceAt100 || ''
         });
         setIsModalOpen(true);
     };
@@ -669,6 +686,65 @@ export default function ProductsManager() {
         } catch (err) {
             console.error('Normalize SKU failed', err);
             alert('Failed to normalize SKU');
+        }
+    };
+
+    const handleRunBoxEngine = () => {
+        if (!formData.length || !formData.width || !formData.height) {
+            alert('Please enter dimensions (L, W, H) first.');
+            return;
+        }
+        const prices = runBoxEngine(formData.category, {
+            length: formData.length,
+            width: formData.width,
+            height: formData.height,
+            unit: formData.unit
+        });
+        setFormData({
+            ...formData,
+            priceAt1: prices.priceAt1,
+            priceAt50: prices.priceAt50,
+            priceAt100: prices.priceAt100
+        });
+        alert(`Box Engine: Prices calculated based on ${formData.category} specs.`);
+    };
+
+    const handleSyncBulkPrices = () => {
+        if (!formData.priceAt1) {
+            alert('Please enter Price @1 first.');
+            return;
+        }
+        const prices = calculateTiersFromBase(parseFloat(formData.priceAt1), formData.category, {
+            length: formData.length,
+            width: formData.width,
+            height: formData.height,
+            unit: formData.unit
+        });
+        setFormData({
+            ...formData,
+            priceAt1: prices[1],
+            priceAt50: prices[50],
+            priceAt100: prices[100]
+        });
+        alert('Bulk prices updated based on Price @1 and manufacturing ratios.');
+    };
+
+    const handleToggleStatus = async (product) => {
+        try {
+            const newStatus = product.isActive === false ? true : false;
+            const res = await fetch('/api/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...product,
+                    isActive: newStatus
+                })
+            });
+            if (res.ok) {
+                setProducts(prev => prev.map(p => (p._id === product._id || p.id === product.id) ? { ...p, isActive: newStatus } : p));
+            }
+        } catch (err) {
+            console.error("Failed to toggle status", err);
         }
     };
 
@@ -722,7 +798,7 @@ export default function ProductsManager() {
         const pages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
         const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
         const paginated = filtered.slice(startIdx, startIdx + ITEMS_PER_PAGE);
-        
+
         return { filteredProducts: paginated, totalPages: pages, totalFiltered: filtered.length };
     }, [products, searchQuery, selectedCategory, currentPage]);
 
@@ -840,6 +916,7 @@ export default function ProductsManager() {
                                         onDuplicate={handleDuplicate}
                                         onNormalizeSku={handleNormalizeSku}
                                         onToggleFeatured={handleToggleFeatured}
+                                        onToggleStatus={handleToggleStatus}
                                         formatDimensions={formatDimensions}
                                     />
                                 ))}
@@ -847,7 +924,7 @@ export default function ProductsManager() {
                         </table>
                     )}
                 </div>
-                
+
                 {/* Pagination Controls */}
                 {!loading && filteredProducts.length > 0 && totalPages > 1 && (
                     <div className="flex items-center justify-center gap-4 p-6 border-t border-gray-100 bg-gray-50/50">
@@ -859,7 +936,7 @@ export default function ProductsManager() {
                         >
                             <ChevronLeft size={20} />
                         </button>
-                        
+
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-bold text-gray-700">
                                 Page {currentPage} of {totalPages}
@@ -868,7 +945,7 @@ export default function ProductsManager() {
                                 ({(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, totalFiltered)} of {totalFiltered})
                             </span>
                         </div>
-                        
+
                         <button
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
@@ -897,7 +974,7 @@ export default function ProductsManager() {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="relative w-full max-w-2xl h-full bg-white shadow-2xl p-10 overflow-y-auto"
+                            className="relative w-full max-w-4xl h-full bg-white shadow-2xl p-10 overflow-y-auto"
                         >
                             <div className="flex items-center justify-between mb-12">
                                 <div>
@@ -1052,6 +1129,7 @@ export default function ProductsManager() {
                                                 </div>
                                             </div>
 
+
                                             <div className="space-y-2">
                                                 <label className="text-xs font-black uppercase tracking-widest text-gray-400">Tags (Comma separated)</label>
                                                 <input
@@ -1195,41 +1273,63 @@ export default function ProductsManager() {
                                                 </div>
                                             </div>
 
-                                            <div className="grid grid-cols-3 gap-6">
-                                                <div className="space-y-2">
-                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Unit Price @1</label>
-                                                    <input
-                                                        type="number"
-                                                        step="0.01"
-                                                        value={formData.priceAt1}
-                                                        onChange={e => setFormData({ ...formData, priceAt1: e.target.value })}
-                                                        placeholder="e.g. 9"
-                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Unit Price @100</label>
-                                                    <input
-                                                        type="number"
-                                                        step="0.01"
-                                                        value={formData.priceAt100}
-                                                        onChange={e => setFormData({ ...formData, priceAt100: e.target.value })}
-                                                        placeholder="e.g. 7"
-                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <label className="text-xs font-black uppercase tracking-widest text-gray-400">Unit Price @500</label>
-                                                    <input
-                                                        type="number"
-                                                        step="0.01"
-                                                        value={formData.priceAt500}
-                                                        onChange={e => setFormData({ ...formData, priceAt500: e.target.value })}
-                                                        placeholder="e.g. 5"
-                                                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all"
-                                                    />
-                                                </div>
-                                            </div>
+                                            <div className="bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 space-y-6">
+                                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                     <div>
+                                                         <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-1">Standardized Pricing</label>
+                                                         <p className="text-[10px] text-gray-400 font-medium italic">Auto-calculate tiers based on manufacturing specs</p>
+                                                     </div>
+                                                 </div>
+
+                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                                                     <div className="space-y-3">
+                                                         <div className="flex items-center justify-between px-1">
+                                                             <label className="text-[10px] font-black uppercase tracking-tight text-gray-400">Price @ 1</label>
+                                                         </div>
+                                                         <div className="relative group">
+                                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 font-black text-sm group-focus-within:text-gray-950 transition-colors">₹</span>
+                                                             <input
+                                                                 type="number"
+                                                                 step="0.01"
+                                                                 value={formData.priceAt1 || ''}
+                                                                 onChange={e => setFormData({ ...formData, priceAt1: e.target.value })}
+                                                                 placeholder="0.00"
+                                                                 className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-6 py-4 font-black text-gray-950 focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 outline-none transition-all shadow-sm"
+                                                             />
+                                                         </div>
+                                                     </div>
+
+                                                     <div className="space-y-3">
+                                                         <label className="text-[10px] font-black uppercase tracking-tight text-gray-400 px-1">Price @ 50</label>
+                                                         <div className="relative group">
+                                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 font-black text-sm group-focus-within:text-gray-950 transition-colors">₹</span>
+                                                             <input
+                                                                 type="number"
+                                                                 step="0.01"
+                                                                 value={formData.priceAt50 || ''}
+                                                                 onChange={e => setFormData({ ...formData, priceAt50: e.target.value })}
+                                                                 placeholder="0.00"
+                                                                 className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-6 py-4 font-black text-gray-950 focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 outline-none transition-all shadow-sm"
+                                                             />
+                                                         </div>
+                                                     </div>
+
+                                                     <div className="space-y-3">
+                                                         <label className="text-[10px] font-black uppercase tracking-tight text-gray-400 px-1">Price @ 100</label>
+                                                         <div className="relative group">
+                                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 font-black text-sm group-focus-within:text-gray-950 transition-colors">₹</span>
+                                                             <input
+                                                                 type="number"
+                                                                 step="0.01"
+                                                                 value={formData.priceAt100 || ''}
+                                                                 onChange={e => setFormData({ ...formData, priceAt100: e.target.value })}
+                                                                 placeholder="0.00"
+                                                                 className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-6 py-4 font-black text-gray-950 focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 outline-none transition-all shadow-sm"
+                                                             />
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                             </div>
 
                                             <div className="space-y-2">
                                                 <label className="text-xs font-black uppercase tracking-widest text-gray-400">Product Images</label>

@@ -21,7 +21,8 @@ import { useCart } from '@/app/context/CartContext';
 import { useToast } from '@/app/context/ToastContext';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { calculateBoxPrice, MARKUP_TYPES, unitPriceFromThreePoints } from '@/lib/boxfoxPricing';
+import { calculateBoxPrice, MARKUP_TYPES } from '@/lib/boxfoxPricing';
+import { calculateDynamicPrice } from '@/lib/boxEngine';
 import { BOX_SPECIFICATIONS } from '@/lib/box-specifications';
 
 export default function ProductPage() {
@@ -105,12 +106,10 @@ export default function ProductPage() {
         s.unit === unit
     );
 
-    // If admin has supplied explicit tier prices (1,100,500), prefer that pricing curve
-    const tierUnitPrice = unitPriceFromThreePoints({
-        priceAt1: product.priceAt1,
-        priceAt100: product.priceAt100,
-        priceAt500: product.priceAt500
-    }, parseInt(quantity) || 10);
+    // If admin has supplied explicit tier prices (1,50,100), use the dynamic power-decay curve
+    const tierUnitPrice = (product.priceAt1 && product.priceAt100) 
+        ? calculateDynamicPrice(parseInt(quantity) || 10, product.priceAt1, product.priceAt50, product.priceAt100)
+        : null;
 
     const pricingResult = tierUnitPrice
         ? { finalPerUnit: tierUnitPrice, finalTotal: Math.ceil(tierUnitPrice * (parseInt(quantity) || 10)) }
@@ -240,44 +239,67 @@ export default function ProductPage() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
-
                                     <div className="space-y-4">
-                                        <div className="relative">
-                                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Specify Units</p>
-                                            <div className="relative group">
-                                                <input
-                                                    type="number"
-                                                    value={quantity}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        if (val === "") {
-                                                            setQuantity("");
-                                                        } else {
-                                                            setQuantity(parseInt(val) || "");
-                                                        }
-                                                    }}
-                                                    onBlur={() => {
-                                                        if (!quantity || quantity < 10) setQuantity(10);
-                                                    }}
-                                                    className="w-full py-4 px-6 rounded-2xl bg-white border-2 border-gray-100 font-black text-sm text-gray-950 focus:border-emerald-500 focus:bg-emerald-50/10 outline-none transition-all pr-20"
-                                                    min={10}
-                                                />
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1 bg-gray-50 rounded-lg text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                                    Min 10
+                                        {product.priceAt1 && product.priceAt100 && (
+                                            <div className="bg-white/50 backdrop-blur-sm border border-gray-100 rounded-2xl p-4 mb-2">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Volume Savings</p>
+                                                    <span className="text-[8px] font-black bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase tracking-widest animate-pulse">Better as you buy more</span>
+                                                </div>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    <div className="text-center p-2 rounded-xl bg-gray-50 border border-gray-100">
+                                                        <p className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">1 Unit</p>
+                                                        <p className="text-sm font-black text-gray-950 tracking-tighter">₹{product.priceAt1}</p>
+                                                    </div>
+                                                    <div className="text-center p-2 rounded-xl bg-emerald-50 border border-emerald-100">
+                                                        <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter">50 Units</p>
+                                                        <p className="text-sm font-black text-emerald-600 tracking-tighter">₹{product.priceAt50 || '—'}</p>
+                                                    </div>
+                                                    <div className="text-center p-2 rounded-xl bg-emerald-600 border border-emerald-600 shadow-lg shadow-emerald-500/20">
+                                                        <p className="text-[8px] font-black text-emerald-50 uppercase tracking-tighter">100 Units</p>
+                                                        <p className="text-sm font-black text-white tracking-tighter">₹{product.priceAt100}</p>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        )}
+
+                                        <div className="space-y-4">
+                                            <div className="relative">
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Specify Units</p>
+                                                <div className="relative group">
+                                                    <input
+                                                        type="number"
+                                                        value={quantity}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            if (val === "") {
+                                                                setQuantity("");
+                                                            } else {
+                                                                setQuantity(parseInt(val) || "");
+                                                            }
+                                                        }}
+                                                        onBlur={() => {
+                                                            const minQ = Math.max(10, product.minOrderQuantity || 10);
+                                                            if (!quantity || quantity < minQ) setQuantity(minQ);
+                                                        }}
+                                                        className="w-full py-4 px-6 rounded-2xl bg-white border-2 border-gray-100 font-black text-sm text-gray-950 focus:border-emerald-500 focus:bg-emerald-50/10 outline-none transition-all pr-20"
+                                                        min={10}
+                                                    />
+                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 px-3 py-1 bg-gray-50 rounded-lg text-[9px] font-black text-gray-400 uppercase tracking-widest">
+                                                        Min {Math.max(10, product.minOrderQuantity || 10)}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => addToCart(product, quantity)}
+                                                className="w-full py-5 bg-gray-950 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-emerald-600 transition-all flex items-center justify-center gap-3 shadow-xl shadow-gray-200 group"
+                                            >
+                                                <ShoppingCart size={18} className="group-hover:scale-110 transition-transform" /> Add to Basket
+                                            </button>
+
                                         </div>
-
-                                        <button
-                                            onClick={() => addToCart(product, quantity)}
-                                            className="w-full py-5 bg-gray-950 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] hover:bg-emerald-600 transition-all flex items-center justify-center gap-3 shadow-xl shadow-gray-200 group"
-                                        >
-                                            <ShoppingCart size={18} className="group-hover:scale-110 transition-transform" /> Add to Basket
-                                        </button>
-
                                     </div>
-                                </div>
                             </div>
 
 
