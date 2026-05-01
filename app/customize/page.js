@@ -995,11 +995,19 @@ function CustomizeLabContent() {
   const pricingResult = (() => {
     if (!product || !quantity || quantity <= 0) return null;
     try {
-      const pricingSpec = (selectedSpec && typeof selectedSpec === 'object')
-        ? selectedSpec
-        : (selectedSpec === 'custom_contact'
-          ? (estimatedSpec || standardSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 })
-          : (standardSpec || estimatedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 }));
+      const pricingSpec = {
+        ...((selectedSpec && typeof selectedSpec === 'object')
+          ? selectedSpec
+          : (selectedSpec === 'custom_contact'
+            ? (estimatedSpec || standardSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 })
+            : (standardSpec || estimatedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 }))
+        ),
+        l: dimensions.l,
+        w: dimensions.w,
+        h: dimensions.h,
+        unit: unit,
+        category: selectedCategory
+      };
 
       return calculateBoxPrice({
         spec: pricingSpec,
