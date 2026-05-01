@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShoppingCart,
@@ -82,7 +82,7 @@ function CustomizeLabContent() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Custom formula states
-  const [selectedGSM, setSelectedGSM] = useState("300");
+  const [selectedGSM, setSelectedGSM] = useState("280");
   const [selectedMaterial, setSelectedMaterial] = useState("SBS");
   const [selectedBrand, setSelectedBrand] = useState("ITC");
   const [selectedFinish, setSelectedFinish] = useState("Plain");
@@ -92,6 +92,7 @@ function CustomizeLabContent() {
   const [selectedMarkup, setSelectedMarkup] = useState("Retail");
   const [dieCutting, setDieCutting] = useState(true);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [unit, setUnit] = useState("in"); // "in" or "mm"
 
   const [labConfig, setLabConfig] = useState({ hierarchies: [], specifications: [] });
   const [categories, setCategories] = useState([]);
@@ -104,13 +105,18 @@ function CustomizeLabContent() {
       try {
         const res = await fetch('/api/lab/config');
         const data = await res.json();
-        setLabConfig(data);
+        
+        if (data && !data.error && data.hierarchies && data.specifications) {
+          setLabConfig(data);
 
-        const cats = data.hierarchies.map(h => h.category);
-        setCategories(cats);
+          const cats = data.hierarchies.map(h => h.category);
+          setCategories(cats);
 
-        if (selectedCategory === "All" || !cats.includes(selectedCategory)) {
-          setSelectedCategory(cats[0] || "Food");
+          if (selectedCategory === "All" || !cats.includes(selectedCategory)) {
+            setSelectedCategory(cats[0] || "Food");
+          }
+        } else {
+          console.error("Invalid lab config data format", data);
         }
       } catch (err) {
         console.error("Failed to fetch lab config:", err);
@@ -131,17 +137,63 @@ function CustomizeLabContent() {
   // Initial default size selection to ensure "Add to Basket" is visible on first load
   useEffect(() => {
     if (labConfig.specifications.length > 0 && selectedSubCategory && !selectedSpec) {
-      const defaultSpec = labConfig.specifications.find(s => 
-        (selectedCategory === "All" || s.category === selectedCategory) && 
+      const refSpec = labConfig.specifications.find(s =>
+        (selectedCategory === "All" || s.category === selectedCategory) &&
+        (selectedSubCategory === "All" || s.subCategory === selectedSubCategory) &&
+        (s.unit || "mm") === unit
+      ) || labConfig.specifications.find(s =>
+        (selectedCategory === "All" || s.category === selectedCategory) &&
         (selectedSubCategory === "All" || s.subCategory === selectedSubCategory)
       );
-      if (defaultSpec) {
-        setSelectedSpec(defaultSpec);
-        setDimensions({ l: defaultSpec.l, w: defaultSpec.w, h: defaultSpec.h });
-        setUnit(defaultSpec.unit || "mm");
+
+      if (refSpec) {
+        setSelectedSpec(refSpec);
+        setDimensions({ l: refSpec.l, w: refSpec.w, h: refSpec.h });
+        setUnit(refSpec.unit || "mm");
       }
     }
-  }, [labConfig.specifications, selectedCategory, selectedSubCategory]);
+  }, [labConfig.specifications, selectedCategory, selectedSubCategory, unit, dimensions, selectedSpec]);
+
+  const standardSpec = useMemo(() => {
+    if (!labConfig?.specifications?.length) return null;
+
+    const exact = labConfig.specifications.find(s =>
+      (selectedCategory === "All" || s.category === selectedCategory) &&
+      (selectedSubCategory === "All" || s.subCategory === selectedSubCategory) &&
+      (s.unit || "mm") === unit
+    );
+
+    if (exact) return exact;
+
+    return labConfig.specifications.find(s =>
+      (selectedCategory === "All" || s.category === selectedCategory) &&
+      (selectedSubCategory === "All" || s.subCategory === selectedSubCategory)
+    ) || null;
+  }, [labConfig.specifications, selectedCategory, selectedSubCategory, unit]);
+
+  const convertSpecDimensions = (spec, targetUnit) => {
+    if (!spec) return null;
+    const sourceUnit = (spec.unit || 'mm').toLowerCase();
+    const destUnit = (targetUnit || 'mm').toLowerCase();
+    const toMm = (value) => sourceUnit === 'in' ? value * 25.4 : value;
+    const toTarget = (valueMm) => destUnit === 'in' ? parseFloat((valueMm / 25.4).toFixed(1)) : parseFloat(valueMm.toFixed(0));
+    const lMm = toMm(parseFloat(spec.l) || 0);
+    const wMm = toMm(parseFloat(spec.w) || 0);
+    const hMm = toMm(parseFloat(spec.h) || 0);
+    return {
+      l: toTarget(lMm),
+      w: toTarget(wMm),
+      h: toTarget(hMm),
+    };
+  };
+
+  const calibratedDimensions = useMemo(() => convertSpecDimensions(standardSpec, unit), [standardSpec, unit]);
+
+  useEffect(() => {
+    if (selectedSpec === 'custom_contact' || !standardSpec || !calibratedDimensions) return;
+    setSelectedSpec(standardSpec);
+    setDimensions(calibratedDimensions);
+  }, [standardSpec, calibratedDimensions, selectedSpec]);
 
   const FINISH_OPTIONS = Object.keys(LAM_RATES);
   const PRINT_OPTIONS = Object.keys(COLOUR_FACTORS);
@@ -160,7 +212,6 @@ function CustomizeLabContent() {
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [isPromptEnhanced, setIsPromptEnhanced] = useState(false);
   const [customText, setCustomText] = useState("");
-  const [unit, setUnit] = useState("in"); // "in" or "mm"
   const [designName, setDesignName] = useState("Untitled Design");
   const [activeDesignId, setActiveDesignId] = useState(null);
 
@@ -185,7 +236,7 @@ function CustomizeLabContent() {
         w: parseFloat(w) || 8,
         h: parseFloat(h) || 4
       });
-      setSelectedSpec(null); // Switch to manual mode for precise matching
+      setSelectedSpec('custom_contact'); // Switch to custom mode for precise matching
     }
     if (u) setUnit(u);
     if (mat) setSelectedMaterial(mat);
@@ -640,13 +691,13 @@ function CustomizeLabContent() {
       s.l === l &&
       s.w === w &&
       s.h === h &&
-      (s.unit || 'mm') === (s.unit || 'mm') // Basic unit check
+      (s.unit || 'mm') === unit
     );
 
     if (match) {
       setEstimatedSpec(match);
     } else {
-      const closest = findClosestSpec(l, w, h, selectedCategory);
+      const closest = findClosestSpec(l, w, h, selectedCategory, unit);
       setEstimatedSpec(closest);
     }
   }, [dimensions, unit, labConfig.specifications, selectedCategory]);
@@ -665,7 +716,6 @@ function CustomizeLabContent() {
       setDimensions({ l: refSpec.l, w: refSpec.w, h: refSpec.h });
       setUnit(refSpec.unit || 'mm');
       setSelectedSpec(refSpec);
-      if (refSpec.gsm) setSelectedGSM(String(refSpec.gsm));
     }
   }, [selectedSubCategory, selectedCategory, labConfig.specifications]);
 
@@ -939,14 +989,20 @@ function CustomizeLabContent() {
 
   const currentSA = 2 * (dimInInches.l * dimInInches.w + dimInInches.w * dimInInches.h + dimInInches.h * dimInInches.l);
 
-  const gsmNum = parseInt(String(selectedGSM).replace(/[^0-9]/g, '')) || 300;
+  const gsmNum = parseInt(String(selectedGSM).replace(/[^0-9]/g, '')) || 280;
 
   // Calculate accurate price using the real engine
   const pricingResult = (() => {
     if (!product || !quantity || quantity <= 0) return null;
     try {
+      const pricingSpec = (selectedSpec && typeof selectedSpec === 'object')
+        ? selectedSpec
+        : (selectedSpec === 'custom_contact'
+          ? (estimatedSpec || standardSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 })
+          : (standardSpec || estimatedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 }));
+
       return calculateBoxPrice({
-        spec: (selectedSpec && typeof selectedSpec === 'object') ? selectedSpec : (estimatedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 }),
+        spec: pricingSpec,
         qty: Math.max(10, parseInt(quantity) || 10),
         gsm: gsmNum,
         material: selectedMaterial,
@@ -1650,7 +1706,7 @@ function CustomizeLabContent() {
               </div>
               <button
                 onClick={() => {
-                  setSelectedGSM("300");
+                  setSelectedGSM("280");
                   setSelectedMaterial("SBS");
                   setSelectedBrand("ITC");
                   setSelectedFinish("Plain");
@@ -1698,7 +1754,7 @@ function CustomizeLabContent() {
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Select GSM</label>
                   <select
-                    value={selectedGSM || "300"}
+                    value={selectedGSM || "280"}
                     onChange={(e) => setSelectedGSM(e.target.value)}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-[11px] font-bold text-gray-950 outline-none focus:border-emerald-500 transition-all"
                   >
@@ -1758,7 +1814,7 @@ function CustomizeLabContent() {
                               w: parseFloat((dimensions.w * factor).toFixed(u === 'mm' ? 0 : 1)),
                               h: parseFloat((dimensions.h * factor).toFixed(u === 'mm' ? 0 : 1)),
                             });
-                            setSelectedSpec(null); // Force WhatsApp for custom sizes after conversion
+                            setSelectedSpec('custom_contact'); // Force custom mode after conversion
                           }
                         }}
                         className={`px-2 py-0.5 rounded text-[8px] font-black uppercase transition-all ${unit === u ? 'bg-white text-emerald-500 shadow-sm' : 'text-gray-400'}`}
@@ -1787,7 +1843,7 @@ function CustomizeLabContent() {
                         if (selected.subCategory !== "All") setSelectedSubCategory(selected.subCategory);
                         if (selected.category === "Bakery") { setSelectedMaterial("SBS"); setSelectedBrand("ITC"); }
                       } else {
-                        setSelectedSpec(null);
+                        setSelectedSpec('custom_contact');
                       }
                     }}
                     className="w-full bg-white border-2 border-emerald-100 rounded-2xl px-5 py-3.5 text-xs font-black uppercase tracking-wider text-gray-950 outline-none transition-all cursor-pointer appearance-none"
@@ -1812,7 +1868,7 @@ function CustomizeLabContent() {
                           // Allow numbers and decimal point for fluid typing
                           if (val === "" || /^[0-9]*\.?[0-9]*$/.test(val)) {
                             setDimensions({ ...dimensions, [d]: val });
-                            setSelectedSpec(null); // Mark as custom
+                            setSelectedSpec('custom_contact');
                           }
                         }}
                         className="w-full h-12 bg-white border border-gray-200 rounded-xl px-2 text-lg font-black text-center focus:border-emerald-500 outline-none transition-all"

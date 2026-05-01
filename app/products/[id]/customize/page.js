@@ -34,6 +34,8 @@ import { useCart } from '@/app/context/CartContext';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Script from 'next/script';
+import { calculateBoxPrice } from '@/lib/boxfoxPricing';
+import { BOX_SPECIFICATIONS, findClosestSpec } from '@/lib/box-specifications';
 
 export default function CustomizePage() {
     const params = useParams();
@@ -44,6 +46,7 @@ export default function CustomizePage() {
     const [loading, setLoading] = useState(true);
     const [quantity, setQuantity] = useState(10);
     const [viewMode, setViewMode] = useState('2D');
+    const [labConfigs, setLabConfigs] = useState(null);
 
     // Customization States
     const [dimensions, setDimensions] = useState({ l: 12, w: 8, h: 4 });
@@ -104,6 +107,13 @@ export default function CustomizePage() {
             })
             .catch(() => setLoading(false));
     }, [params.id]);
+
+    useEffect(() => {
+        fetch('/api/admin/lab/config')
+            .then(res => res.json())
+            .then(data => setLabConfigs(data))
+            .catch(() => setLabConfigs(null));
+    }, []);
 
     useEffect(() => {
         if (isRestored && product) {
@@ -173,27 +183,38 @@ export default function CustomizePage() {
     const H = dimensions.h * factor;
 
     const currentSA = 2 * (dimensions.l * dimensions.w + dimensions.w * dimensions.h + dimensions.h * dimensions.l);
+    const unit = 'in';
 
-    // Base min/max pricing from product
-    const basePrice = typeof product?.price === 'number' ? product.price : parseFloat(String(product?.price || 15).replace(/[^0-9.]/g, '')) || 15;
-    const minPrice = typeof product?.minPrice === 'number' ? product.minPrice : parseFloat(String(product?.minPrice || basePrice).replace(/[^0-9.]/g, '')) || basePrice;
-    const maxPrice = typeof product?.maxPrice === 'number' ? product.maxPrice : parseFloat(String(product?.maxPrice || basePrice).replace(/[^0-9.]/g, '')) || basePrice;
+    const exactSpec = BOX_SPECIFICATIONS.find(s =>
+        s.l === dimensions.l &&
+        s.w === dimensions.w &&
+        s.h === dimensions.h &&
+        s.unit === unit
+    );
+    const selectedSpec = exactSpec || findClosestSpec(dimensions.l, dimensions.w, dimensions.h, product?.category || 'All', unit) || {
+        ups: 1,
+        machine: 2029,
+        sheetW: 20,
+        sheetH: 29,
+        unit: 'in'
+    };
 
-    // Practical Tiered Step Pricing
-    const diff = maxPrice - minPrice;
-    let unitPriceVal = maxPrice;
+    const pricingResult = calculateBoxPrice({
+        spec: selectedSpec,
+        qty: Math.max(10, parseInt(quantity) || 10),
+        gsm: 280,
+        material: 'SBS',
+        brand: 'ITC',
+        colours: 'Four Colour',
+        lamination: 'Plain',
+        addon: 'Plain',
+        dieCutting: true,
+        markupType: 'Retail',
+        sides: 'One'
+    }, labConfigs);
 
-    if (quantity >= 5000) unitPriceVal = minPrice;
-    else if (quantity >= 1000) unitPriceVal = maxPrice - (diff * 0.4651);
-    else if (quantity >= 500) unitPriceVal = maxPrice - (diff * 0.4205);
-    else if (quantity >= 100) unitPriceVal = maxPrice - (diff * 0.3364);
-    else if (quantity >= 50) unitPriceVal = maxPrice - (diff * 0.1682);
-    else if (quantity >= 30) unitPriceVal = maxPrice - (diff * 0.10);
-    else if (quantity >= 20) unitPriceVal = maxPrice - (diff * 0.05);
-    else unitPriceVal = maxPrice;
-
-    // Apply surface area multiplier
-    const calculatedUnitPrice = (unitPriceVal * (currentSA / 288)).toFixed(2);
+    const calculatedUnitPrice = pricingResult.finalPerUnit.toFixed(2);
+    const calculatedTotalPrice = pricingResult.grandTotal.toLocaleString('en-IN');
 
     if (loading || !product) return <div className="min-h-screen bg-[#020617] flex items-center justify-center text-emerald-500 font-black tracking-tighter text-4xl animate-pulse">SYNCHRONIZING_NEURAL_MAP...</div>;
 
@@ -624,16 +645,34 @@ export default function CustomizePage() {
                                 </div>
                                 <div className="text-center space-y-2">
                                     <p className="text-[7px] font-black text-slate-300 uppercase tracking-[0.2em]">TOTAL</p>
-                                    <p className="text-2xl font-black text-[#020617]">₹{(calculatedUnitPrice * quantity).toLocaleString('en-IN')}</p>
+                                    <p className="text-2xl font-black text-[#020617]">₹{calculatedTotalPrice}</p>
                                 </div>
                             </div>
                         </div>
                         <div className="p-10 flex items-center justify-between">
                             <div className="space-y-0.5">
                                 <p className="text-[8px] font-black text-emerald-800 uppercase tracking-[0.4em]">EST. TOTAL COST</p>
-                                <h2 className="text-5xl font-black tracking-tighter text-emerald-900 font-['Space_Grotesk']">₹{(calculatedUnitPrice * quantity).toLocaleString('en-IN')}</h2>
+                                <h2 className="text-5xl font-black tracking-tighter text-emerald-900 font-['Space_Grotesk']">₹{calculatedTotalPrice}</h2>
                             </div>
-                            <button onClick={() => addToCart(product, quantity)} className="h-24 px-10 bg-[#020617] text-white rounded-[2.5rem] font-black uppercase text-[11px] tracking-[0.2em] flex items-center gap-5 hover:scale-[1.02] transition-all shadow-2xl active:scale-95 group">
+                            <button onClick={() => addToCart({
+                                ...product,
+                                id: `${product.id}-${Date.now()}`,
+                                name: `${product.name} ${dimensions.l}x${dimensions.w}x${dimensions.h}`,
+                                img: displayImage,
+                                price: pricingResult.finalPerUnit,
+                                customDesign: {
+                                    dimensions,
+                                    unit,
+                                    selectedGSM: '280',
+                                    selectedMaterial: 'SBS',
+                                    selectedBrand: 'ITC',
+                                    selectedFinish: 'Plain',
+                                    selectedPrinting: 'Four Colour',
+                                    selectedMarkup: 'Retail',
+                                    dieCutting: true,
+                                    specData: selectedSpec
+                                }
+                            }, quantity)} className="h-24 px-10 bg-[#020617] text-white rounded-[2.5rem] font-black uppercase text-[11px] tracking-[0.2em] flex items-center gap-5 hover:scale-[1.02] transition-all shadow-2xl active:scale-95 group">
                                 <ShoppingCart size={24} /> 
                                 <span className="border-l border-white/20 pl-5">ADD_TO_BASKET</span>
                             </button>

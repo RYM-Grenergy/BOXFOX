@@ -26,7 +26,7 @@ export function CartProvider({ children }) {
             const pricingParams = {
                 spec: product.customDesign.specData || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
                 qty: Math.max(10, quantity),
-                gsm: parseInt(product.customDesign.selectedGSM) || 300,
+                gsm: parseInt(product.customDesign.selectedGSM) || 280,
                 material: product.customDesign.selectedMaterial || 'SBS',
                 brand: product.customDesign.selectedBrand || 'Normal',
                 colours: product.customDesign.selectedPrinting || 'Four Colour',
@@ -60,7 +60,7 @@ export function CartProvider({ children }) {
         const pricingResult = calculateBoxPrice({
             spec: selectedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
             qty: quantity,
-            gsm: 300,
+            gsm: 280,
             material: 'SBS',
             brand: 'Normal',
             colours: 'Four Colour',

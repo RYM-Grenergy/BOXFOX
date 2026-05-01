@@ -1,6 +1,5 @@
 import Navbar from "./components/Navbar";
 import HeroBanner from "./components/HeroBanner";
-import PremiumDesigns from "./components/PremiumDesigns";
 import CategorySection from "./components/CategorySection";
 import ProductSection from "./components/ProductSection";
 import FeaturesStrip from "./components/FeaturesStrip";
@@ -12,7 +11,6 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <main>
         <HeroBanner />
-        <PremiumDesigns />
         <PackagingGallery />
         <TopSellingStrip />
         <CategorySection />

@@ -38,6 +38,7 @@ export default function ProductPage() {
     const [viewMode, setViewMode] = useState('2D');
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [wishlistBusy, setWishlistBusy] = useState(false);
+    const [labConfigs, setLabConfigs] = useState(null);
 
     useEffect(() => {
         setLoading(true);
@@ -50,6 +51,13 @@ export default function ProductPage() {
             })
             .catch(() => setLoading(false));
     }, [params.id]);
+
+    useEffect(() => {
+        fetch('/api/admin/lab/config')
+            .then(res => res.json())
+            .then(data => setLabConfigs(data))
+            .catch(() => setLabConfigs(null));
+    }, []);
 
     useEffect(() => {
         if (!product?._id && !product?.id) return;
@@ -116,14 +124,14 @@ export default function ProductPage() {
         : calculateBoxPrice({
               spec: selectedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
               qty: parseInt(quantity) || 10,
-              gsm: 300,
+              gsm: 280,
               material: 'SBS',
               brand: 'Normal',
               colours: 'Four Colour',
               lamination: 'Plain',
               markupType: 'Retail',
               dieCutting: true
-          });
+          }, labConfigs);
 
     const unitPrice = pricingResult.finalPerUnit.toFixed(2);
     const totalPrice = pricingResult.finalTotal.toLocaleString('en-IN');
