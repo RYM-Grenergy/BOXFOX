@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, Gift, ArrowRight, CheckCircle2, Star, Zap, Shield, Heart } from "lucide-react";
+import { Sparkles, Gift, ArrowRight, CheckCircle2, Star, Zap, Shield, Heart, ChevronDown } from "lucide-react";
 import Link from "next/link";
 
 const gifts = [
