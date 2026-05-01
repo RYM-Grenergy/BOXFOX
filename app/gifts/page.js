@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Sparkles, Gift, ArrowRight, CheckCircle2, Star, Zap, Shield, Heart, ChevronDown } from "lucide-react";
 import Link from "next/link";
@@ -163,6 +163,20 @@ function QuoteForm() {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [openGiftDropdown, setOpenGiftDropdown] = useState(false);
   const [openGiftDropdownIndex, setOpenGiftDropdownIndex] = useState(null);
+  const formRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (formRef.current && !formRef.current.contains(event.target)) {
+        setOpenDropdown(null);
+        setOpenGiftDropdown(false);
+        setOpenGiftDropdownIndex(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     // Fetch products for dropdown
@@ -218,7 +232,7 @@ function QuoteForm() {
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
         <input type="text" placeholder="Full Name" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
         <input type="email" placeholder="Business Email" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 text-xs font-bold outline-none focus:border-emerald-500" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} required />
