@@ -107,7 +107,7 @@ export default function Footer() {
 
         {/* Minimal Bottom Bar */}
         <div className="mt-16 pt-8 border-t border-gray-50 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p className="text-[10px] font-black text-gray-950 tracking-[0.2em] uppercase">
+          <p className="text-[10px] font-black text-gray-950 tracking-[0.2em] uppercase" suppressHydrationWarning>
             &copy; 2020-{new Date().getFullYear()} Indo Omakase Pvt Ltd. All Rights Reserved
           </p>
           <div className="flex gap-8 uppercase tracking-[0.2em] font-black text-[9px] text-gray-950">

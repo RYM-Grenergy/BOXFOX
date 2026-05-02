@@ -78,7 +78,7 @@ export default function Navbar() {
   return (
     <>
       {/* ─── Navbar ──────────────────────────────────────────────────────── */}
-      <nav className={`fixed top-0 left-0 right-0 z-[100] w-full transition-all duration-500 ${isScrolled ? "bg-white/95 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)]" : ""}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-[100] w-full transition-all duration-500 ${isScrolled ? "bg-white/95 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)]" : ""}`} suppressHydrationWarning>
         <AnimatePresence>
           {!isScrolled && (
             <motion.div
