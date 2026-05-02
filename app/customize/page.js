@@ -38,6 +38,10 @@ import {
   Copy,
   Star,
   Lock,
+  MousePointer2,
+  RotateCcw,
+  Maximize,
+  Grid3x3,
 } from "lucide-react";
 import Navbar from "@/app/components/Navbar";
 import AuthModal from "@/app/components/AuthModal";
@@ -105,21 +109,41 @@ function CustomizeLabContent() {
       try {
         const res = await fetch('/api/lab/config');
         const data = await res.json();
-        
-        if (data && !data.error && data.hierarchies && data.specifications) {
-          setLabConfig(data);
 
+        if (data && !data.error && data.hierarchies?.length > 0 && data.specifications?.length > 0) {
+          setLabConfig(data);
           const cats = data.hierarchies.map(h => h.category);
           setCategories(cats);
-
           if (selectedCategory === "All" || !cats.includes(selectedCategory)) {
             setSelectedCategory(cats[0] || "Food");
           }
         } else {
-          console.error("Invalid lab config data format", data);
+          console.warn("Lab config empty, using fallbacks...");
+          const fallbackData = {
+            hierarchies: [
+              { category: "Food", subCategories: ["Bakery", "Confectionery"] },
+              { category: "Retail", subCategories: ["Electronics", "Apparel"] },
+              { category: "Pharma", subCategories: ["Medicine", "Cosmetics"] }
+            ],
+            specifications: [
+              { category: "Food", subCategory: "Bakery", length: 10, width: 10, height: 4, unit: "in", isActive: true }
+            ]
+          };
+          setLabConfig(fallbackData);
+          const cats = fallbackData.hierarchies.map(h => h.category);
+          setCategories(cats);
+          setSelectedCategory(cats[0]);
         }
       } catch (err) {
         console.error("Failed to fetch lab config:", err);
+        // Fallback on total failure
+        const fallbackData = {
+          hierarchies: [{ category: "Standard", subCategories: ["Custom"] }],
+          specifications: [{ category: "Standard", subCategory: "Custom", length: 12, width: 8, height: 4, unit: "in", isActive: true }]
+        };
+        setLabConfig(fallbackData);
+        setCategories(["Standard"]);
+        setSelectedCategory("Standard");
       }
     };
     fetchConfig();
@@ -242,7 +266,7 @@ function CustomizeLabContent() {
     if (mat) setSelectedMaterial(mat);
     if (finish) setSelectedFinish(finish);
     if (gsm) setSelectedGSM(gsm);
-    
+
     // Set higher default quantity for enterprise customization
     setQuantity(500);
 
@@ -346,12 +370,12 @@ function CustomizeLabContent() {
     right: "#059669",
   });
   const [textureSettings, setTextureSettings] = useState({
-    front: { scale: 100, x: 50, y: 50 },
-    back: { scale: 100, x: 50, y: 50 },
-    top: { scale: 100, x: 50, y: 50 },
-    bottom: { scale: 100, x: 50, y: 50 },
-    left: { scale: 100, x: 50, y: 50 },
-    right: { scale: 100, x: 50, y: 50 },
+    front: { scale: 100, x: 50, y: 50, rotate: 0 },
+    back: { scale: 100, x: 50, y: 50, rotate: 0 },
+    top: { scale: 100, x: 50, y: 50, rotate: 0 },
+    bottom: { scale: 100, x: 50, y: 50, rotate: 0 },
+    left: { scale: 100, x: 50, y: 50, rotate: 0 },
+    right: { scale: 100, x: 50, y: 50, rotate: 0 },
   });
   const [selectedFace, setSelectedFace] = useState(null);
   const [activeColor, setActiveColor] = useState("#059669");
@@ -402,6 +426,7 @@ function CustomizeLabContent() {
   const [imageToCrop, setImageToCrop] = useState(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [cropRotation, setCropRotation] = useState(0);
   const isSpatialPanning = useRef(false);
   const lastSpatialMouse = useRef({ x: 0, y: 0 });
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
@@ -424,24 +449,39 @@ function CustomizeLabContent() {
       image.src = url;
     });
 
-  async function getCroppedImg(imageSrc, pixelCrop) {
+  async function getCroppedImg(imageSrc, pixelCrop, rotation = 0) {
     const image = await createImage(imageSrc);
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
-    canvas.width = pixelCrop.width;
-    canvas.height = pixelCrop.height;
-    ctx.drawImage(
-      image,
+
+    const rotRad = (rotation * Math.PI) / 180;
+
+    // Calculate bounding box for rotated image
+    const { width: bWidth, height: bHeight } = {
+      width: Math.abs(Math.cos(rotRad) * image.width) + Math.abs(Math.sin(rotRad) * image.height),
+      height: Math.abs(Math.sin(rotRad) * image.width) + Math.abs(Math.cos(rotRad) * image.height)
+    };
+
+    canvas.width = bWidth;
+    canvas.height = bHeight;
+
+    ctx.translate(bWidth / 2, bHeight / 2);
+    ctx.rotate(rotRad);
+    ctx.translate(-image.width / 2, -image.height / 2);
+    ctx.drawImage(image, 0, 0);
+
+    const data = ctx.getImageData(
       pixelCrop.x,
       pixelCrop.y,
       pixelCrop.width,
-      pixelCrop.height,
-      0,
-      0,
-      pixelCrop.width,
       pixelCrop.height
     );
+
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+    ctx.putImageData(data, 0, 0);
+
     return canvas.toDataURL('image/jpeg');
   }
 
@@ -556,25 +596,35 @@ function CustomizeLabContent() {
   }, [searchParams]);
 
   const handleFileUpload = (e) => {
-    const files = Array.from(e.target.files).slice(0, 3 - assetPool.length);
-    if (files.length > 0) {
-      files.forEach((file, index) => {
+    const files = e.target.files ? Array.from(e.target.files) : (e.dataTransfer ? Array.from(e.dataTransfer.files) : []);
+    const availableSlots = 10 - assetPool.length; // Increased limit to 10 for "advance" feel
+    const filesToProcess = files.slice(0, availableSlots);
+
+    if (filesToProcess.length > 0) {
+      setIsGenerating(true);
+      filesToProcess.forEach((file, index) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           const imageSrc = reader.result;
 
           setAssetPool((prev) => {
-            const updated = [...prev, imageSrc].slice(-3);
-            // If it's the first file of this batch, select it
+            const updated = [...prev, imageSrc];
             if (index === 0) setActiveAssetIndex(updated.length - 1);
             return updated;
           });
 
-          // Show crop modal for the first image uploaded if it's the very first asset
-          if (assetPool.length === 0 && index === 0) {
-            setImageToCrop(imageSrc);
-            setShowCropModal(true);
-            setBoxTextures((prev) => ({ ...prev, front: imageSrc }));
+          // "Advance" Auto-Mapping Logic
+          if (selectedFace) {
+            setBoxTextures(prev => ({ ...prev, [selectedFace]: imageSrc }));
+            showToast(`Asset applied to ${selectedFace}!`, "success");
+          } else if (assetPool.length === 0 && index === 0) {
+            // Fallback for first upload ever
+            setBoxTextures(prev => ({ ...prev, front: imageSrc }));
+            showToast("Asset applied to front!", "success");
+          }
+
+          if (index === filesToProcess.length - 1) {
+            setIsGenerating(false);
           }
         };
         reader.readAsDataURL(file);
@@ -596,14 +646,25 @@ function CustomizeLabContent() {
     const dx = (e.clientX - lastSpatialMouse.current.x) * 0.2;
     const dy = (e.clientY - lastSpatialMouse.current.y) * 0.2;
 
-    setTextureSettings(prev => ({
-      ...prev,
-      [face]: {
-        ...prev[face],
-        x: Math.min(100, Math.max(0, prev[face].x + dx)),
-        y: Math.min(100, Math.max(0, prev[face].y + dy))
-      }
-    }));
+    if (customMode === "logo" || (boxLogos[face] && !boxTextures[face])) {
+      setLogoSettings(prev => ({
+        ...prev,
+        [face]: {
+          ...prev[face],
+          x: prev[face].x + dx,
+          y: prev[face].y + dy
+        }
+      }));
+    } else {
+      setTextureSettings(prev => ({
+        ...prev,
+        [face]: {
+          ...prev[face],
+          x: prev[face].x + dx,
+          y: prev[face].y + dy
+        }
+      }));
+    }
 
     lastSpatialMouse.current = { x: e.clientX, y: e.clientY };
     e.stopPropagation();
@@ -614,13 +675,23 @@ function CustomizeLabContent() {
     e.stopPropagation();
 
     const delta = e.deltaY > 0 ? -5 : 5;
-    setTextureSettings(prev => ({
-      ...prev,
-      [face]: {
-        ...prev[face],
-        scale: Math.min(400, Math.max(10, prev[face].scale + delta))
-      }
-    }));
+    if (customMode === "logo" || (boxLogos[face] && !boxTextures[face])) {
+      setLogoSettings(prev => ({
+        ...prev,
+        [face]: {
+          ...prev[face],
+          scale: Math.min(400, Math.max(1, (prev[face].scale || 30) + delta))
+        }
+      }));
+    } else {
+      setTextureSettings(prev => ({
+        ...prev,
+        [face]: {
+          ...prev[face],
+          scale: Math.min(400, Math.max(10, prev[face].scale + delta))
+        }
+      }));
+    }
   };
 
   const stopSpatialPanning = () => {
@@ -639,7 +710,7 @@ function CustomizeLabContent() {
   const finalizeCrop = async () => {
     if (!croppedAreaPixels) return;
     try {
-      const croppedImage = await getCroppedImg(imageToCrop, croppedAreaPixels);
+      const croppedImage = await getCroppedImg(imageToCrop, croppedAreaPixels, cropRotation);
 
       // Update the asset in the pool at the active index (which was just added in handleFileUpload)
       setAssetPool((prev) => {
@@ -650,6 +721,17 @@ function CustomizeLabContent() {
 
       // Update all faces currently using the original with the cropped version
       setBoxTextures((prev) => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(face => {
+          if (updated[face] === imageToCrop) {
+            updated[face] = croppedImage;
+          }
+        });
+        return updated;
+      });
+
+      // Update logos as well
+      setBoxLogos((prev) => {
         const updated = { ...prev };
         Object.keys(updated).forEach(face => {
           if (updated[face] === imageToCrop) {
@@ -1185,6 +1267,25 @@ function CustomizeLabContent() {
 
   if ((loading || authLoading || !product) && !isGenerating) return <LoadingScreen />;
 
+  const renderFaceTexture = (face) => {
+    if (!boxTextures[face]) return null;
+    const settings = textureSettings[face] || { scale: 100, x: 50, y: 50, rotate: 0 };
+    return (
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: `url(${boxTextures[face]})`,
+          backgroundSize: `${settings.scale}%`,
+          backgroundPosition: `${settings.x}% ${settings.y}%`,
+          backgroundRepeat: "no-repeat",
+          transform: `rotate(${settings.rotate}deg)`,
+          transition: isSpatialPanning.current ? "none" : "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+          zIndex: 10
+        }}
+      />
+    );
+  };
+
   const renderFaceLogo = (face) => {
     if (!boxLogos[face]) return null;
     const settings = logoSettings[face] || { scale: 30, x: 50, y: 50, rotate: 0 };
@@ -1205,14 +1306,9 @@ function CustomizeLabContent() {
   };
 
   const faceStyle = (face) => {
-    const settings = textureSettings[face] || { scale: 100, x: 50, y: 50 };
     const isActive = selectedFace === face;
     return {
-      backgroundImage: boxTextures[face] ? `url(${boxTextures[face]})` : "none",
       backgroundColor: boxColors[face] || "rgba(16, 185, 129, 0.05)",
-      backgroundSize: boxTextures[face] ? `${settings.scale}%` : "cover",
-      backgroundPosition: `${settings.x}% ${settings.y}%`,
-      backgroundRepeat: "no-repeat",
       transition: isSpatialPanning.current ? "none" : "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
       transformStyle: "preserve-3d",
       boxShadow: isActive ? "inset 0 0 0 4px #10b981, 0 0 40px rgba(16, 185, 129, 0.2)" : "none",
@@ -1465,6 +1561,7 @@ function CustomizeLabContent() {
                       Front_Panel
                     </div>
                   )}
+                  {renderFaceTexture("front")}
                   {renderFaceLogo("front")}
                 </div>
                 <div
@@ -1491,6 +1588,7 @@ function CustomizeLabContent() {
                       Rear
                     </div>
                   )}
+                  {renderFaceTexture("back")}
                   {renderFaceLogo("back")}
                 </div>
                 <div
@@ -1518,6 +1616,7 @@ function CustomizeLabContent() {
                       Right
                     </div>
                   )}
+                  {renderFaceTexture("right")}
                   {renderFaceLogo("right")}
                 </div>
                 <div
@@ -1545,6 +1644,7 @@ function CustomizeLabContent() {
                       Left
                     </div>
                   )}
+                  {renderFaceTexture("left")}
                   {renderFaceLogo("left")}
                 </div>
                 <div
@@ -1573,6 +1673,7 @@ function CustomizeLabContent() {
                     </div>
                   )}
 
+                  {renderFaceTexture("top")}
                   {renderFaceLogo("top")}
 
                   {customText && textOnBox && (
@@ -1617,6 +1718,7 @@ function CustomizeLabContent() {
                       base
                     </div>
                   )}
+                  {renderFaceTexture("bottom")}
                   {renderFaceLogo("bottom")}
                 </div>
               </motion.div>
@@ -1655,39 +1757,7 @@ function CustomizeLabContent() {
                 </div>
               </div>
 
-              {/* Spatial UI Controls - Minimal Floating Status */}
-              <AnimatePresence>
-                {selectedFace && boxTextures[selectedFace] && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="absolute top-8 left-1/2 -translate-x-1/2 z-50 bg-gray-950 text-white px-6 py-3 rounded-full flex items-center gap-6 shadow-2xl border border-white/10 pointer-events-auto"
-                  >
-                    <div className="flex items-center gap-2 border-r border-white/10 pr-6">
-                      <Move size={14} className="text-emerald-400" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">{selectedFace} Active</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-[9px] font-bold text-gray-400 tracking-widest uppercase">
-                      <span>Drag to Pan</span>
-                      <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
-                      <span>Scroll to Zoom</span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setTextureSettings(prev => ({
-                          ...prev,
-                          [selectedFace]: { scale: 100, x: 50, y: 50 }
-                        }));
-                        setSelectedFace(null);
-                      }}
-                      className="ml-4 p-1 hover:text-red-400 transition-colors"
-                    >
-                      <X size={14} />
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Spatial UI Controls removed as per user request - Controls are now in Sidebar Asset Tuning Lab */}
 
               <div className="group pointer-events-auto cursor-pointer flex flex-col items-center gap-1.5 sm:gap-2 bg-white/95 p-3 sm:p-4 md:p-5 rounded-2xl sm:rounded-[2.5rem] border border-gray-100 shadow-lg backdrop-blur-md active:scale-90 transition-all duration-300">
                 <RotateCw
@@ -1907,45 +1977,35 @@ function CustomizeLabContent() {
           <div className={`relative rounded-[2rem] border transition-all duration-700 overflow-hidden group shadow-xl ${customMode === 'texture' ? 'bg-emerald-50/30 border-emerald-500/50 shadow-emerald-500/10' : 'bg-white border-gray-100 hover:border-blue-200'}`}>
             {/* Neural Scanning Animation (Visible only in Texture mode) */}
             {customMode === 'texture' && (
-              <motion.div 
+              <motion.div
                 initial={{ top: '0%' }}
                 animate={{ top: '100%' }}
                 transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent z-10 pointer-events-none"
               />
             )}
-            
+
             <div className={`flex items-center justify-between px-6 py-5 border-b transition-colors duration-500 ${customMode === 'texture' ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-gray-50/50 border-gray-100'}`}>
               <div className="flex items-center gap-3">
                 <div className={`flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-black transition-all ${customMode === 'texture' ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-blue-600 text-white'}`}>2</div>
-                <div className="flex flex-col">
-                  <h3 className={`text-xs font-black uppercase tracking-widest transition-colors ${customMode === 'texture' ? 'text-emerald-900' : 'text-gray-950'}`}>Neural_Maps</h3>
-                  {customMode === 'texture' && <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest animate-pulse">Scanning Active</span>}
+                <div>
+                  <h3 className={`text-[12px] font-black uppercase tracking-[0.1em] ${customMode === 'texture' ? 'text-emerald-900' : 'text-gray-900'}`}>Neural_Maps</h3>
+                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Apply Textures & Logos</p>
                 </div>
               </div>
-              <div className={`px-3 py-1 rounded-lg text-[8px] font-black tracking-widest transition-all ${customMode === 'texture' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-blue-100 text-blue-700'}`}>NEURAL_V2.5</div>
+              {customMode === 'texture' && (
+                <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500 text-white rounded-full">
+                  <Zap size={10} className="animate-pulse" />
+                  <span className="text-[8px] font-black tracking-widest uppercase">Live_Lab</span>
+                </div>
+              )}
             </div>
 
-            <div className="p-6 space-y-6">
-              <div className={`flex p-1 rounded-xl transition-colors ${customMode === 'texture' ? 'bg-emerald-100/50' : 'bg-gray-100'}`}>
-                {['texture', 'logo', 'color', 'upload'].map(mode => (
-                  <button
-                    key={mode}
-                    onClick={() => setCustomMode(mode)}
-                    className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                      customMode === mode 
-                        ? (mode === 'texture' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-white text-blue-600 shadow-sm')
-                        : (customMode === 'texture' ? 'text-emerald-700/60 hover:text-emerald-900' : 'text-gray-400 hover:text-gray-600')
-                    }`}
-                  >
-                    {mode === 'texture' ? 'AI_Texture' : mode === 'logo' ? 'Logo_Lab' : mode === 'color' ? 'Solid_Lab' : 'Image_Upload'}
-                  </button>
-                ))}
-              </div>
-              {/* Mode-Specific Tools */}
+            <div className="p-6 space-y-8">
+              {/* Step 2.1: Intelligence_Input (Chips and Prompt) */}
               {customMode === 'texture' && (
                 <div className="space-y-6">
-                  {/* AI Forge Logic */}
+                  {/* AI Forge Logic (Chips) */}
                   <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
                     <div className="flex border-b border-gray-100 overflow-x-auto no-scrollbar">
                       {Object.keys(chipCategories).map(cat => (
@@ -1971,6 +2031,7 @@ function CustomizeLabContent() {
                     </div>
                   </div>
 
+                  {/* Describe Your Idea (Prompt) */}
                   <div className={`space-y-3 p-4 rounded-3xl transition-all ${customMode === 'texture' ? 'bg-emerald-500/5 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.05)]' : ''}`}>
                     <div className="flex items-center justify-between px-1">
                       <label className={`text-[11px] font-black uppercase tracking-[0.15em] transition-colors ${customMode === 'texture' ? 'text-emerald-900' : 'text-blue-700'}`}>Describe Your Idea</label>
@@ -1986,11 +2047,10 @@ function CustomizeLabContent() {
                       value={aiPrompt || ""}
                       onChange={(e) => { setAiPrompt(e.target.value); setIsPromptEnhanced(false); }}
                       rows={3}
-                      className={`w-full border-2 rounded-[1.5rem] p-5 text-[13px] font-bold outline-none transition-all resize-none shadow-sm ${
-                        customMode === 'texture' 
-                          ? 'bg-white border-emerald-500/30 focus:border-emerald-500 text-emerald-950 placeholder:text-emerald-100 shadow-emerald-500/5' 
-                          : 'bg-gray-50 border-gray-100 focus:border-blue-400'
-                      }`}
+                      className={`w-full border-2 rounded-[1.5rem] p-5 text-[13px] font-bold outline-none transition-all resize-none shadow-sm ${customMode === 'texture'
+                        ? 'bg-white border-emerald-500/30 focus:border-emerald-500 text-emerald-950 placeholder:text-emerald-100 shadow-emerald-500/5'
+                        : 'bg-gray-50 border-gray-100 focus:border-blue-400'
+                        }`}
                     />
                     {customMode === 'texture' && (
                       <div className="flex items-center gap-2 px-1">
@@ -1999,9 +2059,59 @@ function CustomizeLabContent() {
                       </div>
                     )}
                   </div>
+
+                  {/* Ignite_Forge Button - Moved below text box as per request */}
+                  <div className="space-y-4 pt-2">
+                    <button
+                      onClick={generateAITexture}
+                      disabled={isGenerating || (!aiPrompt.trim() && selectedChips.length === 0)}
+                      className={`w-full py-4 sm:py-5 md:py-6 rounded-xl sm:rounded-2xl font-black uppercase text-xs sm:text-sm tracking-[0.3em] sm:tracking-[0.45em] flex flex-col items-center justify-center gap-1 transition-all shadow-lg active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed group relative overflow-hidden ${customMode === 'texture'
+                        ? 'bg-emerald-500 text-white shadow-emerald-500/40 hover:bg-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+                        : 'bg-gray-950 text-white hover:bg-emerald-500'
+                        }`}
+                    >
+                      {isGenerating ? (
+                        <div className="flex items-center gap-3">
+                          <RefreshCw className="animate-spin shrink-0" size={18} />
+                          <span>Processing Neural Maps...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <Sparkles size={17} className="group-hover:rotate-12 transition-transform shrink-0" />
+                          <span>Ignite_Forge</span>
+                        </div>
+                      )}
+                    </button>
+                    <div className="flex items-center justify-between gap-2 px-2">
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100 shadow-sm">
+                        <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[7px] font-black uppercase tracking-[0.2em]">Neural_Activation_Ready</span>
+                      </div>
+                      <div className="px-3 py-1.5 bg-gray-50 rounded-full text-[7px] font-black text-gray-500 uppercase tracking-widest border border-gray-100 shadow-sm">
+                        {user?.aiUnlimitedUntil && new Date(user.aiUnlimitedUntil) > new Date() ? 'Unlimited Generations' : `${Math.max(0, 5 - (user?.aiGenerationCount || 0))} Generations Left`}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
+              {/* Step 2.3: Mode Switcher Tabs */}
+              <div className={`flex p-1 rounded-xl transition-colors ${customMode === 'texture' ? 'bg-emerald-100/50' : 'bg-gray-100'}`}>
+                {['texture', 'logo', 'color', 'upload'].map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => setCustomMode(mode)}
+                    className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${customMode === mode
+                      ? (mode === 'texture' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-white text-blue-600 shadow-sm')
+                      : (customMode === 'texture' ? 'text-emerald-700/60 hover:text-emerald-900' : 'text-gray-400 hover:text-gray-600')
+                      }`}
+                  >
+                    {mode === 'texture' ? 'AI_Texture' : mode === 'logo' ? 'Logo_Lab' : mode === 'color' ? 'Solid_Lab' : 'Image_Upload'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Mode-Specific Tools */}
               {customMode === 'logo' && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-4 gap-3">
@@ -2038,34 +2148,34 @@ function CustomizeLabContent() {
 
               {customMode === 'color' && (
                 <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[8px] font-black uppercase text-gray-400 tracking-[0.2em]">Quick Fill</span>
-                        <button 
-                          onClick={() => {
-                            if (activeColor) {
-                              const allSides = {};
-                              ['front', 'back', 'top', 'bottom', 'left', 'right'].forEach(s => {
-                                allSides[s] = activeColor;
-                              });
-                              setBoxColors(allSides);
-                              setBoxTextures({}); // Clear textures if solid fill
-                              showToast("Solid color applied to all sides!");
-                            }
-                          }}
-                          className="px-3 py-1 bg-gray-50 text-gray-400 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-gray-950 hover:text-white transition-all"
-                        >
-                          Fill All Sides
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-6 gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[8px] font-black uppercase text-gray-400 tracking-[0.2em]">Quick Fill</span>
+                    <button
+                      onClick={() => {
+                        if (activeColor) {
+                          const allSides = {};
+                          ['front', 'back', 'top', 'bottom', 'left', 'right'].forEach(s => {
+                            allSides[s] = activeColor;
+                          });
+                          setBoxColors(allSides);
+                          setBoxTextures({}); // Clear textures if solid fill
+                          showToast("Solid color applied to all sides!");
+                        }
+                      }}
+                      className="px-3 py-1 bg-gray-50 text-gray-400 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-gray-950 hover:text-white transition-all"
+                    >
+                      Fill All Sides
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-6 gap-2">
                     {["#000000", "#FFFFFF", "#059669", "#1D4ED8", "#B91C1C", "#D97706"].map(c => (
                       <button key={c} onClick={() => setActiveColor(c)} style={{ backgroundColor: c }} className={`aspect-square rounded-xl border-2 ${activeColor === c ? 'border-blue-600 scale-90' : 'border-gray-100'}`} />
                     ))}
                     <div className="aspect-square rounded-xl bg-white border border-gray-100 flex items-center justify-center relative overflow-hidden">
                       <input type="color" value={activeColor || "#FFFFFF"} onChange={(e) => setActiveColor(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer scale-[5]" />
                       <Palette size={14} className="text-gray-400" />
+                    </div>
                   </div>
-                </div>
 
                   <div className="pt-4 space-y-4 border-t border-gray-100">
                     <div className="flex items-center justify-between">
@@ -2097,18 +2207,34 @@ function CustomizeLabContent() {
                   </div>
                 </div>
               )}
-
               {customMode === 'upload' && (
-                <div className="p-8 border-2 border-dashed border-gray-100 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 bg-gray-50/30 hover:bg-blue-50/30 hover:border-blue-200 transition-all group">
-                  <div className="w-16 h-16 rounded-full bg-white shadow-xl flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-                    <Upload size={24} />
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.add('border-blue-500', 'bg-blue-50/50');
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50/50');
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50/50');
+                    handleFileUpload(e);
+                  }}
+                  className="p-10 border-2 border-dashed border-gray-100 rounded-[2.5rem] flex flex-col items-center justify-center gap-5 bg-gray-50/30 hover:bg-blue-50/30 hover:border-blue-200 transition-all group relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="w-20 h-20 rounded-3xl bg-white shadow-xl flex items-center justify-center text-blue-600 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                    <Upload size={32} />
                   </div>
-                  <div className="text-center">
-                    <p className="text-[10px] font-black text-gray-950 uppercase tracking-widest">Upload Custom Graphics</p>
-                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-1">High-res PNG/JPG supported</p>
+                  <div className="text-center relative z-10">
+                    <p className="text-[12px] font-black text-gray-950 uppercase tracking-widest">Advanced_Asset_Upload</p>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Drag & Drop or Click to Select</p>
+                    <p className="text-[7px] font-medium text-blue-500 uppercase tracking-widest mt-2 px-2 py-0.5 bg-blue-50 rounded-full inline-block">High-Res PNG/JPG/SVG</p>
                   </div>
-                  <label className="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 cursor-pointer hover:bg-blue-700 transition-all active:scale-95">
-                    Select Files
+                  <label className="px-8 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 cursor-pointer hover:bg-blue-700 transition-all active:scale-95 hover:shadow-blue-500/40 relative z-10">
+                    Choose Files
                     <input
                       type="file"
                       multiple
@@ -2121,48 +2247,53 @@ function CustomizeLabContent() {
 
               {/* Shared Asset Manager (Visible in Texture and Upload Modes) */}
               {(customMode === 'texture' || customMode === 'upload') && (
-                <div className="space-y-6 pt-6 border-t border-gray-100">
+                <div className="space-y-6 pt-8 border-t border-gray-100">
                   {/* Multi-Asset Pool Gallery */}
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col">
-                        <label className={`text-[10px] font-black uppercase tracking-widest transition-colors ${customMode === 'texture' ? 'text-emerald-700' : 'text-blue-700'}`}>Active Asset Pool ({assetPool.length}/3)</label>
-                        <span className={`text-[7px] font-bold uppercase tracking-widest transition-colors ${customMode === 'texture' ? 'text-emerald-500/50' : 'text-gray-300'}`}>Neural Multi-Asset Management</span>
+                        <div className="flex items-center gap-2">
+                          <div className={`w-1.5 h-4 rounded-full ${customMode === 'texture' ? 'bg-emerald-500' : 'bg-blue-600'}`} />
+                          <label className={`text-[11px] font-black uppercase tracking-widest transition-colors ${customMode === 'texture' ? 'text-emerald-700' : 'text-blue-700'}`}>Asset_Inventory ({assetPool.length})</label>
+                        </div>
+                        <span className={`text-[8px] font-bold uppercase tracking-widest mt-1 transition-colors ${customMode === 'texture' ? 'text-emerald-500/50' : 'text-gray-400'}`}>Multi-Asset Neural Management Enabled</span>
                       </div>
-                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full border transition-all ${customMode === 'texture' ? 'bg-emerald-500 text-white border-emerald-400 shadow-lg shadow-emerald-500/20' : 'bg-emerald-50 text-emerald-600 border-emerald-100'}`}>
-                        <span className="text-[8px] font-black uppercase tracking-widest">Mix & Match Enabled</span>
-                        <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${customMode === 'texture' ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'bg-emerald-500'}`} />
+                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${customMode === 'texture' ? 'bg-emerald-500 text-white border-emerald-400 shadow-lg shadow-emerald-500/20' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                        <span className="text-[8px] font-black uppercase tracking-widest">{customMode === 'texture' ? 'Studio Mode' : 'Upload Mode'}</span>
+                        <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${customMode === 'texture' ? 'bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'bg-blue-600'}`} />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
-                      {[0, 1, 2].map((idx) => (
+                    <div className="grid grid-cols-4 gap-3">
+                      {assetPool.map((asset, idx) => (
                         <div key={idx} className="relative aspect-square">
-                          {assetPool[idx] ? (
-                            <motion.div
-                              whileHover={{ scale: 1.05 }}
-                              onClick={() => setActiveAssetIndex(idx)}
-                              className={`w-full h-full rounded-2xl border-2 overflow-hidden cursor-pointer transition-all ${activeAssetIndex === idx ? 'border-blue-600 shadow-lg shadow-blue-500/20' : 'border-gray-100'}`}
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            whileActive={{ scale: 0.95 }}
+                            onClick={() => setActiveAssetIndex(idx)}
+                            className={`w-full h-full rounded-2xl border-2 overflow-hidden cursor-pointer transition-all ${activeAssetIndex === idx ? 'border-blue-600 shadow-xl shadow-blue-500/20' : 'border-gray-100 hover:border-blue-200'}`}
+                          >
+                            <img src={asset} className="w-full h-full object-cover" />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAssetPool(prev => prev.filter((_, i) => i !== idx));
+                                if (activeAssetIndex >= idx) setActiveAssetIndex(Math.max(0, activeAssetIndex - 1));
+                                showToast("Asset removed from pool");
+                              }}
+                              className="absolute top-1 right-1 w-5 h-5 bg-red-500/90 backdrop-blur-md text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-colors border border-white/20"
                             >
-                              <img src={assetPool[idx]} className="w-full h-full object-cover" />
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setAssetPool(prev => prev.filter((_, i) => i !== idx));
-                                  if (activeAssetIndex >= idx) setActiveAssetIndex(Math.max(0, activeAssetIndex - 1));
-                                }}
-                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md hover:bg-red-600 transition-colors"
-                              >
-                                <X size={10} />
-                              </button>
-                            </motion.div>
-                          ) : (
-                            <div className="w-full h-full border-2 border-dashed border-gray-50 rounded-2xl flex items-center justify-center text-gray-200">
-                              <Sparkles size={16} />
-                            </div>
-                          )}
+                              <X size={10} />
+                            </button>
+                          </motion.div>
                         </div>
                       ))}
+                      {assetPool.length < 10 && (
+                        <div className="aspect-square border-2 border-dashed border-gray-100 rounded-2xl flex items-center justify-center text-gray-300 hover:border-blue-200 hover:text-blue-400 transition-all cursor-pointer group"
+                          onClick={() => setCustomMode('upload')}>
+                          <Plus size={20} className="group-hover:scale-110 transition-transform" />
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -2175,8 +2306,8 @@ function CustomizeLabContent() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-blue-600" />
-                          <h4 className="text-[10px] font-black text-gray-950 uppercase tracking-widest">Assign to Side</h4>
+                          <div className="w-1.5 h-4 bg-emerald-500 rounded-full" />
+                          <h4 className="text-[10px] font-black text-gray-950 uppercase tracking-widest">Assign_To_Side</h4>
                         </div>
                         <button
                           onClick={() => {
@@ -2186,9 +2317,9 @@ function CustomizeLabContent() {
                             });
                             showToast("Asset applied to all sides!");
                           }}
-                          className="px-3 py-1.5 bg-gray-950 text-white rounded-xl text-[8px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 transition-all shadow-sm"
+                          className="px-4 py-1.5 bg-gray-950 text-white rounded-xl text-[8px] font-black uppercase tracking-[0.2em] hover:bg-emerald-500 transition-all active:scale-95 shadow-lg shadow-gray-950/10"
                         >
-                          Apply to All
+                          Apply_To_All
                         </button>
                       </div>
 
@@ -2205,12 +2336,12 @@ function CustomizeLabContent() {
                                   [face]: isMapped ? null : assetPool[activeAssetIndex]
                                 }));
                               }}
-                              className={`group relative py-3 rounded-xl border text-[8px] font-black uppercase tracking-widest transition-all ${isMapped ? 'bg-white border-blue-600 text-blue-600 shadow-md scale-105' : 'bg-white border-gray-100 text-gray-400 hover:border-blue-200'}`}
+                              className={`group relative py-3 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 ${isMapped ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-white border-gray-100 text-gray-400 hover:border-blue-200 hover:text-gray-600'}`}
                             >
                               {face}
                               {isMapped && (
-                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-600 rounded-full flex items-center justify-center">
-                                  <Check size={6} className="text-white" />
+                                <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center shadow-md">
+                                  <Check size={6} className="text-blue-600" />
                                 </div>
                               )}
                               {hasOtherImage && (
@@ -2223,7 +2354,202 @@ function CustomizeLabContent() {
                         })}
                       </div>
 
-                      <p className="text-[8px] leading-relaxed text-gray-400 font-bold text-center uppercase tracking-tighter">
+                      <div className="pt-6 border-t border-gray-100 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-4 bg-blue-600 rounded-full" />
+                            <h4 className="text-[11px] font-black text-gray-950 uppercase tracking-widest">Asset_Tuning_Lab</h4>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setImageToCrop(assetPool[activeAssetIndex]);
+                              setCropRotation(0);
+                              setZoom(1);
+                              setShowCropModal(true);
+                            }}
+                            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg shadow-blue-900/10 active:scale-95"
+                          >
+                            <Scissors size={12} />
+                            Crop Asset
+                          </button>
+                        </div>
+                        <div className="space-y-6 bg-gray-50/50 p-5 rounded-[1.5rem] border border-gray-100">
+                          {/* Neural Positioning Matrix */}
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Grid3x3 size={12} className="text-blue-500" />
+                              <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Neural Positioning Matrix</span>
+                            </div>
+                            <div className="flex gap-4 items-center">
+                              <div className="grid grid-cols-3 gap-1.5 p-2 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                {[
+                                  { label: 'TL', x: 20, y: 20 }, { label: 'TC', x: 50, y: 20 }, { label: 'TR', x: 80, y: 20 },
+                                  { label: 'ML', x: 20, y: 50 }, { label: 'CC', x: 50, y: 50 }, { label: 'MR', x: 80, y: 50 },
+                                  { label: 'BL', x: 20, y: 80 }, { label: 'BC', x: 50, y: 80 }, { label: 'BR', x: 80, y: 80 }
+                                ].map((pos) => {
+                                  // Determine if this position is "active"
+                                  const currentX = selectedFace ? textureSettings[selectedFace]?.x : 50;
+                                  const currentY = selectedFace ? textureSettings[selectedFace]?.y : 50;
+                                  const isActive = Math.abs(currentX - pos.x) < 5 && Math.abs(currentY - pos.y) < 5;
+
+                                  return (
+                                    <button
+                                      key={pos.label}
+                                      onClick={() => {
+                                        setTextureSettings(prev => {
+                                          const updated = { ...prev };
+                                          if (selectedFace) {
+                                            updated[selectedFace] = { ...updated[selectedFace], x: pos.x, y: pos.y };
+                                          } else {
+                                            Object.keys(updated).forEach(face => {
+                                              if (boxTextures[face] === assetPool[activeAssetIndex]) {
+                                                updated[face] = { ...updated[face], x: pos.x, y: pos.y };
+                                              }
+                                            });
+                                          }
+                                          return updated;
+                                        });
+                                        showToast(`Snapped to ${pos.label}`, "success");
+                                      }}
+                                      className={`w-6 h-6 rounded-md border text-[6px] font-black transition-all ${isActive ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-gray-50 border-gray-100 text-gray-300 hover:border-blue-200 hover:text-blue-500'}`}
+                                    >
+                                      {pos.label}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <div className="flex-1 space-y-3">
+                                <div className="space-y-1.5">
+                                  <div className="flex justify-between">
+                                    <span className="text-[7px] font-black text-gray-400 uppercase">Micro-Nudge X</span>
+                                    <span className="text-[7px] font-black text-blue-600">{(selectedFace ? textureSettings[selectedFace]?.x : 50)}%</span>
+                                  </div>
+                                  <input
+                                    type="range" min="0" max="100"
+                                    value={selectedFace ? textureSettings[selectedFace]?.x : 50}
+                                    onChange={(e) => {
+                                      const val = parseInt(e.target.value);
+                                      setTextureSettings(prev => {
+                                        const updated = { ...prev };
+                                        if (selectedFace) updated[selectedFace] = { ...updated[selectedFace], x: val };
+                                        return updated;
+                                      });
+                                    }}
+                                    className="w-full h-1 bg-gray-200 rounded-full appearance-none accent-blue-600"
+                                  />
+                                </div>
+                                <div className="space-y-1.5">
+                                  <div className="flex justify-between">
+                                    <span className="text-[7px] font-black text-gray-400 uppercase">Micro-Nudge Y</span>
+                                    <span className="text-[7px] font-black text-blue-600">{(selectedFace ? textureSettings[selectedFace]?.y : 50)}%</span>
+                                  </div>
+                                  <input
+                                    type="range" min="0" max="100"
+                                    value={selectedFace ? textureSettings[selectedFace]?.y : 50}
+                                    onChange={(e) => {
+                                      const val = parseInt(e.target.value);
+                                      setTextureSettings(prev => {
+                                        const updated = { ...prev };
+                                        if (selectedFace) updated[selectedFace] = { ...updated[selectedFace], y: val };
+                                        return updated;
+                                      });
+                                    }}
+                                    className="w-full h-1 bg-gray-200 rounded-full appearance-none accent-blue-600"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <RotateCcw size={12} className="text-blue-500" />
+                                <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Master Rotation</span>
+                              </div>
+                              <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-black">
+                                {(() => {
+                                  if (selectedFace) return textureSettings[selectedFace]?.rotate || 0;
+                                  const firstFace = Object.keys(boxTextures).find(f => boxTextures[f] === assetPool[activeAssetIndex]);
+                                  return (firstFace ? textureSettings[firstFace]?.rotate : 0) || 0;
+                                })()}°
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min="-180"
+                              max="180"
+                              value={(() => {
+                                if (selectedFace) return textureSettings[selectedFace]?.rotate || 0;
+                                const firstFace = Object.keys(boxTextures).find(f => boxTextures[f] === assetPool[activeAssetIndex]);
+                                return (firstFace ? textureSettings[firstFace]?.rotate : 0) || 0;
+                              })()}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                setTextureSettings(prev => {
+                                  const updated = { ...prev };
+                                  if (selectedFace) {
+                                    updated[selectedFace] = { ...updated[selectedFace], rotate: val };
+                                  } else {
+                                    Object.keys(updated).forEach(face => {
+                                      if (boxTextures[face] === assetPool[activeAssetIndex]) {
+                                        updated[face] = { ...updated[face], rotate: val };
+                                      }
+                                    });
+                                  }
+                                  return updated;
+                                });
+                              }}
+                              className="w-full h-1.5 bg-gray-200 rounded-full appearance-none accent-blue-600 cursor-pointer"
+                            />
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <div className="flex items-center gap-2">
+                                <Maximize size={12} className="text-blue-500" />
+                                <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Master Scale</span>
+                              </div>
+                              <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-black">
+                                {(() => {
+                                  if (selectedFace) return textureSettings[selectedFace]?.scale || 100;
+                                  const firstFace = Object.keys(boxTextures).find(f => boxTextures[f] === assetPool[activeAssetIndex]);
+                                  return (firstFace ? textureSettings[firstFace]?.scale : 100) || 100;
+                                })()}%
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min="10"
+                              max="400"
+                              value={(() => {
+                                if (selectedFace) return textureSettings[selectedFace]?.scale || 100;
+                                const firstFace = Object.keys(boxTextures).find(f => boxTextures[f] === assetPool[activeAssetIndex]);
+                                return (firstFace ? textureSettings[firstFace]?.scale : 100) || 100;
+                              })()}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                setTextureSettings(prev => {
+                                  const updated = { ...prev };
+                                  if (selectedFace) {
+                                    updated[selectedFace] = { ...updated[selectedFace], scale: val };
+                                  } else {
+                                    Object.keys(updated).forEach(face => {
+                                      if (boxTextures[face] === assetPool[activeAssetIndex]) {
+                                        updated[face] = { ...updated[face], scale: val };
+                                      }
+                                    });
+                                  }
+                                  return updated;
+                                });
+                              }}
+                              className="w-full h-1.5 bg-gray-200 rounded-full appearance-none accent-blue-600 cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-[9px] leading-relaxed text-gray-400 font-bold text-center uppercase tracking-widest">
                         Tap any side to toggle the current image. Mix AI and Uploads seamlessly.
                       </p>
                     </motion.div>
@@ -2267,47 +2593,9 @@ function CustomizeLabContent() {
                 )}
               </div>
 
-              <button
-                onClick={generateAITexture}
-                disabled={isGenerating || (!aiPrompt.trim() && selectedChips.length === 0)}
-                className={`w-full py-4 sm:py-5 md:py-6 rounded-xl sm:rounded-2xl font-black uppercase text-xs sm:text-sm tracking-[0.3em] sm:tracking-[0.45em] flex flex-col items-center justify-center gap-1 transition-all shadow-lg active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed group relative overflow-hidden ${
-                  customMode === 'texture' 
-                    ? 'bg-emerald-500 text-white shadow-emerald-500/40 hover:bg-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.3)]' 
-                    : 'bg-gray-950 text-white hover:bg-emerald-500'
-                }`}
-              >
-                {isGenerating ? (
-                  <div className="flex items-center gap-3">
-                    <RefreshCw className="animate-spin shrink-0" size={18} />
-                    <span>Processing Neural Maps...</span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <Sparkles size={17} className="group-hover:rotate-12 transition-transform shrink-0" />
-                      <span>Ignite_Forge</span>
-                    </div>
-                    {customMode === 'texture' && (
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <div className="w-12 h-0.5 bg-white/20 rounded-full overflow-hidden">
-                          <motion.div 
-                            initial={{ x: '-100%' }}
-                            animate={{ x: '100%' }}
-                            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                            className="w-full h-full bg-white"
-                          />
-                        </div>
-                        <span className="text-[6px] font-black tracking-[0.2em] opacity-80">Neural_Activation_Ready</span>
-                      </div>
-                    )}
-                  </>
-                )}
-              </button>
-              <div className="flex justify-center items-center mt-3 gap-2">
-                <div className="px-3 py-2 bg-gray-50 rounded-lg text-[9px] font-black text-gray-500 uppercase tracking-widest border border-gray-100">
-                  {user?.aiUnlimitedUntil && new Date(user.aiUnlimitedUntil) > new Date() ? 'Unlimited Generations Enabled' : `${Math.max(0, 5 - (user?.aiGenerationCount || 0))} Generations Left Today`}
-                </div>
-              </div>
+
+              {/* Secondary Forge Button at bottom as requested */}
+
             </div>
           </div>
           {/* Step 3: Order_Quantity */}
@@ -2567,29 +2855,30 @@ function CustomizeLabContent() {
               </div>
             </div>
           </div>
-          {/* Share Toast Notification */}
           <AnimatePresence>
             {shareToast && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                className="fixed bottom-6 right-6 z-[9999] bg-gray-950 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3"
+                initial={{ opacity: 0, y: -20, x: "-50%" }}
+                animate={{ opacity: 1, y: 0, x: "-50%" }}
+                exit={{ opacity: 0, y: -20, x: "-50%" }}
+                className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] bg-gray-950 text-white px-6 py-4 rounded-2xl shadow-2xl flex flex-col gap-3 border border-white/10 min-w-[300px]"
               >
-                <Link2 size={16} className="text-emerald-400" />
-                <div>
-                  <p className="text-xs font-black uppercase tracking-widest">Design Share Link</p>
-                  <p className="text-[10px] font-bold text-gray-400 truncate max-w-[200px] sm:max-w-xs mb-2">{shareLink}</p>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(shareLink);
-                      showToast("Link copied to clipboard!", "success");
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all"
-                  >
-                    <Copy size={10} /> Copy Link
-                  </button>
+                <div className="flex items-center gap-3">
+                  <Link2 size={16} className="text-emerald-400" />
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-widest">Design Share Link</p>
+                    <p className="text-[10px] font-bold text-gray-400 truncate max-w-[200px] sm:max-w-xs">{shareLink}</p>
+                  </div>
                 </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(shareLink);
+                    showToast("Link copied to clipboard!", "success");
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-emerald-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20"
+                >
+                  <Copy size={12} /> Copy Link
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -2623,45 +2912,67 @@ function CustomizeLabContent() {
                       image={imageToCrop}
                       crop={crop}
                       zoom={zoom}
+                      rotation={cropRotation}
                       aspect={1}
                       onCropChange={setCrop}
+                      onRotationChange={setCropRotation}
                       onCropComplete={handleCropComplete}
                       onZoomChange={setZoom}
                     />
                   </div>
 
-                  <div className="p-8 bg-gray-50 space-y-8">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Zoom_Precision</p>
-                        <span className="text-sm font-black text-gray-950">{Math.round(zoom * 100)}%</span>
+                  <div className="p-8 bg-gray-50 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Zoom_Precision</p>
+                          <span className="text-sm font-black text-gray-950">{Math.round(zoom * 100)}%</span>
+                        </div>
+                        <input
+                          type="range"
+                          value={zoom}
+                          min={1}
+                          max={3}
+                          step={0.1}
+                          onChange={(e) => setZoom(parseFloat(e.target.value))}
+                          className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                        />
                       </div>
-                      <input
-                        type="range"
-                        value={zoom}
-                        min={1}
-                        max={3}
-                        step={0.1}
-                        onChange={(e) => setZoom(parseFloat(e.target.value))}
-                        className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                      />
+
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Angle_Rotation</p>
+                          <span className="text-sm font-black text-gray-950">{Math.round(cropRotation)}°</span>
+                        </div>
+                        <input
+                          type="range"
+                          value={cropRotation}
+                          min={-180}
+                          max={180}
+                          step={1}
+                          onChange={(e) => setCropRotation(parseFloat(e.target.value))}
+                          className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                        />
+                      </div>
                     </div>
 
-                    <button
-                      onClick={finalizeCrop}
-                      className="w-full py-6 bg-gray-950 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] hover:bg-emerald-500 transition-all shadow-xl active:scale-95"
-                    >
-                      Apply_Neural_Mapping
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowCropModal(false);
-                        setImageToCrop(null);
-                      }}
-                      className="w-full py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-950 transition-colors"
-                    >
-                      Skip & Use Original
-                    </button>
+                    <div className="flex flex-col justify-end space-y-3">
+                      <button
+                        onClick={finalizeCrop}
+                        className="w-full py-6 bg-gray-950 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] hover:bg-emerald-500 transition-all shadow-xl active:scale-95"
+                      >
+                        Apply_Neural_Mapping
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowCropModal(false);
+                          setImageToCrop(null);
+                        }}
+                        className="w-full py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-950 transition-colors"
+                      >
+                        Skip & Use Original
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               </motion.div>

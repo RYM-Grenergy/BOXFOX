@@ -490,6 +490,7 @@ export default function ProductsManager() {
         const data = [{
             'Product Name': product.name || '',
             'Product SKU': product.sku || '',
+            'Status': product.isActive !== false ? 'Active' : 'Inactive',
             'Category': product.category || (Array.isArray(product.categories) ? product.categories[0] : ''),
             'Min Order Qty': product.minOrderQuantity || '',
             'Tags (Comma separated)': tags,
@@ -518,7 +519,7 @@ export default function ProductsManager() {
     const handleDownloadAll = async () => {
         try {
             const XLSX = await import('xlsx');
-            const rows = products.filter(p => p.isActive !== false).map(p => {
+            const rows = products.map(p => {
                 // Extract tags
                 const tags = Array.isArray(p.tags) ? p.tags.join(', ') : (p.tags || '');
 
@@ -544,6 +545,7 @@ export default function ProductsManager() {
                 return {
                     'Product Name': p.name || '',
                     'Product SKU': p.sku || '',
+                    'Status': p.isActive !== false ? 'Active' : 'Inactive',
                     'Category': p.category || (Array.isArray(p.categories) ? p.categories[0] : ''),
                     'Min Order Qty': p.minOrderQuantity || '',
                     'Tags (Comma separated)': tags,
