@@ -100,6 +100,7 @@ export default function HeroBanner() {
 
     <section
       className="relative w-full bg-[#111] overflow-hidden pt-[90px]"
+      suppressHydrationWarning
     >
 
       {/* ── Slider fills the half-hero area ── */}

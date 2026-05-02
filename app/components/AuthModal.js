@@ -5,7 +5,15 @@ import Link from "next/link";
 import { ShieldCheck, Sparkles, Lock, UserPlus, X } from "lucide-react";
 
 export default function AuthModal({ isOpen, onClose }) {
+    const [currentPath, setCurrentPath] = React.useState("");
+
+    React.useEffect(() => {
+        setCurrentPath(window.location.pathname + window.location.search);
+    }, []);
+
     if (!isOpen) return null;
+
+    const redirectQuery = currentPath ? `?redirect=${encodeURIComponent(currentPath)}` : "";
 
     return (
         <AnimatePresence>
@@ -55,14 +63,14 @@ export default function AuthModal({ isOpen, onClose }) {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                                 <Link
-                                    href="/login"
+                                    href={`/login${redirectQuery}`}
                                     className="flex items-center justify-center gap-3 py-5 bg-gray-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-500 transition-all duration-300 shadow-lg shadow-gray-950/20"
                                 >
                                     <Lock size={14} />
                                     Sign In Now
                                 </Link>
                                 <Link
-                                    href="/signup"
+                                    href={`/signup${redirectQuery}`}
                                     className="flex items-center justify-center gap-3 py-5 bg-white text-gray-950 border border-gray-100 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:border-emerald-500 hover:text-emerald-500 transition-all duration-300 shadow-sm"
                                 >
                                     <UserPlus size={14} />

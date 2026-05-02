@@ -33,7 +33,7 @@ const features = [
 
 export default function FeaturesStrip() {
   return (
-    <section className="py-12 bg-white relative overflow-hidden text-center sm:text-left">
+    <section className="py-12 bg-white relative overflow-hidden text-center sm:text-left" suppressHydrationWarning>
       <MatrixBackground />
 
       {/* Continuing the 'Packaging' labels from Hero */}
