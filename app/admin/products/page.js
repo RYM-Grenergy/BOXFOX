@@ -153,6 +153,7 @@ export default function ProductsManager() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
+    const [sortBy, setSortBy] = useState('newest'); // newest, name, status
     const ITEMS_PER_PAGE = 20;
 
     const [formData, setFormData] = useState({
@@ -188,7 +189,7 @@ export default function ProductsManager() {
         isFeatured: false
     });
 
-    const fetchProducts = () => {
+    const fetchProducts = (preservePage = false) => {
         setLoading(true);
         // Load all products at once (backend can paginate if needed for future)
         fetch('/api/products?admin=true&all=true')
@@ -196,7 +197,9 @@ export default function ProductsManager() {
             .then(data => {
                 if (Array.isArray(data)) {
                     setProducts(data);
-                    setCurrentPage(1); // Reset to first page on refresh
+                    if (!preservePage) {
+                        setCurrentPage(1); // Reset to first page only if not preserving
+                    }
                 } else {
                     console.error("Admin: Failed to fetch products", data);
                     setProducts([]);
@@ -404,7 +407,7 @@ export default function ProductsManager() {
             const data = await res.json();
             if (data.success) {
                 setSuccessMsg('Product saved successfully!');
-                fetchProducts();
+                fetchProducts(true);
                 setTimeout(() => {
                     setIsModalOpen(false);
                     setSuccessMsg('');
@@ -884,7 +887,7 @@ export default function ProductsManager() {
 
     // Memoized filtered products with pagination to prevent unnecessary recalculations
     const { filteredProducts, totalPages, totalFiltered } = useMemo(() => {
-        const filtered = products.filter(p => {
+        let filtered = products.filter(p => {
             const matchesSearch = searchQuery.trim() === '' ||
                 (p.name && p.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
                 (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -897,12 +900,28 @@ export default function ProductsManager() {
             return matchesSearch && matchesCategory;
         });
 
+        // Apply Sorting
+        filtered.sort((a, b) => {
+            if (sortBy === 'newest') {
+                return new Date(b.createdAt || Date.now()) - new Date(a.createdAt || Date.now());
+            }
+            if (sortBy === 'name') {
+                return (a.name || '').localeCompare(b.name || '');
+            }
+            if (sortBy === 'status') {
+                // Active first (true > false)
+                if (a.isActive === b.isActive) return 0;
+                return a.isActive === false ? 1 : -1;
+            }
+            return 0;
+        });
+
         const pages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
         const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
         const paginated = filtered.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
         return { filteredProducts: paginated, totalPages: pages, totalFiltered: filtered.length };
-    }, [products, searchQuery, selectedCategory, currentPage]);
+    }, [products, searchQuery, selectedCategory, currentPage, sortBy]);
 
     return (
         <div className="space-y-8">
@@ -919,7 +938,7 @@ export default function ProductsManager() {
                 </div>
                 <div className="flex gap-3">
                     <button
-                        onClick={fetchProducts}
+                        onClick={() => fetchProducts()}
                         className="p-4 bg-gray-100 text-gray-400 rounded-2xl hover:text-gray-950 transition-all active:rotate-180"
                     >
                         <RefreshCw size={20} />
@@ -983,6 +1002,18 @@ export default function ProductsManager() {
                         <option value="Wrap Box">Wrap Box</option>
                         <option value="Popcorn">Popcorn</option>
                         <option value="Carry Bag">Carry Bag</option>
+                    </select>
+                    <Filter size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                </div>
+                <div className="relative">
+                    <select
+                        value={sortBy}
+                        onChange={e => setSortBy(e.target.value)}
+                        className="flex items-center gap-2 px-6 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-500 hover:text-gray-950 transition-all appearance-none outline-none pr-10 cursor-pointer"
+                    >
+                        <option value="newest">Sort by Newest</option>
+                        <option value="name">Sort by Name</option>
+                        <option value="status">Sort by Status (Active first)</option>
                     </select>
                     <Filter size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 </div>

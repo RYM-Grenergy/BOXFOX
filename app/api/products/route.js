@@ -31,11 +31,11 @@ function toStoreProduct(product, source = 'core') {
 
   // Extract numeric price value - be thorough with fallbacks
   let numericPrice = null;
-  
+
   // Try minPrice first
   if (product.minPrice && !isNaN(product.minPrice)) {
     numericPrice = Number(product.minPrice);
-  } 
+  }
   // Try price field
   else if (product.price && !isNaN(product.price)) {
     numericPrice = Number(product.price);
@@ -102,13 +102,14 @@ export async function GET(req) {
     const skip = (page - 1) * limit;
 
     // Fetch query
-    let query = {
-      type: { $in: ["simple", "variable"] },
-      parent_id: { $eq: 0 }, // Only top level
-    };
+    let query = {};
 
     if (!isAdmin) {
-      query.isActive = { $ne: false };
+      query = {
+        type: { $in: ["simple", "variable"] },
+        parent_id: { $eq: 0 }, // Only top level for public
+        isActive: { $ne: false }
+      };
     }
 
     if (searchTerm) {
@@ -130,7 +131,7 @@ export async function GET(req) {
     const fetchProducts = async () => {
       // High Performance Fetch: Use projections to return only required fields for the UI
       // When all=true, fetch complete product data to ensure all fields are available
-      const projection = all 
+      const projection = all
         ? {} // Return ALL fields for complete product data on shop page
         : (isAdmin ? {} : {
           _id: 1, wpId: 1, name: 1, sku: 1, price: 1, minPrice: 1, maxPrice: 1,
@@ -145,9 +146,9 @@ export async function GET(req) {
       let cursor = Product.find(query, projection).sort({ createdAt: -1 });
 
       const products = await cursor
-          .skip(skip)
-          .limit(all ? 0 : limit) // No limit when all=true
-          .lean();
+        .skip(skip)
+        .limit(all ? 0 : limit) // No limit when all=true
+        .lean();
 
       const combinedProducts = products.map((product) => {
         // Add safety checks to ensure required fields exist
@@ -300,9 +301,9 @@ export async function POST(req) {
         isActive: data.isActive !== undefined ? data.isActive : true
       }, { returnDocument: 'after' });
       await invalidateProductCache();
-      
+
       // Finalize images to prevent them from being deleted by cleanup script
-      await finalizeImagesInObject(updatedProduct);
+      await finalizeImagesInObject(updatedProduct.toObject());
 
       return NextResponse.json({ success: true, product: updatedProduct });
     }
@@ -339,12 +340,12 @@ export async function POST(req) {
     await invalidateProductCache();
 
     // Finalize images to prevent them from being deleted by cleanup script
-    await finalizeImagesInObject(product);
+    await finalizeImagesInObject(product.toObject());
 
     return NextResponse.json({ success: true, product });
   } catch (e) {
     console.error("POST Error:", e);
-    
+
     // User-friendly handling for Duplicate SKU errors
     if (e.code === 11000) {
       const field = Object.keys(e.keyPattern || {})[0] || 'SKU';

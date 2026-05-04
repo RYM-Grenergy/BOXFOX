@@ -175,53 +175,53 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
         </div>
 
         {allowWishlist !== false && (
-        <button
-          onClick={async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (wishlistBusy) return;
-            setWishlistBusy(true);
-            try {
-              const res = await fetch('/api/wishlist', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productId: productId })
-              });
-              if (res.status === 401) {
-                window.location.href = '/login';
-                return;
-              }
-              const data = await res.json();
-              if (res.ok) {
-                const nextWishlisted = data?.action === 'added';
-                setIsWishlisted(nextWishlisted);
-
-                const idSet = wishlistIdsCache || new Set();
-                if (nextWishlisted) {
-                  if (productMongoId) idSet.add(productMongoId);
-                  if (productWpId) idSet.add(productWpId);
-                } else {
-                  if (productMongoId) idSet.delete(productMongoId);
-                  if (productWpId) idSet.delete(productWpId);
+          <button
+            onClick={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (wishlistBusy) return;
+              setWishlistBusy(true);
+              try {
+                const res = await fetch('/api/wishlist', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ productId: productId })
+                });
+                if (res.status === 401) {
+                  window.location.href = '/login';
+                  return;
                 }
-                wishlistIdsCache = idSet;
+                const data = await res.json();
+                if (res.ok) {
+                  const nextWishlisted = data?.action === 'added';
+                  setIsWishlisted(nextWishlisted);
 
-                showToast(data.message || (nextWishlisted ? "Added to wishlist" : "Removed from wishlist"));
-              } else {
-                showToast(data.error || "Failed to update wishlist", "error");
+                  const idSet = wishlistIdsCache || new Set();
+                  if (nextWishlisted) {
+                    if (productMongoId) idSet.add(productMongoId);
+                    if (productWpId) idSet.add(productWpId);
+                  } else {
+                    if (productMongoId) idSet.delete(productMongoId);
+                    if (productWpId) idSet.delete(productWpId);
+                  }
+                  wishlistIdsCache = idSet;
+
+                  showToast(data.message || (nextWishlisted ? "Added to wishlist" : "Removed from wishlist"));
+                } else {
+                  showToast(data.error || "Failed to update wishlist", "error");
+                }
+              } catch (err) {
+                console.error(err);
+                showToast("Connection error", "error");
+              } finally {
+                setWishlistBusy(false);
               }
-            } catch (err) {
-              console.error(err);
-              showToast("Connection error", "error");
-            } finally {
-              setWishlistBusy(false);
-            }
-          }}
-          className={`absolute top-2 right-2 sm:top-4 sm:right-4 p-2 sm:p-2.5 rounded-full transition-all shadow-md z-10 ${isWishlisted ? 'bg-red-50 text-red-500' : 'bg-white text-gray-400 hover:bg-red-50 hover:text-red-500'} ${wishlistBusy ? 'opacity-60' : ''}`}
-          title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
-        >
-          <Heart size={16} fill={isWishlisted ? 'currentColor' : 'none'} className="sm:w-4.5 sm:h-4.5" />
-        </button>
+            }}
+            className={`absolute top-2 right-2 sm:top-4 sm:right-4 p-2 sm:p-2.5 rounded-full transition-all shadow-md z-10 ${isWishlisted ? 'bg-red-50 text-red-500' : 'bg-white text-gray-400 hover:bg-red-50 hover:text-red-500'} ${wishlistBusy ? 'opacity-60' : ''}`}
+            title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+          >
+            <Heart size={16} fill={isWishlisted ? 'currentColor' : 'none'} className="sm:w-4.5 sm:h-4.5" />
+          </button>
         )}
       </div>
 

@@ -23,7 +23,10 @@ export async function GET(req, { params }) {
             if (product) console.log(`✅ Found product by MongoDB _id: ${id}`);
         }
 
-        if (!product || (product.isActive === false)) {
+        const { searchParams } = new URL(req.url);
+        const isAdmin = searchParams.get('admin') === 'true';
+
+        if (!product || (product.isActive === false && !isAdmin)) {
             console.warn(`❌ Product not found or inactive for ID: ${id}`);
             return NextResponse.json({ error: "Product not found" }, { status: 404 });
         }
