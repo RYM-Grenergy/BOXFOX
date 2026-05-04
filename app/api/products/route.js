@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
 import { getOrSetCache, default as redis } from "@/lib/redis";
+import { finalizeImagesInObject } from "@/lib/image-finalizer";
 
 async function invalidateProductCache() {
   try {
@@ -295,6 +296,10 @@ export async function POST(req) {
         isActive: data.isActive !== undefined ? data.isActive : true
       }, { returnDocument: 'after' });
       await invalidateProductCache();
+      
+      // Finalize images to prevent them from being deleted by cleanup script
+      await finalizeImagesInObject(updatedProduct);
+
       return NextResponse.json({ success: true, product: updatedProduct });
     }
 
@@ -327,6 +332,10 @@ export async function POST(req) {
       isActive: data.isActive !== undefined ? data.isActive : true
     });
     await invalidateProductCache();
+
+    // Finalize images to prevent them from being deleted by cleanup script
+    await finalizeImagesInObject(product);
+
     return NextResponse.json({ success: true, product });
   } catch (e) {
     console.error("POST Error:", e);

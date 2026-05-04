@@ -82,7 +82,7 @@ export const POST = async (req) => {
             });
         }
 
-        cleanupTemporaryImages().catch(err => console.error('Cleanup Error:', err));
+        // cleanupTemporaryImages().catch(err => console.error('Cleanup Error:', err));
 
         return NextResponse.json({ 
             url: result.secure_url, 

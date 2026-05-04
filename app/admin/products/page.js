@@ -28,7 +28,16 @@ const ProductRow = React.memo(({ product, onEdit, onDelete, onDuplicate, onRegen
         <td className="px-8 py-5">
             <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
-                    <img src={product.img} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    <img 
+                        src={product.img || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg"} 
+                        alt="" 
+                        className="w-full h-full object-cover" 
+                        loading="lazy"
+                        onError={(e) => {
+                            e.target.src = "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg";
+                            e.target.onerror = null; // Prevent infinite loops
+                        }}
+                    />
                 </div>
                 <div>
                     <div className="flex items-center gap-2">
