@@ -65,7 +65,10 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
     pacdoraId,
     images,
     allowWishlist = true,
+    minOrderQuantity,
   } = product;
+
+  const [isAdding, setIsAdding] = useState(false);
 
   const productId = _id || id;
   const routeId = _id || id;
@@ -229,11 +232,29 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
         <h3 className="text-[12px] sm:text-lg font-black text-gray-950 leading-[1.1] tracking-tighter uppercase line-clamp-2 group-hover:text-emerald-500 transition-colors">
           {name}
         </h3>
-        {product.dimensions && (
-          <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-            {product.dimensions.length} x {product.dimensions.width} x {product.dimensions.height} {product.dimensions.unit || 'inch'}
-          </p>
-        )}
+        {(() => {
+          // 1. Try structured dimensions first
+          const hasStructured = product.dimensions && (product.dimensions.length > 0 || product.dimensions.width > 0 || product.dimensions.height > 0);
+          if (hasStructured) {
+            return (
+              <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                {product.dimensions.length} x {product.dimensions.width} x {product.dimensions.height} {product.dimensions.unit || 'in'}
+              </p>
+            );
+          }
+
+          // 2. Try parsing from name (e.g., "Carry Bag - 268x268x203 mm")
+          const nameMatch = product.name?.match(/(\d+(?:\.\d+)?)\s*[x*]\s*(\d+(?:\.\d+)?)\s*[x*]\s*(\d+(?:\.\d+)?)\s*(mm|inch|in|cm)?/i);
+          if (nameMatch) {
+            return (
+              <p className="text-[10px] sm:text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                {nameMatch[1]} x {nameMatch[2]} x {nameMatch[3]} {nameMatch[4] || 'mm'}
+              </p>
+            );
+          }
+
+          return null;
+        })()}
 
         <div className="flex items-center justify-between mt-auto pt-2 gap-1.5 sm:gap-2">
           <div className="flex flex-col justify-center min-w-0">
@@ -264,11 +285,38 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
             )}
           </div>
 
-          <div className="flex items-center justify-center gap-1 px-2 sm:px-4 py-1.5 sm:py-2 bg-emerald-50 text-emerald-600 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-sm border border-emerald-100/50 shrink-0">
-            <span className="hidden xs:inline">View Details</span>
-            <span className="xs:hidden">Details</span>
-            <ArrowUpRight size={11} className="sm:w-3.5 sm:h-3.5" />
+          <div className="flex items-center justify-center gap-1.5 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-gray-50 text-gray-500 rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest group-hover:bg-gray-100 group-hover:text-gray-900 transition-all shadow-sm border border-gray-150 shrink-0">
+            <span className="hidden xs:inline">Details</span>
+            <span className="xs:hidden">View</span>
+            <ArrowUpRight size={11} className="sm:w-3.5 sm:h-3.5 opacity-50" />
           </div>
+
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (isAdding) return;
+              setIsAdding(true);
+              setTimeout(() => {
+                addToCart(product, minOrderQuantity || 10);
+                setIsAdding(false);
+              }, 400);
+            }}
+            disabled={isAdding}
+            className={`flex items-center justify-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 bg-emerald-600 text-white rounded-full text-[8px] sm:text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 shrink-0 ${isAdding ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            {isAdding ? (
+              <span className="flex items-center gap-1">
+                <div className="w-2 h-2 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span className="hidden xs:inline">Adding</span>
+              </span>
+            ) : (
+              <>
+                <Plus size={11} className="sm:w-3.5 sm:h-3.5" />
+                <span>Add</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </Link>

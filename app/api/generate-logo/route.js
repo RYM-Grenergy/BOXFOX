@@ -1,7 +1,34 @@
-import { NextResponse } from "next/server";
+import jwt from 'jsonwebtoken';
+import { rateLimit, getIP } from '@/lib/rateLimit';
+
+const limiter = rateLimit({ interval: 30 * 60 * 1000 }); // 30 minutes
 
 export async function POST(req) {
   try {
+    const token = req.cookies.get('token')?.value;
+    let userId = null;
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_for_development_purposes');
+            userId = decoded.id;
+        } catch (err) { }
+    }
+
+    // Rate limiting logic
+    try {
+        const ip = getIP(req);
+        const rateLimitKey = userId ? `user_logo_${userId}` : `ip_logo_${ip}`;
+        const maxRequests = userId ? 20 : 4; 
+        await limiter.check(maxRequests, rateLimitKey);
+    } catch {
+        return NextResponse.json({
+            error: "LIMIT_REACHED",
+            message: userId 
+                ? "Too many logo generation requests. Please wait 30 minutes."
+                : "Guest limit reached (4 AI logos). Please login for more!"
+        }, { status: 429 });
+    }
+
     const { prompt, style, color } = await req.json();
 
     if (!process.env.FREEPIK_API_KEY) {

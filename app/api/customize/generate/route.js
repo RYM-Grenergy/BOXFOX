@@ -32,30 +32,30 @@ export async function POST(req) {
         try {
             const ip = getIP(req);
             const rateLimitKey = userId ? `user_${userId}` : `ip_${ip}`;
-            await limiter.check(20, rateLimitKey); // 20 requests per 30 minutes
+            // 20 requests per 30 mins for logged in, 4 for guests
+            const maxRequests = userId ? 20 : 4; 
+            await limiter.check(maxRequests, rateLimitKey);
         } catch {
             return NextResponse.json({
                 error: "LIMIT_REACHED",
                 limitReached: true,
-                message: "Too many AI generation requests. Please wait 30 minutes."
+                message: userId 
+                    ? "Too many AI generation requests. Please wait 30 minutes."
+                    : "Guest limit reached (4 AI generations). Please login for unlimited designs!"
             }, { status: 429 });
         }
 
-        if (!userId) {
-            return NextResponse.json({
-                error: "LIMIT_REACHED",
-                limitReached: true,
-                message: "Please login to use AI Forge."
-            }, { status: 401 });
-        }
+        let hasUnlimited = false;
+        let user = null;
 
-        const user = await User.findById(userId);
-        if (!user) {
-            return NextResponse.json({ error: "LIMIT_REACHED", limitReached: true, message: "User not found." }, { status: 404 });
+        if (userId) {
+            user = await User.findById(userId);
+            if (!user) {
+                return NextResponse.json({ error: "LIMIT_REACHED", limitReached: true, message: "User not found." }, { status: 404 });
+            }
+            const now = new Date();
+            hasUnlimited = user.aiUnlimitedUntil && user.aiUnlimitedUntil > now;
         }
-
-        const now = new Date();
-        const hasUnlimited = user.aiUnlimitedUntil && user.aiUnlimitedUntil > now;
 
         if (!hasUnlimited) {
             // Robust Daily Reset Logic
@@ -291,14 +291,14 @@ export async function POST(req) {
             }, { status: response.status });
         }
 
-        if (!hasUnlimited) {
+        if (!hasUnlimited && user) {
             user.aiGenerationCount = (user.aiGenerationCount || 0) + 1;
             user.lastAiGenerationDate = new Date();
             await user.save();
         }
 
         return NextResponse.json(
-            { ...data, aiGenerationCount: user.aiGenerationCount },
+            { ...data, aiGenerationCount: user ? user.aiGenerationCount : 0 },
             { headers: { 'Cache-Control': 'no-store' } }
         );
     } catch (error) {

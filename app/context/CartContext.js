@@ -1,7 +1,7 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from './ToastContext';
-import { calculateBoxPrice } from '@/lib/boxfoxPricing';
+import { calculateBoxPrice, unitPriceFromThreePoints } from '@/lib/boxfoxPricing';
 import { BOX_SPECIFICATIONS } from '@/lib/box-specifications';
 
 const CartContext = createContext();
@@ -21,7 +21,22 @@ export function CartProvider({ children }) {
     }, [cart]);
 
     const calculateItemPricing = (product, quantity) => {
-        // If this is a custom design box, we respect the price settings from the Lab
+        // 1. Explicit Tiered Pricing (Highest Accuracy for Admin-managed products)
+        if (product.priceAt1 || product.priceAt50 || product.priceAt100) {
+            const unitPrice = unitPriceFromThreePoints({
+                priceAt1: product.priceAt1,
+                priceAt50: product.priceAt50,
+                priceAt100: product.priceAt100
+            }, quantity);
+            
+            return {
+                unitPrice: unitPrice,
+                oneTimeCharge: 0,
+                breakdown: { finalPerUnit: unitPrice, finalTotal: unitPrice * quantity }
+            };
+        }
+
+        // 2. Custom design box logic
         if (product.customDesign) {
             const pricingParams = {
                 spec: product.customDesign.specData || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
@@ -42,7 +57,7 @@ export function CartProvider({ children }) {
             };
         }
 
-        // For regular products, try to match a manufacturing spec for accurate pricing
+        // 3. Regular products - try to match manufacturing spec
         const unit = product.dimensions?.unit || 'in';
         const dimensions = {
             l: product.dimensions?.length || 1,
@@ -57,37 +72,50 @@ export function CartProvider({ children }) {
             s.unit === unit
         );
 
-        const pricingResult = calculateBoxPrice({
-            spec: selectedSpec || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
-            qty: quantity,
-            gsm: 280,
-            material: 'SBS',
-            brand: 'Normal',
-            colours: 'Four Colour',
-            lamination: 'Plain',
-            markupType: 'Retail',
-            dieCutting: true
-        });
+        if (selectedSpec) {
+            const pricingResult = calculateBoxPrice({
+                spec: selectedSpec,
+                qty: quantity,
+                gsm: 280,
+                material: 'SBS',
+                brand: 'Normal',
+                colours: 'Four Colour',
+                lamination: 'Plain',
+                markupType: 'Retail',
+                dieCutting: true
+            });
 
+            return {
+                unitPrice: pricingResult.finalPerUnit,
+                oneTimeCharge: 0,
+                breakdown: pricingResult
+            };
+        }
+
+        // 4. Fallback to static prices
+        const staticPrice = Number(product.minPrice || product.price || 0);
         return {
-            unitPrice: pricingResult.finalPerUnit,
+            unitPrice: staticPrice,
             oneTimeCharge: 0,
-            breakdown: pricingResult
+            breakdown: { finalPerUnit: staticPrice, finalTotal: staticPrice * quantity }
         };
     };
 
     const addToCart = (product, quantity) => {
         let isUpdate = false;
+        // Use consistent ID (prefer MongoDB _id, then WP id)
+        const productId = product._id || product.id || product.wpId;
+        
         setCart(prev => {
-            const existing = prev.find(item => item.id === product.id);
-            const minQty = 10;
+            const existing = prev.find(item => (item._id || item.id || item.wpId) === productId);
+            const minQty = Math.max(10, product.minOrderQuantity || 10);
             const finalQty = Math.max(minQty, quantity);
 
             if (existing) {
                 isUpdate = true;
                 const newQuantity = existing.quantity + Math.max(0, quantity);
                 const pricing = calculateItemPricing(existing, newQuantity);
-                return prev.map(item => item.id === product.id
+                return prev.map(item => (item._id || item.id || item.wpId) === productId
                     ? {
                         ...item,
                         quantity: newQuantity,
@@ -102,6 +130,7 @@ export function CartProvider({ children }) {
             const pricing = calculateItemPricing(product, finalQty);
             return [...prev, {
                 ...product,
+                id: productId, // Ensure it has an id field for consistency
                 quantity: finalQty,
                 price: pricing.unitPrice,
                 oneTimeCharge: pricing.oneTimeCharge,
@@ -112,6 +141,7 @@ export function CartProvider({ children }) {
         showToast(isUpdate ? `Updated ${product.name} quantity` : `Added ${product.name} to basket`);
         setIsCartOpen(true);
     };
+
 
     const updateQuantity = (id, quantity) => {
         setCart(prev => prev.map(item => {

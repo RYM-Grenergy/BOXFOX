@@ -238,7 +238,17 @@ export default function ProductPage() {
                                     <div className="text-right">
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dimensions</p>
                                         <p className="text-xs font-black text-gray-950 uppercase">
-                                            {product.dimensions?.length}x{product.dimensions?.width}x{product.dimensions?.height} {product.dimensions?.unit || 'in'}
+                                            {(() => {
+                                                const d = product.dimensions;
+                                                if (d && (d.length > 0 || d.width > 0 || d.height > 0)) {
+                                                    return `${d.length}x${d.width}x${d.height} ${d.unit || 'in'}`;
+                                                }
+                                                const match = product.name?.match(/(\d+(?:\.\d+)?)\s*[x*]\s*(\d+(?:\.\d+)?)\s*[x*]\s*(\d+(?:\.\d+)?)\s*(mm|inch|in|cm)?/i);
+                                                if (match) {
+                                                    return `${match[1]}x${match[2]}x${match[3]} ${match[4] || 'mm'}`;
+                                                }
+                                                return '—';
+                                            })()}
                                         </p>
                                     </div>
                                     <div className="text-right">
@@ -248,7 +258,7 @@ export default function ProductPage() {
                                 </div>
 
                                     <div className="space-y-4">
-                                        {product.priceAt1 && product.priceAt100 && (
+                                        {(product.priceAt1 && product.priceAt100) && (
                                             <div className="bg-white/50 backdrop-blur-sm border border-gray-100 rounded-2xl p-4 mb-2">
                                                 <div className="flex items-center justify-between mb-3">
                                                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Volume Savings</p>
@@ -261,7 +271,9 @@ export default function ProductPage() {
                                                     </div>
                                                     <div className="text-center p-2 rounded-xl bg-emerald-50 border border-emerald-100">
                                                         <p className="text-[8px] font-black text-emerald-600 uppercase tracking-tighter">50 Units</p>
-                                                        <p className="text-sm font-black text-emerald-600 tracking-tighter">₹{product.priceAt50 || '—'}</p>
+                                                        <p className="text-sm font-black text-emerald-600 tracking-tighter">
+                                                            ₹{product.priceAt50 || Math.round(calculateDynamicPrice(50, product.priceAt1, product.priceAt50, product.priceAt100))}
+                                                        </p>
                                                     </div>
                                                     <div className="text-center p-2 rounded-xl bg-emerald-600 border border-emerald-600 shadow-lg shadow-emerald-500/20">
                                                         <p className="text-[8px] font-black text-emerald-50 uppercase tracking-tighter">100 Units</p>
@@ -270,6 +282,7 @@ export default function ProductPage() {
                                                 </div>
                                             </div>
                                         )}
+
 
                                         <div className="space-y-4">
                                             <div className="relative">

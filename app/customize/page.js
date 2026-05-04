@@ -66,12 +66,8 @@ function CustomizeLabContent() {
   const { user, loading: authLoading, checkUser } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      const currentUrl = window.location.pathname + window.location.search;
-      router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
-    }
-  }, [user, authLoading, router]);
+  // Removed forced login redirect to allow guest design experience
+  // Guests can design but will be prompted to login to save or access premium features
 
   // Default Product ID for the Standalone Lab
   const DEFAULT_PRODUCT_ID = "1771670990303";
@@ -1394,7 +1390,7 @@ function CustomizeLabContent() {
                     } else {
                       const errorMsg = result.error || 'Failed to save design';
                       showToast(errorMsg, "error");
-                      if (res.status === 401) router.push('/login');
+                      if (res.status === 401) setShowAuthModal(true);
                     }
                   } catch (e) {
                     console.error('Save Design Error:', e);
@@ -1452,7 +1448,7 @@ function CustomizeLabContent() {
                     } else {
                       const errorMsg = result.error || 'Failed to generate share link';
                       showToast(errorMsg, "error");
-                      if (res.status === 401) router.push('/login');
+                      if (res.status === 401) setShowAuthModal(true);
                     }
                   } catch (e) {
                     console.error('Share Design Error:', e);
