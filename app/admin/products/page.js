@@ -1443,55 +1443,79 @@ export default function ProductsManager() {
                                                  </div>
                                              </div>
 
-                                            <div className="space-y-2">
-                                                <label className="text-xs font-black uppercase tracking-widest text-gray-400">Product Images</label>
-                                                <div className="space-y-4">
-                                                    <div className="flex gap-4">
-                                                        <textarea
-                                                            required
-                                                            rows="3"
-                                                            value={formData.images}
-                                                            onChange={e => setFormData({ ...formData, images: e.target.value })}
-                                                            placeholder="Add image URLs separated by commas..."
-                                                            className="flex-1 bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 font-bold text-gray-950 focus:ring-2 focus:ring-gray-950/5 outline-none transition-all resize-none"
-                                                        />
-                                                        <label className={`w-32 shrink-0 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 transition-all ${isUploadingImages ? 'opacity-50 pointer-events-none' : ''}`}>
-                                                            {isUploadingImages ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400" />}
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 text-center px-2">{isUploadingImages ? 'Uploading...' : 'Upload Images'}</span>
-                                                            <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
-                                                        </label>
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <label className="text-xs font-black uppercase tracking-widest text-gray-400">Product Media</label>
+                                                        <p className="text-[10px] text-gray-400 font-medium">Manage your product gallery and primary image</p>
                                                     </div>
-                                                    <div className="flex flex-wrap gap-4">
-                                                        {formData.images.split(',').map((url, i) => url.trim() && (
-                                                            <div key={i} className="w-20 h-20 rounded-2xl border border-gray-100 overflow-hidden shrink-0 relative group">
-                                                                <img src={url.trim()} className="w-full h-full object-cover" alt={`Preview ${i + 1}`} />
-                                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => handleDownload(url.trim(), `${formData.name}_img_${i + 1}`)}
-                                                                        className="w-7 h-7 bg-white text-gray-900 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 shadow-lg"
-                                                                        title="Download"
-                                                                    >
-                                                                        <Download size={14} />
-                                                                    </button>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            const urlToDelete = url.trim();
-                                                                            handleCloudinaryDelete(urlToDelete);
-                                                                            const newUrls = formData.images.split(',').map(u => u.trim()).filter(Boolean);
-                                                                            newUrls.splice(i, 1);
-                                                                            setFormData({ ...formData, images: newUrls.join(', ') });
-                                                                        }}
-                                                                        className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:scale-110 active:scale-95 shadow-lg"
-                                                                        title="Remove"
-                                                                    >
-                                                                        <X size={14} />
-                                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const url = prompt('Enter Image URL:');
+                                                            if (url) {
+                                                                const current = formData.images ? formData.images.split(',').map(u => u.trim()).filter(Boolean) : [];
+                                                                setFormData({ ...formData, images: [...current, url].join(', ') });
+                                                            }
+                                                        }}
+                                                        className="text-[10px] font-black text-gray-400 hover:text-gray-950 uppercase tracking-widest transition-colors"
+                                                    >
+                                                        + Add by URL
+                                                    </button>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                                    {/* Upload Box */}
+                                                    <label className={`aspect-square border-2 border-dashed border-gray-200 rounded-[2rem] flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 transition-all group ${isUploadingImages ? 'opacity-50 pointer-events-none' : ''}`}>
+                                                        <div className="w-12 h-12 rounded-2xl bg-gray-50 group-hover:bg-white flex items-center justify-center transition-colors">
+                                                            {isUploadingImages ? <Loader2 size={24} className="text-emerald-500 animate-spin" /> : <UploadCloud size={24} className="text-gray-400 group-hover:text-emerald-500" />}
+                                                        </div>
+                                                        <div className="text-center px-4">
+                                                            <span className="text-[10px] font-black uppercase tracking-widest block">{isUploadingImages ? 'Uploading...' : 'Upload Media'}</span>
+                                                            <span className="text-[8px] text-gray-400 font-medium block mt-1">PNG, JPG up to 10MB</span>
+                                                        </div>
+                                                        <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+                                                    </label>
+
+                                                    {/* Image Thumbnails */}
+                                                    {formData.images.split(',').map((url, i) => url.trim() && (
+                                                        <div key={i} className="group aspect-square rounded-[2rem] border border-gray-100 overflow-hidden relative bg-gray-50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                                                            <img src={url.trim()} className="w-full h-full object-contain p-2" alt={`Product ${i + 1}`} />
+                                                            
+                                                            {/* Primary Badge */}
+                                                            {i === 0 && (
+                                                                <div className="absolute top-3 left-3 px-2 py-1 bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg">
+                                                                    Primary
                                                                 </div>
+                                                            )}
+
+                                                            {/* Action Overlay */}
+                                                            <div className="absolute inset-0 bg-gray-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleDownload(url.trim(), `${formData.name}_img_${i + 1}`)}
+                                                                    className="w-9 h-9 bg-white text-gray-900 rounded-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl"
+                                                                    title="Download"
+                                                                >
+                                                                    <Download size={16} />
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const urlToDelete = url.trim();
+                                                                        handleCloudinaryDelete(urlToDelete);
+                                                                        const newUrls = formData.images.split(',').map(u => u.trim()).filter(Boolean);
+                                                                        newUrls.splice(i, 1);
+                                                                        setFormData({ ...formData, images: newUrls.join(', ') });
+                                                                    }}
+                                                                    className="w-9 h-9 bg-red-500 text-white rounded-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl"
+                                                                    title="Remove"
+                                                                >
+                                                                    <X size={16} />
+                                                                </button>
                                                             </div>
-                                                        ))}
-                                                    </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </div>
 
