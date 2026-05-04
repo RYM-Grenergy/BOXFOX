@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import dbConnect from '@/lib/mongodb';
 import Product from '@/models/Product';
+import { getOptimizedImageUrl } from '@/lib/image-finalizer';
 
 export async function GET(req, { params }) {
     try {
@@ -42,8 +43,8 @@ export async function GET(req, { params }) {
                 sale_price: product.sale_price,
                 description: product.description,
                 short_description: product.short_description,
-                img: product.images[0] || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
-                images: product.images,
+                images: ((Array.isArray(product.images) && product.images.length > 0) ? product.images : (product.img ? [product.img] : [])).map(getOptimizedImageUrl),
+                img: getOptimizedImageUrl((Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : product.img) || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg"),
                 category: (product.categories && product.categories.length > 0) ? (product.categories[product.categories.length - 1] || "Packaging") : "Packaging",
                 stock_status: product.stock_status,
                 type: product.type,

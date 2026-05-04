@@ -154,7 +154,7 @@ export default function ProductPage() {
                                 </div>
                             </motion.div>
 
-                            <div className="flex gap-4 p-2 bg-gray-50/50 rounded-3xl w-fit">
+                            <div className="flex gap-4 p-2 bg-gray-50/50 rounded-3xl w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
                                 {images.map((img, i) => (
                                     <button
                                         key={i}

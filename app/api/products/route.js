@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
 import { getOrSetCache, default as redis } from "@/lib/redis";
-import { finalizeImagesInObject } from "@/lib/image-finalizer";
+import { finalizeImagesInObject, getOptimizedImageUrl } from "@/lib/image-finalizer";
 
 async function invalidateProductCache() {
   try {
@@ -45,6 +45,9 @@ function toStoreProduct(product, source = 'core') {
     numericPrice = Number(product.priceAt1);
   }
 
+  const optimizedImages = (Array.isArray(product.images) ? product.images : []).map(getOptimizedImageUrl);
+  const primaryImg = (Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : product.img) || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg";
+
   return {
     _id: product._id,
     id: product._id || product.wpId,
@@ -62,8 +65,8 @@ function toStoreProduct(product, source = 'core') {
     originalPrice: product.regular_price || null,
     discount: product.sale_price ? "Sale" : null,
     status: product.stock_status || 'instock',
-    images: Array.isArray(product.images) ? product.images : [],
-    img: product.img || (Array.isArray(product.images) && product.images[0]) || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg",
+    images: optimizedImages,
+    img: getOptimizedImageUrl(primaryImg),
     outOfStock: product.stock_status === "outofstock" || (product.stock_quantity === 0),
     badge: product.badge || (product.isFeatured ? "Featured" : null),
     hasVariants: product.type === "variable",
@@ -277,7 +280,8 @@ export async function POST(req) {
         minPrice: data.minPrice,
         maxPrice: data.maxPrice,
         badge: data.badge,
-        images: processedImages,
+        images: processedImages.map(getOptimizedImageUrl),
+        img: getOptimizedImageUrl(processedImages[0] || undefined),
         categories: [data.category],
         type: data.hasVariants ? "variable" : "simple",
         dimensions: {
@@ -313,7 +317,8 @@ export async function POST(req) {
       maxPrice: data.maxPrice,
       badge: data.badge,
       wpId,
-      images: processedImages,
+      images: processedImages.map(getOptimizedImageUrl),
+      img: getOptimizedImageUrl(processedImages[0] || undefined),
       categories: [data.category],
       type: data.hasVariants ? "variable" : "simple",
       dimensions: {

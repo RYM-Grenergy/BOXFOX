@@ -106,7 +106,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           alt={name}
           width={400}
           height={500}
-          unoptimized={img?.includes('boxfox.in') || !img}
+          unoptimized={true}
           className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-105 ${hoverImage ? 'group-hover:opacity-0' : ''}`}
           placeholder="blur"
           blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
@@ -118,7 +118,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
             alt={`${name} hover`}
             width={400}
             height={500}
-            unoptimized={hoverImage.includes('boxfox.in')}
+            unoptimized={true}
             className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 absolute inset-0 opacity-0 group-hover:opacity-100"
             priority={priority}
           />
@@ -144,7 +144,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
           alt={name || 'Product image'}
           width={500}
           height={500}
-          unoptimized={img?.includes('boxfox.in') || !img}
+          unoptimized={true}
           className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-105 ${hoverImage ? 'group-hover:opacity-0' : ''}`}
           priority={priority}
         />
@@ -154,7 +154,7 @@ export default function ProductCard({ product, imageOnly = false, priority = fal
             alt={`${name || 'Product'} hover`}
             width={500}
             height={500}
-            unoptimized={hoverImage.includes('boxfox.in')}
+            unoptimized={true}
             className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 absolute inset-0 opacity-0 group-hover:opacity-100"
             priority={priority}
           />
