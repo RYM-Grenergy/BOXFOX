@@ -14,6 +14,7 @@ import {
     Loader2,
     Copy,
     Download,
+    Link2,
     Star,
     FileText,
     ChevronLeft,
