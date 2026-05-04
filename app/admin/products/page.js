@@ -84,7 +84,7 @@ const ProductRow = React.memo(({ product, onEdit, onDelete, onDuplicate, onRegen
         </td>
         <td className="px-8 py-5">
             {(() => {
-                const d = formatDimensions(product.dimensions);
+                const d = formatDimensions(product.dimensions, product.name);
                 if (!d) return <span className="text-[10px] text-gray-300 font-bold">—</span>;
                 return (
                     <div className="flex flex-col gap-0.5">
@@ -837,9 +837,24 @@ export default function ProductsManager() {
         }
     };
 
-    const formatDimensions = (dim) => {
-        if (!dim || (!dim.length && !dim.width && !dim.height)) return null;
-        const { length: l, width: w, height: h, unit = 'inch' } = dim;
+    const formatDimensions = (dim, name) => {
+        let d = dim;
+        if (!d || (!d.length && !d.width && !d.height)) {
+            // Smart Fallback: Extract dimensions from name if missing in data (e.g. "Cake Box 8x8x5 in")
+            const match = name?.match(/(\d+(?:\.\d+)?)\s*[x×*]\s*(\d+(?:\.\d+)?)\s*[x×*]\s*(\d+(?:\.\d+)?)/i);
+            if (match) {
+                d = { 
+                    length: parseFloat(match[1]), 
+                    width: parseFloat(match[2]), 
+                    height: parseFloat(match[3]), 
+                    unit: 'inch' 
+                };
+            } else {
+                return null;
+            }
+        }
+        
+        const { length: l, width: w, height: h, unit = 'inch' } = d;
         const toInch = (v) => unit === 'inch' ? v : unit === 'cm' ? v / 2.54 : v / 25.4;
         const toCm = (v) => unit === 'cm' ? v : unit === 'inch' ? v * 2.54 : v / 10;
         const toMm = (v) => unit === 'mm' ? v : unit === 'inch' ? v * 25.4 : v * 10;
