@@ -1493,6 +1493,21 @@ export default function ProductsManager() {
                                                             <div className="absolute inset-0 bg-gray-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                                                 <button
                                                                     type="button"
+                                                                    onClick={() => {
+                                                                        const newUrl = prompt('Edit Image URL:', url.trim());
+                                                                        if (newUrl !== null && newUrl !== url.trim()) {
+                                                                            const newUrls = formData.images.split(',').map(u => u.trim()).filter(Boolean);
+                                                                            newUrls[i] = newUrl;
+                                                                            setFormData({ ...formData, images: newUrls.join(', ') });
+                                                                        }
+                                                                    }}
+                                                                    className="w-9 h-9 bg-white text-gray-900 rounded-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl"
+                                                                    title="Edit URL"
+                                                                >
+                                                                    <Link2 size={16} />
+                                                                </button>
+                                                                <button
+                                                                    type="button"
                                                                     onClick={() => handleDownload(url.trim(), `${formData.name}_img_${i + 1}`)}
                                                                     className="w-9 h-9 bg-white text-gray-900 rounded-xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl"
                                                                     title="Download"
