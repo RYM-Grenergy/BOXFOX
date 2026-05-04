@@ -225,7 +225,7 @@ export default function ProductsManager() {
 
                     const formDataObj = new FormData();
                     formDataObj.append('image', fileToUpload);
-                    formDataObj.append('type', 'other');
+                    formDataObj.append('type', 'product');
 
                     const response = await fetch('/api/upload', {
                         method: 'POST',
@@ -251,7 +251,13 @@ export default function ProductsManager() {
             const uploadedUrls = results.filter(Boolean);
 
             if (uploadedUrls.length > 0) {
-                const currentImages = formData.images ? formData.images.split(',').map(u => u.trim()).filter(Boolean) : [];
+                let currentImages = [];
+                if (typeof formData.images === 'string') {
+                    currentImages = formData.images.split(',').map(u => u.trim()).filter(Boolean);
+                } else if (Array.isArray(formData.images)) {
+                    currentImages = formData.images.filter(Boolean);
+                }
+                
                 setFormData({ ...formData, images: [...currentImages, ...uploadedUrls].join(', ') });
             }
         } catch (error) {

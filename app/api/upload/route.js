@@ -77,7 +77,7 @@ export const POST = async (req) => {
                 publicId: result.public_id,
                 name: name || `Uploaded ${fileFormat.toUpperCase()}`,
                 format: fileFormat,
-                isTemporary: true,
+                isTemporary: !['product', 'pattern', 'document'].includes(type),
                 type: finalType
             });
         }
@@ -88,7 +88,7 @@ export const POST = async (req) => {
             url: result.secure_url, 
             publicId: result.public_id,
             format: fileFormat,
-            isTemporary: true 
+            isTemporary: !['product', 'pattern', 'document'].includes(type)
         });
     } catch (error) {
         console.error('Upload Error:', error);
