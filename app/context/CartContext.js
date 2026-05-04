@@ -21,22 +21,8 @@ export function CartProvider({ children }) {
     }, [cart]);
 
     const calculateItemPricing = (product, quantity) => {
-        // 1. Explicit Tiered Pricing (Highest Accuracy for Admin-managed products)
-        if (product.priceAt1 || product.priceAt50 || product.priceAt100) {
-            const unitPrice = unitPriceFromThreePoints({
-                priceAt1: product.priceAt1,
-                priceAt50: product.priceAt50,
-                priceAt100: product.priceAt100
-            }, quantity);
-            
-            return {
-                unitPrice: unitPrice,
-                oneTimeCharge: 0,
-                breakdown: { finalPerUnit: unitPrice, finalTotal: unitPrice * quantity }
-            };
-        }
-
-        // 2. Custom design box logic
+        // 1. Custom design box logic (THE LAB)
+        // Highest priority: If it's a custom design, use manufacturing specs ONLY.
         if (product.customDesign) {
             const pricingParams = {
                 spec: product.customDesign.specData || { ups: 1, machine: 2029, sheetW: 20, sheetH: 29 },
@@ -54,6 +40,21 @@ export function CartProvider({ children }) {
                 unitPrice: res.finalPerUnit,
                 oneTimeCharge: res.dieToolingCharge || 0,
                 breakdown: res // Store full breakdown for B2B transparency
+            };
+        }
+
+        // 2. Explicit Tiered Pricing (For standard Shop products)
+        if (product.priceAt1 || product.priceAt50 || product.priceAt100) {
+            const unitPrice = unitPriceFromThreePoints({
+                priceAt1: product.priceAt1,
+                priceAt50: product.priceAt50,
+                priceAt100: product.priceAt100
+            }, quantity);
+            
+            return {
+                unitPrice: unitPrice,
+                oneTimeCharge: 0,
+                breakdown: { finalPerUnit: unitPrice, finalTotal: unitPrice * quantity }
             };
         }
 

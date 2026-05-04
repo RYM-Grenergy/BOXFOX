@@ -57,9 +57,8 @@ export async function POST(req) {
             hasUnlimited = user.aiUnlimitedUntil && user.aiUnlimitedUntil > now;
         }
 
-        if (!hasUnlimited) {
+        if (!hasUnlimited && user) {
             // Robust Daily Reset Logic
-            const now = new Date();
             const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 
             if (user.lastAiGenerationDate) {
