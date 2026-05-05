@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import dbConnect from '@/lib/mongodb';
 import User from '@/models/User';
+import ImageGeneration from '@/models/ImageGeneration';
 import { rateLimit, getIP } from '@/lib/rateLimit';
 
 const limiter = rateLimit({ interval: 30 * 60 * 1000 }); // 30 minutes
+const GUEST_DAILY_LIMIT = 5;
 
 export async function POST(req) {
     try {
@@ -29,11 +31,13 @@ export async function POST(req) {
             } catch (err) { }
         }
 
+        const now = new Date();
+
         try {
             const ip = getIP(req);
             const rateLimitKey = userId ? `user_${userId}` : `ip_${ip}`;
-            // 20 requests per 30 mins for logged in, 4 for guests
-            const maxRequests = userId ? 20 : 4; 
+            // 20 requests per 30 mins for logged in, 5 for guests
+            const maxRequests = userId ? 20 : 5;
             await limiter.check(maxRequests, rateLimitKey);
         } catch {
             return NextResponse.json({
@@ -41,20 +45,43 @@ export async function POST(req) {
                 limitReached: true,
                 message: userId 
                     ? "Too many AI generation requests. Please wait 30 minutes."
-                    : "Guest limit reached (4 AI generations). Please login for unlimited designs!"
+                    : "Guest limit reached (5 AI generations). Please login for unlimited designs!"
             }, { status: 429 });
         }
 
         let hasUnlimited = false;
         let user = null;
+        let guestRecord = null;
+        let guestRemaining = null;
 
         if (userId) {
             user = await User.findById(userId);
             if (!user) {
                 return NextResponse.json({ error: "LIMIT_REACHED", limitReached: true, message: "User not found." }, { status: 404 });
             }
-            const now = new Date();
             hasUnlimited = user.aiUnlimitedUntil && user.aiUnlimitedUntil > now;
+        } else {
+            await dbConnect();
+            const ip = getIP(req);
+            const today = new Date().toISOString().split('T')[0];
+            guestRecord = await ImageGeneration.findOne({ ip, date: today });
+
+            if (!guestRecord) {
+                guestRecord = new ImageGeneration({ ip, date: today, count: 0 });
+            }
+
+            if (guestRecord.count >= GUEST_DAILY_LIMIT) {
+                return NextResponse.json({
+                    error: "LIMIT_REACHED",
+                    limitReached: true,
+                    message: "You have reached your 5 free AI generations for today."
+                }, {
+                    status: 403,
+                    headers: { 'Cache-Control': 'no-store' }
+                });
+            }
+
+            guestRemaining = Math.max(0, GUEST_DAILY_LIMIT - guestRecord.count - 1);
         }
 
         if (!hasUnlimited && user) {
@@ -294,10 +321,17 @@ export async function POST(req) {
             user.aiGenerationCount = (user.aiGenerationCount || 0) + 1;
             user.lastAiGenerationDate = new Date();
             await user.save();
+        } else if (guestRecord) {
+            guestRecord.count += 1;
+            await guestRecord.save();
         }
 
         return NextResponse.json(
-            { ...data, aiGenerationCount: user ? user.aiGenerationCount : 0 },
+            {
+                ...data,
+                aiGenerationCount: user ? user.aiGenerationCount : 0,
+                guestGenerationsLeft: user ? null : guestRemaining,
+            },
             { headers: { 'Cache-Control': 'no-store' } }
         );
     } catch (error) {

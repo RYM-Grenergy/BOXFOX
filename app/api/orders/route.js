@@ -4,6 +4,7 @@ import Order from '@/models/Order';
 import Coupon from '@/models/Coupon';
 import Product from '@/models/Product';
 import UserImage from '@/models/UserImage';
+import jwt from 'jsonwebtoken';
 import { finalizeImagesInObject } from '@/lib/image-finalizer';
 import { 
     sendEmail, 
@@ -101,6 +102,22 @@ export async function POST(req) {
         await dbConnect();
         const orderData = await req.json();
         const validationError = validateOrderPayload(orderData);
+
+        const token = req.cookies.get('token')?.value;
+        if (!token) {
+            return NextResponse.json({ success: false, error: 'Please login to place an order' }, { status: 401 });
+        }
+
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_for_development_purposes');
+        } catch (error) {
+            return NextResponse.json({ success: false, error: 'Please login to place an order' }, { status: 401 });
+        }
+
+        if (!orderData.userId) {
+            orderData.userId = decoded.id;
+        }
 
         if (validationError) {
             return NextResponse.json({ success: false, error: validationError }, { status: 400 });

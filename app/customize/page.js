@@ -65,6 +65,7 @@ function CustomizeLabContent() {
   const { showToast } = useToast();
   const { user, loading: authLoading, checkUser } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [guestGenerationsLeft, setGuestGenerationsLeft] = useState(5);
 
   // Removed forced login redirect to allow guest design experience
   // Guests can design but will be prompted to login to save or access premium features
@@ -278,6 +279,33 @@ function CustomizeLabContent() {
   }, [searchParams]);
 
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+  useEffect(() => {
+    if (user) return;
+
+    let cancelled = false;
+
+    const loadGuestGenerations = async () => {
+      try {
+        const res = await fetch('/api/customize/limit', { cache: 'no-store' });
+        const data = await res.json();
+
+        if (!cancelled && res.ok && typeof data.remaining === 'number') {
+          setGuestGenerationsLeft(data.remaining);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setGuestGenerationsLeft(5);
+        }
+      }
+    };
+
+    loadGuestGenerations();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   // AI Forge: Smart Prompt Builder
   const [selectedChips, setSelectedChips] = useState([]);
@@ -916,6 +944,9 @@ function CustomizeLabContent() {
         return;
       }
       const taskId = startData.data.task_id;
+      if (!user && typeof startData.guestGenerationsLeft === 'number') {
+        setGuestGenerationsLeft(startData.guestGenerationsLeft);
+      }
       if (checkUser) checkUser();
       let completed = false;
       let attempts = 0;
@@ -2084,7 +2115,7 @@ function CustomizeLabContent() {
                         <span className="text-[7px] font-black uppercase tracking-[0.2em]">Neural_Activation_Ready</span>
                       </div>
                       <div className="px-3 py-1.5 bg-gray-50 rounded-full text-[7px] font-black text-gray-500 uppercase tracking-widest border border-gray-100 shadow-sm">
-                        {user?.aiUnlimitedUntil && new Date(user.aiUnlimitedUntil) > new Date() ? 'Unlimited Generations' : `${Math.max(0, 5 - (user?.aiGenerationCount || 0))} Generations Left`}
+                        {user?.aiUnlimitedUntil && new Date(user.aiUnlimitedUntil) > new Date() ? 'Unlimited Generations' : `${user ? Math.max(0, 5 - (user?.aiGenerationCount || 0)) : guestGenerationsLeft} Generations Left`}
                       </div>
                     </div>
                   </div>

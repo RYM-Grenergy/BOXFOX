@@ -184,7 +184,7 @@ export default function CartPage() {
                                 href={user ? "/checkout" : `/login?redirect=/checkout`}
                                 className="w-full flex items-center justify-between px-10 py-6 bg-white text-gray-950 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all group"
                             >
-                                Proceed to Checkout
+                                {user ? 'Proceed to Checkout' : 'Login to Checkout'}
                                 <ArrowRight className="group-hover:translate-x-2 transition-transform" />
                             </Link>
 
