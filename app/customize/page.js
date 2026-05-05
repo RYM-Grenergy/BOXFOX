@@ -1359,26 +1359,39 @@ function CustomizeLabContent() {
         onClose={() => setShowAuthModal(false)}
       />
       {isGuest && (
-        <div className="px-4 sm:px-6 lg:px-8 xl:px-12 pt-4 sm:pt-6">
-          <div className="mx-auto max-w-[1500px] rounded-[2.5rem] border border-emerald-200 bg-emerald-50/80 backdrop-blur-sm px-5 sm:px-8 py-5 sm:py-6 shadow-lg shadow-emerald-500/5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="space-y-2">
-              <p className="text-[9px] font-black uppercase tracking-[0.35em] text-emerald-600">Guest mode</p>
-              <h2 className="text-lg sm:text-xl font-black text-gray-950 uppercase tracking-tighter">Login to unlock the full Customize Studio.</h2>
-              <p className="text-xs sm:text-sm font-medium text-gray-600 max-w-2xl leading-relaxed">
-                Guests can preview the box designer, but login is required for saved designs, sharing, brand vault access, and full account features.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowAuthModal(true)}
-              className="inline-flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-gray-950 text-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-emerald-500 transition-all shadow-xl shadow-gray-950/10 whitespace-nowrap"
+        <div className="pt-24 sm:pt-28 overflow-hidden">
+          <button
+            onClick={() => setShowAuthModal(true)}
+            className="w-full min-h-[56px] rounded-none border-y border-emerald-200 bg-emerald-50/90 backdrop-blur-sm shadow-lg shadow-emerald-500/5 overflow-hidden text-left group"
+          >
+            <motion.div
+              className="flex w-max items-center gap-4 px-4 py-2 sm:px-6 sm:py-3 whitespace-nowrap"
+              animate={{ x: ['-50%', '0%'] }}
+              transition={{ duration: 18, ease: "linear", repeat: Infinity }}
             >
-              Sign In For Full Access
-            </button>
-          </div>
+              {Array.from({ length: 3 }).map((_, rowIndex) => (
+                <div key={rowIndex} className="flex items-center gap-4 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[8px] font-black uppercase tracking-[0.35em] text-emerald-600">Guest Mode</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  </div>
+                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.28em] text-gray-950">
+                    Login to unlock the full Customize Studio
+                  </p>
+                  <span className="text-[8px] sm:text-[9px] font-bold text-gray-600 uppercase tracking-[0.2em]">
+                    Saved designs · sharing · brand vault · full account access
+                  </span>
+                  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-950 text-white text-[8px] sm:text-[9px] font-black uppercase tracking-[0.25em]">
+                    Sign In For Full Access
+                  </span>
+                </div>
+              ))}
+            </motion.div>
+          </button>
         </div>
       )}
       {/* AI Generate overlay removed for direct lab flow */}
-      <div className="pt-20 sm:pt-24 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8 xl:px-12 max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10">
+      <div className="pt-24 sm:pt-28 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8 xl:px-12 max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10">
         {/* 3D SPATIAL CANVAS (LEFT) */}
         <div className="lg:col-span-7 lg:sticky lg:top-24 lg:h-[calc(100vh-120px)] flex flex-col space-y-4 md:space-y-6 overflow-y-auto no-scrollbar pb-6">
           <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-gray-50 border border-gray-100 rounded-2xl sm:rounded-[2rem] shadow-sm shrink-0">
