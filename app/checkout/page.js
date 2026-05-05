@@ -16,6 +16,10 @@ import { useToast } from '../context/ToastContext';
 import Link from 'next/link';
 import Navbar from '../components/Navbar';
 
+const INDIAN_STATES = [
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+];
+
 export default function CheckoutPage() {
     const { cart, cartTotal, clearCart } = useCart();
     const { showToast } = useToast();
@@ -31,10 +35,13 @@ export default function CheckoutPage() {
         shippingAddress: {
             street: '',
             apartment: '',
+            landmark: '',
             city: '',
             state: '',
             zipCode: '',
-            country: 'India'
+            country: 'India',
+            addressNickname: '',
+            gstin: ''
         }
     });
 
@@ -42,6 +49,8 @@ export default function CheckoutPage() {
 
     const [savedAddresses, setSavedAddresses] = useState([]);
     const [selectedAddressIndex, setSelectedAddressIndex] = useState(-1);
+    const [isPincodeLoading, setIsPincodeLoading] = useState(false);
+    const [fetchedCities, setFetchedCities] = useState([]);
 
     React.useEffect(() => {
         const query = new URLSearchParams(window.location.search);
@@ -60,16 +69,17 @@ export default function CheckoutPage() {
                     setUser(data.user);
                     setFormData(prev => ({
                         ...prev,
-                        name: data.user.name || '',
-                        email: data.user.email || '',
-                        phone: data.user.phone || '',
+                        name: data.user.name || prev.name,
+                        email: data.user.email || prev.email,
+                        phone: data.user.phone || prev.phone,
+                        shippingAddress: {
+                            ...prev.shippingAddress,
+                            ...(data.user.shippingAddress || {})
+                        }
                     }));
-                    if (data.user.shippingAddress) {
+                    if (data.user.shippingAddress && data.user.shippingAddress.street) {
                         setSavedAddresses([data.user.shippingAddress]);
-                        setFormData(prev => ({
-                            ...prev,
-                            shippingAddress: data.user.shippingAddress
-                        }));
+                        setSelectedAddressIndex(0);
                     }
                 } else {
                     // Redirect to login if not authenticated
@@ -80,6 +90,35 @@ export default function CheckoutPage() {
                 window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
             });
     }, []);
+
+    const lookupPincode = async (pincode) => {
+        if (pincode.length !== 6) return;
+        setIsPincodeLoading(true);
+        try {
+            const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+            const data = await res.json();
+            if (data[0].Status === "Success") {
+                const postOffices = data[0].PostOffice;
+                const state = postOffices[0].State;
+                const cities = Array.from(new Set(postOffices.map(po => po.District)));
+                
+                setFetchedCities(cities);
+                setFormData(prev => ({
+                    ...prev,
+                    shippingAddress: {
+                        ...prev.shippingAddress,
+                        state: state,
+                        city: cities[0] || prev.shippingAddress.city,
+                        zipCode: pincode
+                    }
+                }));
+            }
+        } catch (error) {
+            console.error("Pincode lookup failed", error);
+        } finally {
+            setIsPincodeLoading(false);
+        }
+    };
 
     const handleFormChange = (e) => {
         const { name, value } = e.target;
@@ -92,6 +131,9 @@ export default function CheckoutPage() {
                     [child]: value
                 }
             }));
+            if (child === 'zipCode' && value.length === 6) {
+                lookupPincode(value);
+            }
         } else {
             setFormData({ ...formData, [name]: value });
         }
@@ -139,8 +181,8 @@ export default function CheckoutPage() {
             window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
             return;
         }
-        if (!formData.shippingAddress.street || !formData.shippingAddress.city || !formData.shippingAddress.zipCode) {
-            showToast("Please complete shipping details", "error");
+        if (!formData.shippingAddress.street || !formData.shippingAddress.city || !formData.shippingAddress.state || !formData.shippingAddress.zipCode) {
+            showToast("Please complete all shipping details", "error");
             return;
         }
         setIsSubmitting(true);
@@ -171,10 +213,13 @@ export default function CheckoutPage() {
                     shipping: {
                         address: formData.shippingAddress.street,
                         apartment: formData.shippingAddress.apartment,
+                        landmark: formData.shippingAddress.landmark,
                         city: formData.shippingAddress.city,
                         state: formData.shippingAddress.state,
                         zipCode: formData.shippingAddress.zipCode,
-                        country: formData.shippingAddress.country
+                        country: formData.shippingAddress.country,
+                        addressNickname: formData.shippingAddress.addressNickname,
+                        gstin: formData.shippingAddress.gstin
                     }
                 })
             });
@@ -389,11 +434,11 @@ export default function CheckoutPage() {
                                     exit={{ opacity: 0, y: -20 }}
                                     className="space-y-12"
                                 >
-                                    {savedAddresses.length > 0 && (
+                                    {savedAddresses.filter(addr => addr.street || addr.city).length > 0 && (
                                         <div className="space-y-6">
                                             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 ml-4">Stored_Coordinates</p>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                {savedAddresses.map((addr, idx) => (
+                                                {savedAddresses.filter(addr => addr.street || addr.city).map((addr, idx) => (
                                                     <button
                                                         key={idx}
                                                         onClick={() => handleSelectSavedAddress(addr, idx)}
@@ -406,11 +451,14 @@ export default function CheckoutPage() {
                                                         <div className={`absolute top-0 right-0 w-24 h-24 blur-3xl rounded-full transition-opacity ${selectedAddressIndex === idx ? 'bg-emerald-500/20 opacity-100' : 'bg-emerald-500/10 opacity-0 group-hover:opacity-100'}`} />
                                                         <div className="relative z-10">
                                                             <div className="flex items-center justify-between mb-4">
-                                                                <span className={`text-[8px] font-black uppercase tracking-widest ${selectedAddressIndex === idx ? 'text-emerald-400' : 'text-gray-400'}`}>Node_LOC_{idx + 1}</span>
+                                                                <span className={`text-[8px] font-black uppercase tracking-widest ${selectedAddressIndex === idx ? 'text-emerald-400' : 'text-gray-400'}`}>
+                                                                    {addr.addressNickname || `Node_LOC_${idx + 1}`}
+                                                                </span>
                                                                 {selectedAddressIndex === idx && <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,1)]" />}
                                                             </div>
                                                             <p className="text-xs font-black uppercase tracking-tighter line-clamp-2 leading-relaxed">
-                                                                {addr.street}, {addr.city},<br />{addr.state} {addr.zipCode}
+                                                                {addr.street}{addr.apartment ? `, ${addr.apartment}` : ''}<br />
+                                                                {addr.city}, {addr.state} {addr.zipCode}
                                                             </p>
                                                         </div>
                                                     </button>
@@ -420,45 +468,114 @@ export default function CheckoutPage() {
                                     )}
 
                                     <div className="bg-gray-50/50 p-8 md:p-12 rounded-[3.5rem] border border-gray-100 space-y-10">
-                                        <div className="space-y-4 group">
-                                            <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 group-focus-within:text-emerald-500 transition-colors">Street Mapping</label>
-                                            <input
-                                                name="shippingAddress.street" value={formData.shippingAddress.street || ''} onChange={handleFormChange}
-                                                placeholder="Primary Street Access"
-                                                className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest"
-                                            />
-                                        </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             <div className="space-y-4 group">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Sector / City</label>
+                                                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 group-focus-within:text-emerald-500 transition-colors">Street Mapping</label>
                                                 <input
-                                                    name="shippingAddress.city" value={formData.shippingAddress.city || ''} onChange={handleFormChange}
-                                                    placeholder="City"
+                                                    name="shippingAddress.street" value={formData.shippingAddress.street || ''} onChange={handleFormChange}
+                                                    placeholder="Primary Street Access"
                                                     className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest"
                                                 />
                                             </div>
                                             <div className="space-y-4 group">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Region Code (ZIP)</label>
+                                                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 group-focus-within:text-emerald-500 transition-colors">Apt / Suite / Landmark</label>
                                                 <input
-                                                    name="shippingAddress.zipCode" value={formData.shippingAddress.zipCode || ''} onChange={handleFormChange}
-                                                    placeholder="000 000"
-                                                    className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all tracking-widest"
+                                                    name="shippingAddress.apartment" value={formData.shippingAddress.apartment || ''} onChange={handleFormChange}
+                                                    placeholder="Unit / Floor / Landmark"
+                                                    className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest"
                                                 />
                                             </div>
                                         </div>
-                                        <div className="space-y-4 group">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Zone Select (Country)</label>
-                                            <div className="relative">
-                                                <select
-                                                    name="shippingAddress.country" value={formData.shippingAddress.country || 'India'} onChange={handleFormChange}
-                                                    className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase appearance-none cursor-pointer"
-                                                >
-                                                    <option value="India">IND - India</option>
-                                                    <option value="United States">USA - United States</option>
-                                                    <option value="United Kingdom">GBR - United Kingdom</option>
-                                                    <option value="UAE">ARE - UAE</option>
-                                                </select>
-                                                <ChevronLeft className="absolute right-8 top-1/2 -translate-y-1/2 rotate-[270deg] text-gray-400 pointer-events-none" size={16} />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div className="space-y-4 group">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Region Code (ZIP)</label>
+                                                <div className="relative">
+                                                    <input
+                                                        name="shippingAddress.zipCode" value={formData.shippingAddress.zipCode || ''} onChange={handleFormChange}
+                                                        placeholder="000 000"
+                                                        className={`w-full bg-white border ${isPincodeLoading ? 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-gray-200'} rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all tracking-widest`}
+                                                    />
+                                                    {isPincodeLoading && (
+                                                        <div className="absolute right-6 top-1/2 -translate-y-1/2">
+                                                            <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-4 group">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Sector / City</label>
+                                                <div className="relative">
+                                                    {fetchedCities.length > 0 ? (
+                                                        <select
+                                                            name="shippingAddress.city" value={formData.shippingAddress.city || ''} onChange={handleFormChange}
+                                                            className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase appearance-none cursor-pointer"
+                                                        >
+                                                            <option value="">Select City</option>
+                                                            {fetchedCities.map(city => (
+                                                                <option key={city} value={city}>{city}</option>
+                                                             ))}
+                                                        </select>
+                                                    ) : (
+                                                        <input
+                                                            name="shippingAddress.city" value={formData.shippingAddress.city || ''} onChange={handleFormChange}
+                                                            placeholder="City"
+                                                            className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest"
+                                                        />
+                                                    )}
+                                                    {fetchedCities.length > 0 && <ChevronLeft className="absolute right-8 top-1/2 -translate-y-1/2 rotate-[270deg] text-gray-400 pointer-events-none" size={16} />}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div className="space-y-4 group">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Administrative Region (State)</label>
+                                                <div className="relative">
+                                                    <select
+                                                        name="shippingAddress.state" value={formData.shippingAddress.state || ''} onChange={handleFormChange}
+                                                        className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase appearance-none cursor-pointer"
+                                                    >
+                                                        <option value="">Select State</option>
+                                                        {INDIAN_STATES.map(state => (
+                                                            <option key={state} value={state}>{state}</option>
+                                                        ))}
+                                                    </select>
+                                                    <ChevronLeft className="absolute right-8 top-1/2 -translate-y-1/2 rotate-[270deg] text-gray-400 pointer-events-none" size={16} />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-4 group">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Zone Select (Country)</label>
+                                                <div className="relative">
+                                                    <select
+                                                        name="shippingAddress.country" value={formData.shippingAddress.country || 'India'} onChange={handleFormChange}
+                                                        className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase appearance-none cursor-pointer"
+                                                    >
+                                                        <option value="India">IND - India</option>
+                                                        <option value="United States">USA - United States</option>
+                                                        <option value="United Kingdom">GBR - United Kingdom</option>
+                                                        <option value="UAE">ARE - UAE</option>
+                                                    </select>
+                                                    <ChevronLeft className="absolute right-8 top-1/2 -translate-y-1/2 rotate-[270deg] text-gray-400 pointer-events-none" size={16} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div className="space-y-4 group">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Address Nickname</label>
+                                                <input
+                                                    name="shippingAddress.addressNickname" value={formData.shippingAddress.addressNickname || ''} onChange={handleFormChange}
+                                                    placeholder="HOME / OFFICE / WAREHOUSE"
+                                                    className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest"
+                                                />
+                                            </div>
+                                            <div className="space-y-4 group">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Business ID (GSTIN - Optional)</label>
+                                                <input
+                                                    name="shippingAddress.gstin" value={formData.shippingAddress.gstin || ''} onChange={handleFormChange}
+                                                    placeholder="00AAAAA0000A1Z0"
+                                                    className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest"
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -471,7 +588,7 @@ export default function CheckoutPage() {
                                             Previous_Phase
                                         </button>
                                         <button
-                                            disabled={isSubmitting || !formData.shippingAddress.street || !formData.shippingAddress.city}
+                                            disabled={isSubmitting || !formData.shippingAddress.street || !formData.shippingAddress.city || !formData.shippingAddress.state || !formData.shippingAddress.zipCode}
                                             onClick={placeOrder}
                                             className="group relative sm:flex-[2] py-8 bg-emerald-500 text-white rounded-[2.5rem] font-black text-[10px] uppercase tracking-[0.4em] overflow-hidden transition-all hover:bg-gray-950 disabled:opacity-30 active:scale-[0.98] shadow-2xl shadow-emerald-500/20"
                                         >
@@ -501,7 +618,7 @@ export default function CheckoutPage() {
 
                                 <div className="relative z-10">
                                     <div className="flex items-center justify-between mb-10 pb-8 border-b border-white/10">
-                                        <h3 className="text-3xl font-black tracking-tighter uppercase italic">Manifest.</h3>
+                                        <h3 className="text-3xl font-black tracking-tighter uppercase italic text-white">Manifest.</h3>
                                         <div className="px-3 py-1 bg-emerald-500 text-[8px] font-black uppercase tracking-widest rounded-lg animate-pulse">Live_Sync</div>
                                     </div>
 
@@ -521,7 +638,7 @@ export default function CheckoutPage() {
                                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                                         <span className="text-[8px] font-black uppercase text-emerald-500/70">QTY: {item.quantity}</span>
                                                         <div className="w-1 h-1 bg-white/20 rounded-full" />
-                                                        <span className="text-[8px] font-black uppercase text-white/40 truncate">REF_{String(item.id || '').slice(-6)}</span>
+                                                        <span className="text-[8px] font-black uppercase text-white/90 truncate">REF_{String(item.id || '').slice(-6)}</span>
                                                     </div>
                                                 </div>
                                                 <div className="text-right shrink-0">
@@ -564,8 +681,8 @@ export default function CheckoutPage() {
 
                                     {/* Financial Data Grid */}
                                     <div className="space-y-4 pt-8 border-t border-white/10">
-                                        <div className="flex items-center justify-between text-[9px] font-black text-white/40 uppercase tracking-[0.3em]">
-                                            <span>Base_Valuation</span>
+                                        <div className="flex items-center justify-between text-[9px] font-black text-white/90 uppercase tracking-[0.3em]">
+                                            <span className="text-white/70">Base_Valuation</span>
                                             <span className="text-white">₹{cartTotal.toLocaleString('en-IN')}</span>
                                         </div>
                                         {appliedCoupon && (
@@ -574,10 +691,11 @@ export default function CheckoutPage() {
                                                 <span className="font-black">- ₹{appliedCoupon.discount.toLocaleString('en-IN')}</span>
                                             </div>
                                         )}
-                                        <div className="flex items-center justify-between text-[9px] font-black text-white/40 uppercase tracking-[0.3em]">
-                                            <span>Global_Transit</span>
+                                        <div className="flex items-center justify-between text-[9px] font-black text-white/90 uppercase tracking-[0.3em]">
+                                            <span className="text-white/70">Global_Transit</span>
                                             <span className="text-emerald-500 font-black italic">WAVIED_FOC</span>
                                         </div>
+                                    </div>
                                         
                                         <div className="pt-8 flex items-end justify-between">
                                             <div className="space-y-1">
@@ -598,7 +716,6 @@ export default function CheckoutPage() {
                                 <CreditCard size={24} />
                                 <CheckCircle2 size={24} />
                             </div>
-                        </div>
                     </div>
                 </div>
             </main>

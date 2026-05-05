@@ -67,7 +67,7 @@ export default function Navbar() {
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "Shop", href: "/shop" },
-    { label: "Gifts", href: "/gifts" },
+    { label: "Corporate Gifts", href: "/gifts" },
     { label: "B2B", href: "/b2b", isB2B: true },
     { label: "AI Customization", href: "/customize", isAI: true },
     { label: "Quality", href: "/quality" },
@@ -95,11 +95,11 @@ export default function Navbar() {
 
         {/* Floating pill wrapper */}
         <div className={`mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isScrolled
-            ? "w-[96%] sm:w-[94%] xl:max-w-[1300px] mt-2 mb-2 bg-white/95 backdrop-blur-md border border-gray-200/50 shadow-2xl rounded-[2rem] py-1 px-4 lg:px-10"
-            : "w-full bg-white border-b border-gray-100 py-0 px-4 sm:px-8 lg:px-14 shadow-none"
+          ? "w-[96%] sm:w-[94%] xl:max-w-[1300px] mt-2 mb-2 bg-white/95 backdrop-blur-md border border-gray-200/50 shadow-2xl rounded-[2rem] py-1 px-4 lg:px-10"
+          : "w-full bg-white border-b border-gray-100 py-0 px-4 sm:px-8 lg:px-14 shadow-none"
           }`}>
           <div className="flex items-center justify-between h-12 sm:h-14">
-            
+
             {/* ── Logo — always left ── */}
             <Link href="/" className="shrink-0 flex items-center">
               <img
@@ -132,11 +132,11 @@ export default function Navbar() {
                     {isAI && <Sparkles size={11} className="animate-pulse" />}
                     {isB2B && <Briefcase size={10} />}
                     <span className="relative z-10">{link.label}</span>
-                    
+
                     {!isAI && !isB2B && (
                       <div className="absolute inset-0 bg-transparent group-hover:bg-gray-900/[0.04] rounded-lg transition-all duration-200" />
                     )}
-                    
+
                     {isActive && !isAI && !isB2B && (
                       <motion.div
                         layoutId="nav-active"
@@ -165,8 +165,8 @@ export default function Navbar() {
                 <Link
                   href={user ? "/account" : `/login?redirect=${encodeURIComponent(pathname)}`}
                   className={`flex items-center gap-2 px-3 sm:px-4 h-9 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${user
-                      ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/60"
-                      : "bg-gray-950 text-white hover:bg-emerald-600 shadow-lg shadow-gray-200/80"
+                    ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/60"
+                    : "bg-gray-950 text-white hover:bg-emerald-600 shadow-lg shadow-gray-200/80"
                     }`}
                 >
                   <User size={14} />
@@ -356,8 +356,8 @@ export default function Navbar() {
                           <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-[0.2em]">{user.role}_Profile</span>
                         </div>
                       </div>
-                      <Link 
-                        href="/account" 
+                      <Link
+                        href="/account"
                         onClick={() => setMenuOpen(false)}
                         className="p-3 bg-gray-50 rounded-xl text-gray-950 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
                       >
@@ -386,12 +386,12 @@ export default function Navbar() {
                       <Link
                         href={link.href}
                         className={`text-lg sm:text-xl font-black uppercase tracking-tighter flex items-center justify-between group py-3 px-4 rounded-2xl transition-all ${pathname === link.href
-                            ? "text-emerald-500 bg-emerald-50"
-                            : link.isAI
-                              ? "text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/10"
-                              : link.isB2B
-                                ? "text-white bg-gray-950 shadow-xl shadow-gray-900/5"
-                                : "text-gray-950 hover:bg-gray-50"
+                          ? "text-emerald-500 bg-emerald-50"
+                          : link.isAI
+                            ? "text-white bg-gradient-to-r from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/10"
+                            : link.isB2B
+                              ? "text-white bg-gray-950 shadow-xl shadow-gray-900/5"
+                              : "text-gray-950 hover:bg-gray-50"
                           }`}
                         onClick={() => setMenuOpen(false)}
                       >
