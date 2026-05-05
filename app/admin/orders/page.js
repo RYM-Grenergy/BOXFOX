@@ -165,14 +165,21 @@ export default function OrdersManager() {
                       ₹{order.total?.toLocaleString('en-IN')}
                     </td>
                     <td className="px-8 py-6 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-600' :
+                      <div className="flex flex-col gap-2">
+                        <span className={`w-fit px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-600' :
                           order.status === 'Cancelled' ? 'bg-red-100 text-red-600' :
                             order.status === 'Shipped' ? 'bg-blue-100 text-blue-600' :
                               'bg-gray-100 text-gray-950'
                           }`}>
                           {order.status}
                         </span>
+                        {order.paid ? (
+                           <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest ml-1 italic">Authorized ✓</span>
+                        ) : order.paymentDetails?.transactionId ? (
+                           <span className="text-[8px] font-black text-amber-500 uppercase tracking-widest ml-1 animate-pulse">TXN Submitted ⚠</span>
+                        ) : (
+                           <span className="text-[8px] font-black text-red-400 uppercase tracking-widest ml-1">Unpaid ×</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-8 py-6 whitespace-nowrap text-right relative group">

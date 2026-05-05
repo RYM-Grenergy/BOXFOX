@@ -139,6 +139,7 @@ export async function POST(req) {
 
         const newOrder = await Order.create({
             ...orderData,
+            paymentDetails: orderData.paymentDetails,
             couponCode: normalizedCouponCode || undefined,
             shipping,
             total,
@@ -232,7 +233,7 @@ export async function POST(req) {
 export async function PATCH(req) {
     try {
         await dbConnect();
-        const { id, status, labNotes } = await req.json();
+        const { id, status, labNotes, paymentDetails, paid } = await req.json();
 
         const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(id);
         const query = isValidObjectId ? { $or: [{ orderId: id }, { _id: id }] } : { orderId: id };
@@ -245,8 +246,8 @@ export async function PATCH(req) {
         if (order) {
             if (status !== undefined) order.status = status;
             if (labNotes !== undefined) order.labNotes = labNotes;
-
-
+            if (paymentDetails !== undefined) order.paymentDetails = paymentDetails;
+            if (paid !== undefined) order.paid = paid;
 
             await order.save();
 

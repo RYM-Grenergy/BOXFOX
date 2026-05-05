@@ -4,7 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import {
     ArrowLeft, Package, Truck, CheckCircle2, Clock, User, Mail, Phone,
     MapPin, CreditCard, ExternalLink, Box, Printer, Layers, Download,
-    Eye, Maximize2, Ruler, Type, Palette, ZoomIn, RotateCw, Scissors, QrCode, FileText, Image as ImageIcon
+    Eye, Maximize2, Ruler, Type, Palette, ZoomIn, RotateCw, Scissors, QrCode, FileText, ShieldAlert, Image as ImageIcon
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BoxFacePreview, MiniBox3D, useFaceSnapshot } from "@/app/components/BoxPreview3D";
@@ -277,18 +277,120 @@ export default function OrderDetails() {
                         </div>
                     </div>
                     <div className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm space-y-8">
-                        <h3 className="text-sm font-black text-gray-950 uppercase tracking-widest border-b border-gray-100 pb-4 flex items-center gap-2"><CreditCard size={16} className="text-gray-400" /> Payment Method</h3>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-white border border-gray-100 rounded-xl flex items-center justify-center shadow-sm">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b2/Razorpay_logo.webp" className="w-8 h-auto" alt="Razorpay" />
-                                </div>
-                                <div><p className="text-sm font-black text-gray-950">Razorpay</p><p className="text-[10px] font-black text-emerald-500 uppercase">Paid Successfully</p></div>
+                        <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                            <h3 className="text-sm font-black text-gray-950 uppercase tracking-widest flex items-center gap-2">
+                                <CreditCard size={16} className="text-gray-400" /> Payment Protocol
+                            </h3>
+                            <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${order.paid ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600 animate-pulse'}`}>
+                                {order.paid ? 'Authorized' : 'Pending Verification'}
                             </div>
                         </div>
-                        <div className="p-4 bg-gray-50 rounded-2xl space-y-2">
-                            <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase"><span>Transaction ID</span><span className="text-gray-950">pay_O9342KLJQ</span></div>
-                            <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase"><span>Currency</span><span className="text-gray-950">INR</span></div>
+                        
+                        <div className="flex flex-col gap-6">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm ${order.paid ? 'bg-emerald-500 text-white' : 'bg-gray-950 text-white'}`}>
+                                        {order.paid ? <CheckCircle2 size={24} /> : <QrCode size={24} />}
+                                    </div>
+                                    <div>
+                                        <p className="text-lg font-black text-gray-950 leading-none">{order.paymentDetails?.method || 'Manual/UPI'}</p>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase mt-1 tracking-widest">Digital Terminal</p>
+                                    </div>
+                                </div>
+                                {!order.paid && (
+                                    <button 
+                                        onClick={async () => {
+                                            if (confirm("Confirm payment receipt? This will mark the order as PAID and notify the customer.")) {
+                                                await fetch("/api/orders", { 
+                                                    method: "PATCH", 
+                                                    headers: { "Content-Type": "application/json" }, 
+                                                    body: JSON.stringify({ 
+                                                        id: order._id, 
+                                                        paid: true, 
+                                                        status: 'Processing',
+                                                        paymentDetails: order.paymentDetails // Ensure we persist existing details
+                                                    }) 
+                                                });
+                                                setOrder({ ...order, paid: true, status: 'Processing' });
+                                            }
+                                        }}
+                                        className="px-6 py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-gray-950 transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+                                    >
+                                        AUTHORIZE
+                                    </button>
+                                )}
+                            </div>
+
+                            {order.paymentDetails?.transactionId ? (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-emerald-500 transition-colors">
+                                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-2">Transaction ID</p>
+                                            <p className="text-sm font-black text-gray-950 break-all select-all cursor-copy" title="Click to copy">{order.paymentDetails.transactionId}</p>
+                                        </div>
+                                        <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-emerald-500 transition-colors">
+                                            <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-2">Bank Name</p>
+                                            <p className="text-sm font-black text-gray-950 select-all cursor-copy" title="Click to copy">{order.paymentDetails.senderName}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between px-4">
+                                        {order.paymentDetails.submittedAt && (
+                                            <div className="flex items-center gap-2 text-[9px] font-bold text-gray-400 uppercase">
+                                                <Clock size={10} />
+                                                <span>Received: {new Date(order.paymentDetails.submittedAt).toLocaleString('en-IN')}</span>
+                                            </div>
+                                        )}
+                                        <button 
+                                            onClick={() => {
+                                                const txnId = prompt("Update Transaction ID:", order.paymentDetails.transactionId);
+                                                const sName = prompt("Update Bank Name:", order.paymentDetails.senderName);
+                                                if (txnId && sName) {
+                                                    const updatedDetails = { ...order.paymentDetails, transactionId: txnId, senderName: sName };
+                                                    fetch("/api/orders", { 
+                                                        method: "PATCH", 
+                                                        headers: { "Content-Type": "application/json" }, 
+                                                        body: JSON.stringify({ id: order._id, paymentDetails: updatedDetails }) 
+                                                    });
+                                                    setOrder({ ...order, paymentDetails: updatedDetails });
+                                                }
+                                            }}
+                                            className="text-[8px] font-black text-emerald-600 hover:text-gray-950 uppercase tracking-widest"
+                                        >
+                                            [ REPAIR_MANIFEST ]
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-6">
+                                    <div className="p-6 bg-amber-50 rounded-[2rem] border border-amber-100 flex flex-col items-center text-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-amber-200/50 flex items-center justify-center text-amber-600">
+                                            <ShieldAlert size={20} />
+                                        </div>
+                                        <p className="text-[10px] font-black text-amber-900 uppercase tracking-widest leading-relaxed">
+                                            Manifest Data Missing.<br/>
+                                            <span className="text-amber-600/60 font-bold">This is a legacy order or bypass detected.</span>
+                                        </p>
+                                    </div>
+                                    <button 
+                                        onClick={() => {
+                                            const txnId = prompt("Enter Transaction ID:");
+                                            const sName = prompt("Enter Bank Name:");
+                                            if (txnId && sName) {
+                                                const details = { transactionId: txnId, senderName: sName, method: 'Manual/Correction', submittedAt: new Date() };
+                                                fetch("/api/orders", { 
+                                                    method: "PATCH", 
+                                                    headers: { "Content-Type": "application/json" }, 
+                                                    body: JSON.stringify({ id: order._id, paymentDetails: details }) 
+                                                });
+                                                setOrder({ ...order, paymentDetails: details });
+                                            }
+                                        }}
+                                        className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] hover:border-emerald-500 hover:text-emerald-600 transition-all"
+                                    >
+                                        Initialize Manual Manifest Recovery
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

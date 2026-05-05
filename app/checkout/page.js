@@ -51,6 +51,11 @@ export default function CheckoutPage() {
     const [selectedAddressIndex, setSelectedAddressIndex] = useState(-1);
     const [isPincodeLoading, setIsPincodeLoading] = useState(false);
     const [fetchedCities, setFetchedCities] = useState([]);
+    const [paymentFormData, setPaymentFormData] = useState({
+        transactionId: '',
+        senderName: ''
+    });
+    const [isPaymentSubmitted, setIsPaymentSubmitted] = useState(false);
 
     React.useEffect(() => {
         const query = new URLSearchParams(window.location.search);
@@ -175,6 +180,8 @@ export default function CheckoutPage() {
 
     const finalTotal = cartTotal - (appliedCoupon?.discount || 0);
 
+
+
     const placeOrder = async () => {
         if (!user) {
             showToast("Please login to place an order", "error");
@@ -183,8 +190,14 @@ export default function CheckoutPage() {
         }
         if (!formData.shippingAddress.street || !formData.shippingAddress.city || !formData.shippingAddress.state || !formData.shippingAddress.zipCode) {
             showToast("Please complete all shipping details", "error");
+            setStep(2);
             return;
         }
+        if (!paymentFormData.transactionId || !paymentFormData.senderName) {
+            showToast("Please provide authorized payment details", "error");
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             const res = await fetch('/api/orders', {
@@ -210,6 +223,11 @@ export default function CheckoutPage() {
                     discount: appliedCoupon?.discount || 0,
                     couponCode: appliedCoupon?.code || null,
                     status: 'Pending',
+                    paymentDetails: {
+                        ...paymentFormData,
+                        method: 'Manual/UPI',
+                        submittedAt: new Date()
+                    },
                     shipping: {
                         address: formData.shippingAddress.street,
                         apartment: formData.shippingAddress.apartment,
@@ -225,18 +243,23 @@ export default function CheckoutPage() {
             });
             const data = await res.json();
             if (data.success) {
-                // FOR NOW: Bypass payment and redirect to success directly
-                window.location.href = `/checkout?status=success&orderId=${data.orderId}`;
+                setOrderId(data.orderId);
+                setStep(4); // Success Step
+                clearCart();
+                showToast("Order placed successfully", "success");
                 return;
+            } else {
+                showToast(data.error || "Failed to place order", "error");
             }
         } catch (e) {
             console.error(e);
+            showToast("System error occurred while placing order", "error");
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    if (step === 3) {
+    if (step === 4) {
         return (
             <div className="min-h-screen bg-white">
                 <Navbar />
@@ -244,7 +267,7 @@ export default function CheckoutPage() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="max-w-xl w-full text-center space-y-12"
+                        className="max-w-2xl w-full text-center space-y-12"
                     >
                         <div className="relative inline-block">
                             <div className="w-32 h-32 bg-emerald-500 text-white rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl shadow-emerald-500/20 rotate-12">
@@ -261,25 +284,22 @@ export default function CheckoutPage() {
                         </div>
 
                         <div className="space-y-6">
-                            <h1 className="text-6xl md:text-7xl font-black text-gray-950 tracking-tighter uppercase leading-none">Order<br />Successful.</h1>
-                            <p className="text-xl text-gray-400 font-medium">Logistics ID #{orderId} is now being processed by our production team.</p>
+                            <h1 className="text-6xl md:text-7xl font-black text-gray-950 tracking-tighter uppercase leading-none">Manifest<br />Submitted.</h1>
+                            <p className="text-xl text-gray-400 font-medium">Logistics ID #{orderId} is under verification.</p>
                         </div>
 
-                        <div className="p-10 bg-gray-50 rounded-[3rem] border border-gray-100 text-left space-y-6">
-                            <div className="flex items-center justify-between pb-6 border-b border-gray-200">
-                                <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Transaction ID</span>
-                                <span className="text-sm font-black text-gray-950">{orderId}</span>
+                        <div className="p-8 bg-amber-50 border border-amber-100 rounded-[2.5rem] space-y-4">
+                            <div className="flex items-center justify-center gap-3 text-amber-600">
+                                <ShieldCheck size={20} />
+                                <span className="text-[10px] font-black uppercase tracking-widest">Protocol Verification Pending</span>
                             </div>
-                            <div className="space-y-2">
-                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Notification</p>
-                                <p className="text-xs font-bold text-gray-950 leading-relaxed">
-                                    An automated structural report and invoice have been dispatched to <span className="text-emerald-500">{formData.email}</span>.
-                                </p>
-                            </div>
+                            <p className="text-xs font-bold text-amber-900 leading-relaxed max-w-md mx-auto uppercase">
+                                Your transaction proof has been logged. The manifest will be activated once our department verifies the payment.
+                            </p>
                         </div>
 
                         <Link href="/" className="inline-flex items-center gap-4 px-12 py-6 bg-gray-950 text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] hover:bg-emerald-500 transition-all shadow-2xl shadow-gray-200">
-                            Continue Shopping <ArrowRight size={18} />
+                            Return To Terminal <ArrowRight size={18} />
                         </Link>
                     </motion.div>
                 </main>
@@ -350,7 +370,8 @@ export default function CheckoutPage() {
                         <div className="flex items-center gap-4 sm:gap-6 bg-gray-50/50 p-4 rounded-[2.5rem] border border-gray-100 overflow-x-auto no-scrollbar">
                             {[
                                 { id: 1, label: 'Identity', icon: <Package size={14} /> },
-                                { id: 2, label: 'Logistics', icon: <Truck size={14} /> }
+                                { id: 2, label: 'Logistics', icon: <Truck size={14} /> },
+                                { id: 3, label: 'Payment', icon: <CreditCard size={14} /> }
                             ].map((s, i) => (
                                 <React.Fragment key={s.id}>
                                     <button 
@@ -369,7 +390,7 @@ export default function CheckoutPage() {
                                             <span className={`text-[11px] font-black uppercase tracking-widest ${step >= s.id ? 'text-gray-950' : 'text-gray-400'}`}>{s.label}</span>
                                         </div>
                                     </button>
-                                    {i === 0 && <div className="h-px w-12 bg-gray-200 shrink-0" />}
+                                    {i < 2 && <div className="h-px w-8 bg-gray-200 shrink-0" />}
                                 </React.Fragment>
                             ))}
                         </div>
@@ -426,7 +447,7 @@ export default function CheckoutPage() {
                                         </span>
                                     </button>
                                 </motion.div>
-                            ) : (
+                            ) : step === 2 ? (
                                 <motion.div 
                                     key="step2"
                                     initial={{ opacity: 0, y: 20 }}
@@ -588,18 +609,98 @@ export default function CheckoutPage() {
                                             Previous_Phase
                                         </button>
                                         <button
-                                            disabled={isSubmitting || !formData.shippingAddress.street || !formData.shippingAddress.city || !formData.shippingAddress.state || !formData.shippingAddress.zipCode}
-                                            onClick={placeOrder}
-                                            className="group relative sm:flex-[2] py-8 bg-emerald-500 text-white rounded-[2.5rem] font-black text-[10px] uppercase tracking-[0.4em] overflow-hidden transition-all hover:bg-gray-950 disabled:opacity-30 active:scale-[0.98] shadow-2xl shadow-emerald-500/20"
+                                            disabled={!formData.shippingAddress.street || !formData.shippingAddress.city || !formData.shippingAddress.state || !formData.shippingAddress.zipCode}
+                                            onClick={() => setStep(3)}
+                                            className="group relative sm:flex-[2] py-8 bg-emerald-500 text-white rounded-[2.5rem] font-black text-[10px] uppercase tracking-[0.4em] overflow-hidden transition-all hover:bg-gray-950 active:scale-[0.98] shadow-2xl shadow-emerald-500/20"
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                             <span className="relative z-10 flex items-center justify-center gap-4">
-                                                {isSubmitting ? 'Authenticating...' : 'Authorize_Manifest'} <CreditCard size={16} className="group-hover:rotate-12 transition-transform" />
+                                                Proceed to Payment <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
                                             </span>
                                         </button>
                                     </div>
                                 </motion.div>
-                            )}
+                            ) : step === 3 ? (
+                                <motion.div 
+                                    key="step3"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    className="space-y-12"
+                                >
+                                    <div className="bg-gray-50 rounded-[3rem] p-10 border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-10">
+                                        <div className="space-y-8">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Authorized QR Gateway</span>
+                                            </div>
+                                            
+                                            <div className="aspect-square bg-white rounded-[2rem] p-6 border border-gray-100 shadow-xl shadow-gray-200/50 flex flex-col items-center justify-center gap-6 group">
+                                                <div className="w-full h-full bg-gray-50 rounded-2xl flex items-center justify-center relative overflow-hidden">
+                                                    <div className="w-56 h-56 p-2 bg-white rounded-xl shadow-inner flex items-center justify-center">
+                                                        <img 
+                                                            src="/WhatsApp Image 2026-05-05 at 10.22.08 AM (2).jpeg" 
+                                                            alt="Payment QR Code"
+                                                            className="w-full h-full object-contain rounded-lg"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className="text-center">
+                                                    <p className="text-[10px] font-black text-gray-950 mb-1 tracking-widest">BOXFOX.STORE@UPI</p>
+                                                    <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Authorized UPI Node</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-8 flex flex-col justify-center">
+                                            <div className="space-y-6">
+                                                <div className="space-y-3">
+                                                    <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest ml-4">Authorized_TXN_ID</label>
+                                                    <input 
+                                                        placeholder="ENTER TRANSACTION ID"
+                                                        value={paymentFormData.transactionId}
+                                                        onChange={(e) => setPaymentFormData({...paymentFormData, transactionId: e.target.value})}
+                                                        className="w-full bg-white border border-gray-200 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest outline-none focus:border-emerald-500 transition-all"
+                                                    />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest ml-4">Sender_Name_Manifest</label>
+                                                    <input 
+                                                        placeholder="NAME ON BANK ACCOUNT"
+                                                        value={paymentFormData.senderName}
+                                                        onChange={(e) => setPaymentFormData({...paymentFormData, senderName: e.target.value})}
+                                                        className="w-full bg-white border border-gray-200 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest outline-none focus:border-emerald-500 transition-all"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="p-6 bg-amber-50 rounded-2xl border border-amber-100">
+                                                <p className="text-[8px] font-bold text-amber-900 leading-relaxed uppercase tracking-tighter">
+                                                    🔒 Note: Order Manifest will only be registered once Transaction ID and Sender Name are verified.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col sm:flex-row gap-6">
+                                        <button
+                                            onClick={() => setStep(2)}
+                                            className="sm:flex-1 py-6 bg-gray-100 text-gray-950 rounded-[2rem] font-black text-[10px] uppercase tracking-[0.3em] hover:bg-gray-200 transition-all active:scale-[0.98]"
+                                        >
+                                            Modify Logistics
+                                        </button>
+                                        <button
+                                            disabled={isSubmitting || !paymentFormData.transactionId || !paymentFormData.senderName}
+                                            onClick={placeOrder}
+                                            className="group relative sm:flex-[2] py-8 bg-gray-950 text-white rounded-[2.5rem] font-black text-[10px] uppercase tracking-[0.4em] overflow-hidden transition-all hover:bg-emerald-500 disabled:opacity-30 active:scale-[0.98] shadow-2xl shadow-gray-200"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <span className="relative z-10 flex items-center justify-center gap-4">
+                                                {isSubmitting ? 'Authenticating...' : 'Authorize & Submit Manifest'} <CheckCircle2 size={16} className="group-hover:scale-110 transition-transform" />
+                                            </span>
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            ) : null}
                         </AnimatePresence>
                     </div>
 

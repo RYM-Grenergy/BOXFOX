@@ -34,6 +34,12 @@ const OrderSchema = new mongoose.Schema({
         default: 'Pending'
     },
     paid: { type: Boolean, default: false },
+    paymentDetails: {
+        transactionId: String,
+        senderName: String,
+        method: { type: String, default: 'UPI/Manual' },
+        submittedAt: Date
+    },
     labNotes: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now }
 }, {
