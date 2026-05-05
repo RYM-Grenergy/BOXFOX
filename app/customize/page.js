@@ -66,6 +66,7 @@ function CustomizeLabContent() {
   const { user, loading: authLoading, checkUser } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [guestGenerationsLeft, setGuestGenerationsLeft] = useState(5);
+  const isGuest = !user;
 
   // Removed forced login redirect to allow guest design experience
   // Guests can design but will be prompted to login to save or access premium features
@@ -349,6 +350,8 @@ function CustomizeLabContent() {
       if (data.success) {
         setBrandVault(data.brandVault);
         showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} secured in vault!`);
+      } else if (res.status === 401) {
+        setShowAuthModal(true);
       }
     } catch (e) {
       console.error("Vault Save Error:", e);
@@ -365,6 +368,8 @@ function CustomizeLabContent() {
       if (data.success) {
         setBrandVault(data.brandVault);
         showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} removed from vault.`);
+      } else if (res.status === 401) {
+        setShowAuthModal(true);
       }
     } catch (e) { console.error(e); }
   };
@@ -1351,8 +1356,27 @@ function CustomizeLabContent() {
     >
       <AuthModal
         isOpen={showAuthModal}
-        onClose={() => router.push('/')}
+        onClose={() => setShowAuthModal(false)}
       />
+      {isGuest && (
+        <div className="px-4 sm:px-6 lg:px-8 xl:px-12 pt-4 sm:pt-6">
+          <div className="mx-auto max-w-[1500px] rounded-[2.5rem] border border-emerald-200 bg-emerald-50/80 backdrop-blur-sm px-5 sm:px-8 py-5 sm:py-6 shadow-lg shadow-emerald-500/5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="space-y-2">
+              <p className="text-[9px] font-black uppercase tracking-[0.35em] text-emerald-600">Guest mode</p>
+              <h2 className="text-lg sm:text-xl font-black text-gray-950 uppercase tracking-tighter">Login to unlock the full Customize Studio.</h2>
+              <p className="text-xs sm:text-sm font-medium text-gray-600 max-w-2xl leading-relaxed">
+                Guests can preview the box designer, but login is required for saved designs, sharing, brand vault access, and full account features.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="inline-flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-gray-950 text-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-emerald-500 transition-all shadow-xl shadow-gray-950/10 whitespace-nowrap"
+            >
+              Sign In For Full Access
+            </button>
+          </div>
+        </div>
+      )}
       {/* AI Generate overlay removed for direct lab flow */}
       <div className="pt-20 sm:pt-24 pb-10 sm:pb-14 px-4 sm:px-6 lg:px-8 xl:px-12 max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10">
         {/* 3D SPATIAL CANVAS (LEFT) */}
