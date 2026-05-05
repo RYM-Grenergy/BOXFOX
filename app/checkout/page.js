@@ -71,9 +71,14 @@ export default function CheckoutPage() {
                             shippingAddress: data.user.shippingAddress
                         }));
                     }
+                } else {
+                    // Redirect to login if not authenticated
+                    window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
                 }
             })
-            .catch(() => { });
+            .catch(() => {
+                window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+            });
     }, []);
 
     const handleFormChange = (e) => {
@@ -129,6 +134,11 @@ export default function CheckoutPage() {
     const finalTotal = cartTotal - (appliedCoupon?.discount || 0);
 
     const placeOrder = async () => {
+        if (!user) {
+            showToast("Please login to place an order", "error");
+            window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+            return;
+        }
         if (!formData.shippingAddress.street || !formData.shippingAddress.city || !formData.shippingAddress.zipCode) {
             showToast("Please complete shipping details", "error");
             return;
@@ -163,7 +173,7 @@ export default function CheckoutPage() {
                         apartment: formData.shippingAddress.apartment,
                         city: formData.shippingAddress.city,
                         state: formData.shippingAddress.state,
-                        pincode: formData.shippingAddress.zipCode,
+                        zipCode: formData.shippingAddress.zipCode,
                         country: formData.shippingAddress.country
                     }
                 })

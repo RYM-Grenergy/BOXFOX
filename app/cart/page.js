@@ -14,11 +14,13 @@ import {
     Truck
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import Link from 'next/link';
 
 export default function CartPage() {
     const { cart, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
+    const { user } = useAuth();
     const [recommendations, setRecommendations] = React.useState([]);
 
     React.useEffect(() => {
@@ -179,7 +181,7 @@ export default function CartPage() {
                             </div>
 
                             <Link
-                                href="/checkout"
+                                href={user ? "/checkout" : `/login?redirect=/checkout`}
                                 className="w-full flex items-center justify-between px-10 py-6 bg-white text-gray-950 rounded-[2rem] font-black text-sm uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all group"
                             >
                                 Proceed to Checkout

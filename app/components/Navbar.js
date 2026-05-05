@@ -527,7 +527,7 @@ export default function Navbar() {
                       Review Shopping Cart
                     </Link>
                     <Link
-                      href="/checkout"
+                      href={user ? "/checkout" : `/login?redirect=/checkout`}
                       onClick={() => setIsCartOpen(false)}
                       className="w-full py-5 bg-gray-950 text-white rounded-2xl flex items-center justify-center gap-4 font-black text-xs uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-xl shadow-gray-100"
                     >
