@@ -99,13 +99,13 @@ export default function HeroBanner() {
   return (
 
     <section
-      className="relative w-full bg-[#111] overflow-hidden pt-[90px]"
+      className="relative w-full bg-[#111] overflow-hidden pt-[65px]"
       suppressHydrationWarning
     >
 
       {/* ── Slider fills the half-hero area ── */}
       <div
-        className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] group"
+        className="relative w-full h-[250px] sm:h-[400px] md:h-[500px] group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >

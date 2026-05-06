@@ -39,7 +39,7 @@ export default function AnnouncementBar() {
 
   return (
     <div className="w-full bg-gray-950 text-white border-b border-white/10 overflow-hidden" suppressHydrationWarning>
-      <div className="py-2.5 flex whitespace-nowrap animate-marquee">
+      <div className="py-1.5 flex whitespace-nowrap animate-marquee">
         <div className="flex shrink-0">
           {[...Array(6)].map((_, i) => (
             <p key={i} className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] leading-none mb-0 text-white px-12">

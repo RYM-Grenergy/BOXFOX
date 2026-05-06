@@ -98,14 +98,14 @@ export default function Navbar() {
           ? "w-[96%] sm:w-[94%] xl:max-w-[1300px] mt-2 mb-2 bg-white/95 backdrop-blur-md border border-gray-200/50 shadow-2xl rounded-[2rem] py-1 px-4 lg:px-10"
           : "w-full bg-white border-b border-gray-100 py-0 px-4 sm:px-8 lg:px-14 shadow-none"
           }`}>
-          <div className="flex items-center justify-between h-12 sm:h-14">
+          <div className="flex items-center justify-between h-10 sm:h-12">
 
             {/* ── Logo — always left ── */}
             <Link href="/" className="shrink-0 flex items-center">
               <img
                 src="/BOXFOX-1.png"
                 alt="BOXFOX Logo"
-                className={`transition-all duration-500 object-contain ${isScrolled ? "h-3.5 sm:h-5" : "h-4 sm:h-6"}`}
+                className={`transition-all duration-500 object-contain ${isScrolled ? "h-3 sm:h-4" : "h-3.5 sm:h-5"}`}
               />
             </Link>
 
@@ -164,7 +164,7 @@ export default function Navbar() {
               <div className="relative group flex items-center">
                 <Link
                   href={user ? "/account" : `/login?redirect=${encodeURIComponent(pathname)}`}
-                  className={`flex items-center gap-2 px-3 sm:px-4 h-9 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${user
+                  className={`flex items-center gap-2 px-3 sm:px-4 h-8 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${user
                     ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200/60"
                     : "bg-gray-950 text-white hover:bg-emerald-600 shadow-lg shadow-gray-200/80"
                     }`}
