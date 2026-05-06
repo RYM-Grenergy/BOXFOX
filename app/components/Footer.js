@@ -118,7 +118,7 @@ export default function Footer() {
               rel="noopener noreferrer" 
               className="text-[9px] font-black text-gray-400 hover:text-emerald-600 tracking-[0.2em] uppercase transition-all flex items-center gap-1.5"
             >
-              Website by Synchronous Build Digital
+              Built by Synchronous Build Digital
               <ExternalLink size={10} strokeWidth={3} />
             </a>
           </div>
