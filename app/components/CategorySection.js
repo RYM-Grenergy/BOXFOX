@@ -4,26 +4,18 @@ import { ArrowUpRight, Box, Layers, Zap, PenTool, ShieldCheck, Heart, LayoutGrid
 
 const categories = [
   {
-    id: 1,
+    id: 14,
     index: "01",
-    name: "Gifting",
-    desc: "Elegant and luxurious packaging designed to make every gift truly stand out.",
-    img: "/categories/cat_gifting.png",
-    icon: <Gift className="w-6 h-6" />,
-    stats: "PREMIUM"
-  },
-  {
-    id: 2,
-    index: "02",
-    name: "CupCake",
-    desc: "Secure display boxes engineered with inserts to protect delicate frostings.",
-    img: "/categories/cat_cupcake.png",
-    icon: <Box className="w-6 h-6" />,
-    stats: "DISPLAY"
+    name: "Pizza Box",
+    desc: "Thick, heat-retaining corrugated boxes designed specifically for hot, delicious pizzas.",
+    img: "/categories/cat_cake.png",
+    icon: <Square className="w-6 h-6" />,
+    stats: "HEAT-SAFE",
+    needsBranding: true
   },
   {
     id: 3,
-    index: "03",
+    index: "02",
     name: "Cake Box",
     desc: "Sturdy, oil-safe packaging built to keep your bakery creations fresh and intact.",
     img: "/categories/cat_cake.png",
@@ -31,85 +23,8 @@ const categories = [
     stats: "OIL-SAFE"
   },
   {
-    id: 4,
-    index: "04",
-    name: "Hamper Box",
-    desc: "Beautifully structured, spacious hampers perfect for curating large gift sets.",
-    img: "/categories/cat_hamper.png",
-    icon: <Layers className="w-6 h-6" />,
-    stats: "DURABLE"
-  },
-  {
-    id: 5,
-    index: "05",
-    name: "Platter",
-    desc: "Durable clear platters for beautifully organizing and presenting your assortments.",
-    img: "/categories/cat_platter_branded.png",
-    icon: <LayoutGrid className="w-6 h-6" />,
-    stats: "PRESENTATION"
-  },
-  {
-    id: 6,
-    index: "06",
-    name: "Loaf",
-    desc: "Long, perfectly sized boxes keeping your freshly baked loaf cakes entirely secure.",
-    img: "/categories/cat_loaf_branded.png",
-    icon: <ShoppingBag className="w-6 h-6" />,
-    stats: "CLASSIC"
-  },
-  {
-    id: 7,
-    index: "07",
-    name: "Pastry",
-    desc: "Exquisite pastry boxes preserving both the texture and visual appeal of delicate treats.",
-    img: "/categories/cat_pastry.png",
-    icon: <Star className="w-6 h-6" />,
-    stats: "DELICATE",
-    needsBranding: true
-  },
-  {
-    id: 8,
-    index: "08",
-    name: "Chocolate Box",
-    desc: "Luxurious, rigid structural designs specifically crafted for premium chocolates.",
-    img: "/categories/cat_chocolate_box.png",
-    icon: <Heart className="w-6 h-6" />,
-    stats: "ARTISANAL",
-    needsBranding: true
-  },
-  {
-    id: 9,
-    index: "09",
-    name: "Macaron",
-    desc: "Protective sleeve boxes allowing colorful macarons to take center stage.",
-    img: "/categories/cat_macaron.png",
-    icon: <Circle className="w-6 h-6" />,
-    stats: "STYLISH",
-    needsBranding: true
-  },
-  {
-    id: 10,
-    index: "10",
-    name: "Brownie",
-    desc: "Compact and sturdy boxes tailored perfectly for dense, rich brownie portions.",
-    img: "/categories/cat_brownie.png",
-    icon: <Square className="w-6 h-6" />,
-    stats: "COMPACT",
-    needsBranding: true
-  },
-  {
-    id: 11,
-    index: "11",
-    name: "CupCake + Bento",
-    desc: "The ultimate combo box, intelligently divided for cakes and matching cupcakes.",
-    img: "/categories/cat_bento.png",
-    icon: <Package className="w-6 h-6" />,
-    stats: "VERSATILE",
-    needsBranding: true
-  },
-  {
     id: 12,
-    index: "12",
+    index: "03",
     name: "Burger Box",
     desc: "Sturdy, grease-resistant boxes crafted to keep your premium burgers hot and intact.",
     img: "/categories/cat_cake.png",
@@ -119,7 +34,7 @@ const categories = [
   },
   {
     id: 13,
-    index: "13",
+    index: "04",
     name: "Food Box",
     desc: "Versatile, secure containers for meals on the go, maintaining freshness perfectly.",
     img: "/categories/cat_bento.png",
@@ -128,23 +43,108 @@ const categories = [
     needsBranding: true
   },
   {
-    id: 14,
-    index: "14",
-    name: "Pizza Box",
-    desc: "Thick, heat-retaining corrugated boxes designed specifically for hot, delicious pizzas.",
-    img: "/categories/cat_cake.png",
-    icon: <Square className="w-6 h-6" />,
-    stats: "HEAT-SAFE",
-    needsBranding: true
-  },
-  {
     id: 15,
-    index: "15",
+    index: "05",
     name: "Wok Box",
     desc: "Leak-proof boxes featuring easy-fold tops, ideal for noodles and hot wok dishes.",
     img: "/categories/cat_cupcake.png",
     icon: <Box className="w-6 h-6" />,
     stats: "LEAK-PROOF",
+    needsBranding: true
+  },
+  {
+    id: 2,
+    index: "06",
+    name: "CupCake",
+    desc: "Secure display boxes engineered with inserts to protect delicate frostings.",
+    img: "/categories/cat_cupcake.png",
+    icon: <Box className="w-6 h-6" />,
+    stats: "DISPLAY"
+  },
+  {
+    id: 11,
+    index: "07",
+    name: "CupCake + Bento",
+    desc: "The ultimate combo box, intelligently divided for cakes and matching cupcakes.",
+    img: "/categories/cat_bento.png",
+    icon: <Package className="w-6 h-6" />,
+    stats: "VERSATILE",
+    needsBranding: true
+  },
+  {
+    id: 1,
+    index: "08",
+    name: "Gifting",
+    desc: "Elegant and luxurious packaging designed to make every gift truly stand out.",
+    img: "/categories/cat_gifting.png",
+    icon: <Gift className="w-6 h-6" />,
+    stats: "PREMIUM"
+  },
+  {
+    id: 4,
+    index: "09",
+    name: "Hamper Box",
+    desc: "Beautifully structured, spacious hampers perfect for curating large gift sets.",
+    img: "/categories/cat_hamper.png",
+    icon: <Layers className="w-6 h-6" />,
+    stats: "DURABLE"
+  },
+  {
+    id: 5,
+    index: "10",
+    name: "Platter",
+    desc: "Durable clear platters for beautifully organizing and presenting your assortments.",
+    img: "/categories/cat_platter_branded.png",
+    icon: <LayoutGrid className="w-6 h-6" />,
+    stats: "PRESENTATION"
+  },
+  {
+    id: 6,
+    index: "11",
+    name: "Loaf",
+    desc: "Long, perfectly sized boxes keeping your freshly baked loaf cakes entirely secure.",
+    img: "/categories/cat_loaf_branded.png",
+    icon: <ShoppingBag className="w-6 h-6" />,
+    stats: "CLASSIC"
+  },
+  {
+    id: 7,
+    index: "12",
+    name: "Pastry",
+    desc: "Exquisite pastry boxes preserving both the texture and visual appeal of delicate treats.",
+    img: "/categories/cat_pastry.png",
+    icon: <Star className="w-6 h-6" />,
+    stats: "DELICATE",
+    needsBranding: true
+  },
+  {
+    id: 8,
+    index: "13",
+    name: "Chocolate Box",
+    desc: "Luxurious, rigid structural designs specifically crafted for premium chocolates.",
+    img: "/categories/cat_chocolate_box.png",
+    icon: <Heart className="w-6 h-6" />,
+    stats: "ARTISANAL",
+    needsBranding: true
+  },
+  {
+    id: 9,
+    index: "14",
+    name: "Macaron",
+    desc: "Protective sleeve boxes allowing colorful macarons to take center stage.",
+    img: "/categories/cat_macaron.png",
+    icon: <Circle className="w-6 h-6" />,
+    stats: "STYLISH",
+    needsBranding: true
+  },
+  {
+    id: 10,
+    index: "15",
+    name: "Brownie",
+    desc: "Compact and sturdy boxes tailored perfectly for dense, rich brownie portions.",
+    img: "/categories/cat_brownie.png",
+    icon: <Square className="w-6 h-6" />,
+    stats: "COMPACT",
     needsBranding: true
   },
   {
