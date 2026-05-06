@@ -4,6 +4,11 @@ export const metadata = {
   title: "BoxFox — Design | Print | Packaging",
   description:
     "India's trusted packaging partner. Premium duplex, rigid, corrugated & bakery boxes with custom prints. Free delivery on orders over ₹2000.",
+  icons: {
+    icon: "/BOXFOX-1.png",
+    shortcut: "/BOXFOX-1.png",
+    apple: "/BOXFOX-1.png",
+  },
 };
 
 import { CartProvider } from "./context/CartContext";
