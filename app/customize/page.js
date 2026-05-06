@@ -124,7 +124,7 @@ function CustomizeLabContent() {
               { category: "Pharma", subCategories: ["Medicine", "Cosmetics"] }
             ],
             specifications: [
-              { category: "Food", subCategory: "Bakery", length: 10, width: 10, height: 4, unit: "in", isActive: true }
+              { spec: "Standard Box | 10x10x4", category: "Food", subCategory: "Bakery", l: 10, w: 10, h: 4, unit: "in", isActive: true }
             ]
           };
           setLabConfig(fallbackData);
@@ -137,7 +137,7 @@ function CustomizeLabContent() {
         // Fallback on total failure
         const fallbackData = {
           hierarchies: [{ category: "Standard", subCategories: ["Custom"] }],
-          specifications: [{ category: "Standard", subCategory: "Custom", length: 12, width: 8, height: 4, unit: "in", isActive: true }]
+          specifications: [{ spec: "Custom Box | 12x8x4", category: "Standard", subCategory: "Custom", l: 12, w: 8, h: 4, unit: "in", isActive: true }]
         };
         setLabConfig(fallbackData);
         setCategories(["Standard"]);
@@ -1992,7 +1992,7 @@ function CustomizeLabContent() {
                   >
                     <option value="">Select a calibrated size...</option>
                     {labConfig.specifications.filter(s => (selectedCategory === "All" || s.category === selectedCategory) && (selectedSubCategory === "All" || s.subCategory === selectedSubCategory)).map((spec, idx) => (
-                      <option key={idx} value={spec.spec}>{spec.spec.split('|')[0].trim()}</option>
+                      <option key={idx} value={spec.spec}>{spec.spec?.split('|')[0].trim() || 'Standard Spec'}</option>
                     ))}
                     <option value="custom_contact">REQUEST CUSTOM SIZE (WHATSAPP)</option>
                   </select>
