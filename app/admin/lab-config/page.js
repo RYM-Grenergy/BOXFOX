@@ -21,7 +21,6 @@ export default function LabConfigAdmin() {
     const [newSubCategory, setNewSubCategory] = useState("");
     const [selectedCategory, setSelectedCategory] = useState(null);
 
-    // Specification State
     const [newSpec, setNewSpec] = useState({
         category: "",
         subCategory: "",
@@ -36,6 +35,7 @@ export default function LabConfigAdmin() {
         sheetH: 0,
         dieRate: 300
     });
+    const [specSearch, setSpecSearch] = useState("");
 
     useEffect(() => {
         fetchData();
@@ -52,8 +52,15 @@ export default function LabConfigAdmin() {
             const sData = await sRes.json();
             setSpecifications(sData);
 
-            if (hData.length > 0 && !selectedCategory) {
-                setSelectedCategory(hData[0]);
+            if (hData.length > 0) {
+                if (!selectedCategory) setSelectedCategory(hData[0]);
+                if (!newSpec.category) {
+                    setNewSpec(prev => ({
+                        ...prev,
+                        category: hData[0].category,
+                        subCategory: hData[0].subCategories?.[0] || ""
+                    }));
+                }
             }
 
             const cRes = await fetch('/api/admin/lab/config');
@@ -431,16 +438,26 @@ export default function LabConfigAdmin() {
                                     </div>
                                 </div>
 
-                                {/* Table */}
                                 <div className="bg-white rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden">
-                                    <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/20">
+                                    <div className="p-8 border-b border-gray-50 flex flex-col sm:flex-row items-center justify-between bg-gray-50/20 gap-4">
                                         <div className="flex items-center gap-4">
                                             <Ruler size={20} className="text-emerald-500" />
                                             <h3 className="text-xl font-black uppercase tracking-tighter italic">Vault</h3>
+                                            <span className="text-[9px] font-black bg-gray-950 text-white px-4 py-1.5 rounded-full uppercase tracking-widest">
+                                                {specifications.length} Registered
+                                            </span>
                                         </div>
-                                        <span className="text-[9px] font-black bg-gray-950 text-white px-4 py-1.5 rounded-full uppercase tracking-widest">
-                                            {specifications.length} Registered
-                                        </span>
+                                        
+                                        <div className="relative w-full sm:w-64">
+                                            <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                            <input 
+                                                type="text"
+                                                placeholder="Search Vault..."
+                                                value={specSearch}
+                                                onChange={(e) => setSpecSearch(e.target.value)}
+                                                className="w-full bg-white border border-gray-100 rounded-xl pl-10 pr-4 py-2 text-[10px] font-bold uppercase outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="overflow-x-auto">
@@ -454,7 +471,15 @@ export default function LabConfigAdmin() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-50">
-                                                {specifications.map(spec => (
+                                                {specifications
+                                                    .filter(s => 
+                                                        specSearch === "" || 
+                                                        s.spec.toLowerCase().includes(specSearch.toLowerCase()) || 
+                                                        s.category.toLowerCase().includes(specSearch.toLowerCase()) || 
+                                                        s.subCategory.toLowerCase().includes(specSearch.toLowerCase())
+                                                    )
+                                                    .slice(0, 100) // Performance optimization
+                                                    .map(spec => (
                                                     <tr key={spec._id} className="group hover:bg-gray-50/50 transition-colors">
                                                         <td className="px-10 py-7">
                                                             <span className="text-[10px] font-black uppercase px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-100">{spec.category}</span>

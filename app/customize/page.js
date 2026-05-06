@@ -108,29 +108,18 @@ function CustomizeLabContent() {
         const res = await fetch('/api/lab/config');
         const data = await res.json();
 
-        if (data && !data.error && data.hierarchies?.length > 0 && data.specifications?.length > 0) {
+        if (data && !data.error && data.hierarchies?.length > 0) {
           setLabConfig(data);
           const cats = data.hierarchies.map(h => h.category);
           setCategories(cats);
-          if (selectedCategory === "All" || !cats.includes(selectedCategory)) {
+          
+          // Only force if current category is not valid and not "All"
+          if (selectedCategory !== "All" && !cats.includes(selectedCategory)) {
             setSelectedCategory(cats[0] || "Food");
           }
         } else {
-          console.warn("Lab config empty, using fallbacks...");
-          const fallbackData = {
-            hierarchies: [
-              { category: "Food", subCategories: ["Bakery", "Confectionery"] },
-              { category: "Retail", subCategories: ["Electronics", "Apparel"] },
-              { category: "Pharma", subCategories: ["Medicine", "Cosmetics"] }
-            ],
-            specifications: [
-              { spec: "Standard Box | 10x10x4", category: "Food", subCategory: "Bakery", l: 10, w: 10, h: 4, unit: "in", isActive: true }
-            ]
-          };
-          setLabConfig(fallbackData);
-          const cats = fallbackData.hierarchies.map(h => h.category);
-          setCategories(cats);
-          setSelectedCategory(cats[0]);
+          console.error("Lab configuration hierarchies are empty.");
+          throw new Error("Empty Lab Hierarchies");
         }
       } catch (err) {
         console.error("Failed to fetch lab config:", err);
@@ -141,18 +130,28 @@ function CustomizeLabContent() {
         };
         setLabConfig(fallbackData);
         setCategories(["Standard"]);
-        setSelectedCategory("Standard");
+        if (selectedCategory === "All") setSelectedCategory("Standard");
       }
     };
     fetchConfig();
   }, []);
 
   useEffect(() => {
-    const hierarchy = labConfig.hierarchies.find(h => h.category === selectedCategory);
-    const subs = hierarchy ? hierarchy.subCategories : [];
+    let subs = [];
+    if (selectedCategory === "All") {
+      subs = labConfig.hierarchies.flatMap(h => h.subCategories);
+      // Unique and sorted
+      subs = [...new Set(subs)].sort();
+    } else {
+      const hierarchy = labConfig.hierarchies.find(h => h.category === selectedCategory);
+      subs = hierarchy ? hierarchy.subCategories : [];
+    }
+    
     setSubCategories(subs);
-    if (!subs.includes(selectedSubCategory)) {
-      setSelectedSubCategory(subs[0] || "");
+    
+    // If current sub-category is not in new list and not "All", reset it
+    if (selectedSubCategory !== "All" && !subs.includes(selectedSubCategory)) {
+      setSelectedSubCategory("All");
     }
   }, [selectedCategory, labConfig]);
 
@@ -557,10 +556,12 @@ function CustomizeLabContent() {
             // Find the first active product if possible
             const fallbackProduct = allData.find(p => p.isActive) || allData[0];
             const fallbackId = fallbackProduct.id || fallbackProduct._id;
-            
+
             // Fetch the specific fallback product with admin=true to ensure we get it even if inactive
             res = await fetch(`/api/products/${fallbackId}?admin=true`);
             data = await res.json();
+          } else {
+            throw new Error("No products found in system");
           }
         }
 
@@ -1301,7 +1302,29 @@ function CustomizeLabContent() {
     </div>
   );
 
-  if ((loading || authLoading || !product) && !isGenerating) return <LoadingScreen />;
+  if (loading || authLoading) return <LoadingScreen />;
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-24 h-24 rounded-3xl bg-red-50 flex items-center justify-center mb-6 border border-red-100">
+          <Box size={40} className="text-red-500" />
+        </div>
+        <h2 className="text-2xl font-black text-gray-950 uppercase tracking-tighter mb-2">Systems_Offline</h2>
+        <p className="text-sm text-gray-500 max-w-md mb-8">
+          The Lab could not synchronize with the product database. Please ensure the system is active or try a different product.
+        </p>
+        <button
+          onClick={() => window.location.href = '/shop'}
+          className="px-8 py-4 bg-gray-950 text-white rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] hover:bg-emerald-500 transition-all active:scale-95 shadow-xl"
+        >
+          Return to Shop
+        </button>
+      </div>
+    );
+  }
+
+  if (isGenerating) return <LoadingScreen />;
 
   const renderFaceTexture = (face) => {
     if (!boxTextures[face]) return null;
