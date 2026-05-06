@@ -551,11 +551,15 @@ function CustomizeLabContent() {
         // Phase 2: If fail, fetch the first available product as fallback
         if (data.error || !data) {
           console.warn("Target product not found, fetching fallback...");
-          const allRes = await fetch('/api/products?admin=true');
+          const allRes = await fetch('/api/products?all=true&admin=true');
           const allData = await allRes.json();
           if (Array.isArray(allData) && allData.length > 0) {
-            // Pick the first available product
-            res = await fetch(`/api/products/${allData[0].id}`);
+            // Find the first active product if possible
+            const fallbackProduct = allData.find(p => p.isActive) || allData[0];
+            const fallbackId = fallbackProduct.id || fallbackProduct._id;
+            
+            // Fetch the specific fallback product with admin=true to ensure we get it even if inactive
+            res = await fetch(`/api/products/${fallbackId}?admin=true`);
             data = await res.json();
           }
         }

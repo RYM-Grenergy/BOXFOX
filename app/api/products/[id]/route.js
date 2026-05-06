@@ -26,9 +26,14 @@ export async function GET(req, { params }) {
         const { searchParams } = new URL(req.url);
         const isAdmin = searchParams.get('admin') === 'true';
 
-        if (!product || (product.isActive === false && !isAdmin)) {
-            console.warn(`❌ Product not found or inactive for ID: ${id}`);
-            return NextResponse.json({ error: "Product not found" }, { status: 404 });
+        if (!product) {
+            console.warn(`❌ Product not found for ID: ${id}`);
+            return NextResponse.json({ error: "Product not found", reason: "not_in_db", id }, { status: 404 });
+        }
+
+        if (product.isActive === false && !isAdmin) {
+            console.warn(`❌ Product inactive for ID: ${id}`);
+            return NextResponse.json({ error: "Product not found", reason: "inactive", id }, { status: 404 });
         }
 
         const result = {
