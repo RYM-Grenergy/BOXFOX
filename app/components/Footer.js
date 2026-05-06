@@ -107,9 +107,21 @@ export default function Footer() {
 
         {/* Minimal Bottom Bar */}
         <div className="mt-16 pt-8 border-t border-gray-50 flex flex-col md:flex-row items-center justify-between gap-6">
-          <p className="text-[10px] font-black text-gray-950 tracking-[0.2em] uppercase" suppressHydrationWarning>
-            &copy; 2020-{new Date().getFullYear()} Indo Omakase Pvt Ltd. All Rights Reserved
-          </p>
+          <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 text-center md:text-left">
+            <p className="text-[10px] font-black text-gray-950 tracking-[0.2em] uppercase" suppressHydrationWarning>
+              &copy; 2020-{new Date().getFullYear()} Indo Omakase Pvt Ltd. All Rights Reserved
+            </p>
+            <span className="hidden md:block w-px h-3 bg-gray-200"></span>
+            <a 
+              href="https://www.synchronousbuilddigital.com/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-[9px] font-black text-gray-400 hover:text-emerald-600 tracking-[0.2em] uppercase transition-all flex items-center gap-1.5"
+            >
+              Website by Synchronous Build Digital
+              <ExternalLink size={10} strokeWidth={3} />
+            </a>
+          </div>
           <div className="flex gap-8 uppercase tracking-[0.2em] font-black text-[9px] text-gray-950">
             {[
               { name: "Privacy Policy", href: "/privacy" },
