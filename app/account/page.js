@@ -428,8 +428,13 @@ function AccountManagementContent() {
         );
     }
 
-    return (
-        <div className="min-h-screen bg-gray-50/50 text-gray-950">
+      return (
+        <div className="min-h-screen bg-[#fafafa] text-gray-950 font-sans selection:bg-emerald-500 selection:text-white">
+            {/* Ambient Technical Background */}
+            <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03]">
+                <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:32px_32px]" />
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#000_1px,transparent_1px),linear-gradient(to_bottom,#000_1px,transparent_1px)] [background-size:128px_128px]" />
+            </div>
             <AnimatePresence>
                 {selectedOrder && renderOrderDetail(selectedOrder)}
                 
@@ -489,22 +494,37 @@ function AccountManagementContent() {
             </AnimatePresence>
 
             <main className="max-w-7xl mx-auto px-6 lg:px-16 pt-24 sm:pt-32 pb-20">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 sm:mb-12">
-                    <div>
-                        <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-gray-950 mb-3">
-                            Account <span className="text-emerald-500">Settings</span>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 sm:mb-24 relative z-10">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <span className="w-12 h-[2px] bg-emerald-500"></span>
+                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-600">Secure Protocol v2.8</span>
+                        </div>
+                        <h1 className="text-6xl sm:text-8xl font-black uppercase tracking-tighter text-gray-950 leading-[0.85]">
+                            Account <br /> <span className="text-emerald-500">Settings</span>
                         </h1>
-                        <p className="text-gray-400 font-bold tracking-[0.2em] uppercase text-[10px] sm:text-xs flex items-center gap-2">
-                            <Box size={14} className="text-emerald-500" /> Manage your profile and orders
+                        <p className="text-gray-400 font-bold tracking-[0.2em] uppercase text-[10px] sm:text-xs flex items-center gap-3 pt-2">
+                            <Box size={16} className="text-emerald-500" /> Manage your profile and orders
                         </p>
                     </div>
-                    <div className="flex items-center gap-3 bg-white border border-gray-100 p-2 rounded-2xl shadow-sm">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 font-black">
-                            {user?.name?.charAt(0)}
-                        </div>
-                        <div className="pr-4">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-gray-950 leading-none">{user?.name}</p>
-                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Status: Authorized</p>
+                    
+                    <div className="relative group">
+                        <div className="absolute -inset-4 bg-emerald-500/5 rounded-[2.5rem] blur-2xl group-hover:bg-emerald-500/10 transition-all duration-500"></div>
+                        <div className="relative flex items-center gap-5 bg-white border border-gray-100 p-4 pr-8 rounded-[2.5rem] shadow-2xl shadow-gray-200/50">
+                            <div className="relative">
+                                <div className="w-16 h-16 rounded-2xl bg-gray-950 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-emerald-500/20 border-2 border-emerald-500/30">
+                                    {user?.name?.charAt(0)}
+                                </div>
+                                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 border-4 border-white rounded-full"></div>
+                            </div>
+                            <div>
+                                <p className="text-[14px] font-black uppercase tracking-widest text-gray-950 leading-none mb-1.5">{user?.name}</p>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping absolute"></div>
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 relative"></div>
+                                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Status: Authorized</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -512,7 +532,7 @@ function AccountManagementContent() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
                     {/* Sidebar - Desktop Sticky Navigation / Mobile Launcher (Hidden when tab active) */}
                     <div className={`lg:col-span-3 space-y-4 lg:sticky lg:top-32 z-40 ${activeTab !== 'dashboard' ? 'hidden lg:block' : 'block'}`}>
-                        <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-2 shadow-xl shadow-gray-200/50 border border-gray-100/50 grid grid-cols-2 lg:flex lg:flex-col gap-2">
+                        <div className="bg-white rounded-[3rem] p-3 shadow-2xl shadow-gray-200/60 border border-gray-100 flex flex-col gap-1.5">
                             {[
                                 { id: "dashboard", label: "Overview", icon: Settings },
                                 { id: "orders", label: "Manifests", icon: Package },
@@ -526,32 +546,35 @@ function AccountManagementContent() {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex flex-col lg:flex-row items-center lg:items-center gap-2 lg:gap-3 px-4 lg:px-6 py-5 lg:py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${activeTab === tab.id ? 'bg-gray-950 text-white shadow-xl shadow-gray-200' : 'text-gray-400 bg-gray-50/50 lg:bg-transparent hover:bg-gray-50 hover:text-gray-950'}`}
+                                    className={`group relative flex items-center gap-4 px-6 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-[0.25em] transition-all duration-500 ${activeTab === tab.id ? 'bg-gray-950 text-white shadow-2xl shadow-gray-950/20' : 'text-gray-400 hover:text-gray-950 hover:bg-gray-50'}`}
                                 >
-                                    <tab.icon size={18} className={activeTab === tab.id ? 'text-emerald-500' : ''} />
-                                    <span>{tab.label}</span>
+                                    {activeTab === tab.id && (
+                                        <motion.div layoutId="tab-indicator" className="absolute left-2 w-1.5 h-6 bg-emerald-500 rounded-full" />
+                                    )}
+                                    <tab.icon size={18} className={`transition-all duration-500 ${activeTab === tab.id ? 'text-emerald-500 scale-110' : 'group-hover:text-emerald-500 group-hover:scale-110'}`} />
+                                    <span className="flex-1 text-left">{tab.label}</span>
                                     {tab.badge > 0 && (
-                                        <span className={`ml-auto hidden lg:flex w-5 h-5 rounded-full items-center justify-center text-[8px] ${activeTab === tab.id ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500'}`}>{tab.badge}</span>
+                                        <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[9px] font-black border transition-all duration-500 ${activeTab === tab.id ? 'bg-emerald-500 border-emerald-400 text-white scale-110' : 'bg-gray-100 border-gray-200 text-gray-500 group-hover:bg-emerald-50 group-hover:border-emerald-200 group-hover:text-emerald-600'}`}>{tab.badge}</span>
                                     )}
                                 </button>
                             ))}
                             
-                            <div className="hidden lg:block h-px bg-gray-50 my-2 mx-4" />
+                            <div className="h-px bg-gray-50 my-4 mx-8" />
                             
                             {user?.role === 'admin' && (
                                 <button
                                     onClick={() => router.push('/admin')}
-                                    className="flex flex-col lg:flex-row items-center lg:items-center gap-2 lg:gap-3 px-4 lg:px-6 py-5 lg:py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-emerald-600 bg-emerald-50/50 lg:bg-transparent hover:bg-emerald-50 transition-all col-span-2 lg:col-span-1 border border-emerald-100/50 lg:border-none"
+                                    className="group flex items-center gap-4 px-6 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-[0.25em] text-emerald-600 hover:bg-emerald-50 transition-all duration-300"
                                 >
-                                    <Shield size={18} />
+                                    <div className="w-5 flex justify-center"><Shield size={18} className="group-hover:scale-110 transition-transform" /></div>
                                     <span>Admin Panel</span>
                                 </button>
                             )}
                             <button
                                 onClick={handleLogout}
-                                className="flex flex-col lg:flex-row items-center lg:items-center gap-2 lg:gap-3 px-4 lg:px-6 py-5 lg:py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-red-400 bg-red-50/50 lg:bg-transparent hover:bg-red-50 hover:text-red-600 transition-all col-span-2 lg:col-span-1 border border-red-100/50 lg:border-none"
+                                className="group flex items-center gap-4 px-6 py-4 rounded-[2rem] font-black text-[10px] uppercase tracking-[0.25em] text-red-400 hover:bg-red-50 hover:text-red-600 transition-all duration-300"
                             >
-                                <LogOut size={18} />
+                                <div className="w-5 flex justify-center"><LogOut size={18} className="group-hover:rotate-12 transition-transform" /></div>
                                 <span>Termination</span>
                             </button>
                         </div>
@@ -568,39 +591,60 @@ function AccountManagementContent() {
                             </button>
                         )}
                         <AnimatePresence mode="wait">
-                            {activeTab === 'dashboard' && (
+                             {activeTab === 'dashboard' && (
                                 <motion.div
                                     key="dashboard"
-                                    initial={{ opacity: 0, y: 10 }}
+                                    initial={{ opacity: 0, y: 30 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="bg-white rounded-[2rem] p-8 sm:p-12 shadow-sm border border-gray-100 italic"
+                                    exit={{ opacity: 0, y: -30 }}
+                                    className="bg-white rounded-[4rem] p-12 sm:p-20 shadow-2xl shadow-gray-200/50 border border-gray-100 relative overflow-hidden group/card"
                                 >
-                                    <div className="max-w-2xl">
-                                        <h2 className="text-2xl font-black uppercase tracking-tight text-gray-950 mb-6">
-                                            Hello, <span className="text-emerald-500">{user?.name}</span>
-                                        </h2>
-                                        <p className="text-gray-500 font-medium leading-relaxed mb-10">
-                                            From your account dashboard you can view your <button onClick={() => setActiveTab('orders')} className="text-emerald-600 font-bold hover:underline">recent orders</button>, manage your <button onClick={() => setActiveTab('addresses')} className="text-emerald-600 font-bold hover:underline">shipping addresses</button>, and <button onClick={() => setActiveTab('details')} className="text-emerald-600 font-bold hover:underline">edit your password and account details</button>.
-                                        </p>
+                                    {/* Tech Ornament */}
+                                    <div className="absolute top-0 right-0 p-12 opacity-[0.05] group-hover/card:opacity-[0.1] transition-opacity duration-700">
+                                        <div className="w-32 h-32 border-4 border-emerald-500 rounded-full border-dashed animate-spin-slow"></div>
+                                    </div>
 
-                                        <div className="hidden lg:grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                                            <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 flex items-center gap-6 group hover:bg-white hover:shadow-xl transition-all cursor-pointer" onClick={() => setActiveTab('orders')}>
-                                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm"><Package size={20} /></div>
-                                                <span className="text-sm font-black uppercase tracking-widest text-gray-950">Recent Orders</span>
-                                            </div>
-                                            <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 flex items-center gap-6 group hover:bg-white hover:shadow-xl transition-all cursor-pointer" onClick={() => setActiveTab('addresses')}>
-                                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm"><MapPin size={20} /></div>
-                                                <span className="text-sm font-black uppercase tracking-widest text-gray-950">Addresses</span>
-                                            </div>
-                                            <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 flex items-center gap-6 group hover:bg-white hover:shadow-xl transition-all cursor-pointer" onClick={() => setActiveTab('details')}>
-                                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm"><UserIcon size={20} /></div>
-                                                <span className="text-sm font-black uppercase tracking-widest text-gray-950">Account Details</span>
-                                            </div>
-                                            <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 flex items-center gap-6 group hover:bg-white hover:shadow-xl transition-all cursor-pointer" onClick={() => setActiveTab('wishlist')}>
-                                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm"><Heart size={20} /></div>
-                                                <span className="text-sm font-black uppercase tracking-widest text-gray-950">Wishlist</span>
-                                            </div>
+                                    <div className="relative z-10 max-w-3xl">
+                                        <div className="inline-flex items-center gap-3 px-5 py-2 bg-emerald-950 text-emerald-400 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-10 shadow-2xl shadow-emerald-900/20">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                                            Control Center Active
+                                        </div>
+                                        
+                                        <h2 className="text-5xl sm:text-7xl font-black uppercase tracking-tighter text-gray-950 mb-10 leading-[0.9]">
+                                            Hello, <br />
+                                            <span className="text-emerald-500 italic decoration-8 decoration-emerald-500/10 underline underline-offset-[10px]">
+                                                {user?.name?.split(' ')[0]}
+                                            </span>
+                                        </h2>
+                                        
+                                        <div className="p-8 bg-gray-50 rounded-[3rem] border border-gray-100 mb-12 relative overflow-hidden">
+                                            <p className="text-gray-500 text-xl font-medium leading-relaxed italic relative z-10">
+                                                From your account dashboard you can view your <button onClick={() => setActiveTab('orders')} className="text-gray-950 font-black hover:text-emerald-600 transition-colors">recent orders</button>, manage your <button onClick={() => setActiveTab('addresses')} className="text-gray-950 font-black hover:text-emerald-600 transition-colors">shipping addresses</button>, and <button onClick={() => setActiveTab('details')} className="text-gray-950 font-black hover:text-emerald-600 transition-colors">edit your password and account details</button>.
+                                            </p>
+                                            <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500"></div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                            {[
+                                                { id: 'orders', label: 'Recent Orders', icon: Package, desc: 'Track your manifests', color: 'emerald' },
+                                                { id: 'addresses', label: 'Addresses', icon: MapPin, desc: 'Manage logistics', color: 'blue' },
+                                                { id: 'details', label: 'Account Details', icon: UserIcon, desc: 'Update identity', color: 'violet' },
+                                                { id: 'wishlist', label: 'Wishlist', icon: Heart, desc: 'Saved favorites', color: 'pink' }
+                                            ].map((item) => (
+                                                <button 
+                                                    key={item.id}
+                                                    onClick={() => setActiveTab(item.id)} 
+                                                    className="p-8 bg-white rounded-[2.5rem] border border-gray-100 flex items-center gap-6 group/item hover:bg-gray-950 hover:border-gray-950 transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-gray-950/20 text-left"
+                                                >
+                                                    <div className={`w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover/item:bg-emerald-500 group-hover/item:text-white transition-all duration-500 shadow-inner group-hover/item:shadow-lg group-hover/item:shadow-emerald-500/30`}>
+                                                        <item.icon size={28} className="group-hover/item:scale-110 transition-transform duration-500" />
+                                                    </div>
+                                                    <div>
+                                                        <span className="block text-[14px] font-black uppercase tracking-widest text-gray-950 group-hover/item:text-white transition-colors duration-500">{item.label}</span>
+                                                        <span className="block text-[10px] font-bold text-gray-400 group-hover/item:text-gray-500 uppercase tracking-widest mt-1 duration-500">{item.desc}</span>
+                                                    </div>
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
                                 </motion.div>
