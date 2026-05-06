@@ -106,7 +106,7 @@ export default function CheckoutPage() {
                 const postOffices = data[0].PostOffice;
                 const state = postOffices[0].State;
                 const cities = Array.from(new Set(postOffices.map(po => po.District)));
-                
+
                 setFetchedCities(cities);
                 setFormData(prev => ({
                     ...prev,
@@ -314,7 +314,7 @@ export default function CheckoutPage() {
                 <header className="relative mb-12 md:mb-20">
                     <div className="absolute -left-12 top-0 w-24 h-24 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none" />
                     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-gray-100 pb-10">
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             className="space-y-4"
@@ -348,9 +348,9 @@ export default function CheckoutPage() {
                 </header>
 
                 {paymentError && (
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }} 
-                        animate={{ opacity: 1, scale: 1 }} 
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
                         className="mb-12 p-6 bg-red-50 border border-red-200 rounded-[2.5rem] flex items-center gap-6 shadow-xl shadow-red-500/5"
                     >
                         <div className="w-14 h-14 bg-red-500 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-red-500/20">
@@ -374,15 +374,14 @@ export default function CheckoutPage() {
                                 { id: 3, label: 'Payment', icon: <CreditCard size={14} /> }
                             ].map((s, i) => (
                                 <React.Fragment key={s.id}>
-                                    <button 
+                                    <button
                                         onClick={() => setStep(s.id)}
                                         className="flex items-center gap-4 group shrink-0"
                                     >
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 ${
-                                            step >= s.id 
-                                            ? 'bg-gray-950 text-white shadow-xl shadow-gray-900/20 rotate-0' 
-                                            : 'bg-white text-gray-400 border border-gray-100 group-hover:border-emerald-500 group-hover:text-emerald-500'
-                                        }`}>
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black transition-all duration-500 ${step >= s.id
+                                                ? 'bg-gray-950 text-white shadow-xl shadow-gray-900/20 rotate-0'
+                                                : 'bg-white text-gray-400 border border-gray-100 group-hover:border-emerald-500 group-hover:text-emerald-500'
+                                            }`}>
                                             {s.id}
                                         </div>
                                         <div className="flex flex-col text-left">
@@ -397,7 +396,7 @@ export default function CheckoutPage() {
 
                         <AnimatePresence mode="wait">
                             {step === 1 ? (
-                                <motion.div 
+                                <motion.div
                                     key="step1"
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -448,7 +447,7 @@ export default function CheckoutPage() {
                                     </button>
                                 </motion.div>
                             ) : step === 2 ? (
-                                <motion.div 
+                                <motion.div
                                     key="step2"
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -463,11 +462,10 @@ export default function CheckoutPage() {
                                                     <button
                                                         key={idx}
                                                         onClick={() => handleSelectSavedAddress(addr, idx)}
-                                                        className={`group p-8 rounded-[2.5rem] border text-left transition-all relative overflow-hidden ${
-                                                            selectedAddressIndex === idx 
-                                                            ? 'bg-gray-950 border-gray-950 text-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)]' 
-                                                            : 'bg-gray-50 border-gray-100 hover:border-emerald-200 hover:bg-white'
-                                                        }`}
+                                                        className={`group p-8 rounded-[2.5rem] border text-left transition-all relative overflow-hidden ${selectedAddressIndex === idx
+                                                                ? 'bg-gray-950 border-gray-950 text-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)]'
+                                                                : 'bg-gray-50 border-gray-100 hover:border-emerald-200 hover:bg-white'
+                                                            }`}
                                                     >
                                                         <div className={`absolute top-0 right-0 w-24 h-24 blur-3xl rounded-full transition-opacity ${selectedAddressIndex === idx ? 'bg-emerald-500/20 opacity-100' : 'bg-emerald-500/10 opacity-0 group-hover:opacity-100'}`} />
                                                         <div className="relative z-10">
@@ -534,7 +532,7 @@ export default function CheckoutPage() {
                                                             <option value="">Select City</option>
                                                             {fetchedCities.map(city => (
                                                                 <option key={city} value={city}>{city}</option>
-                                                             ))}
+                                                            ))}
                                                         </select>
                                                     ) : (
                                                         <input
@@ -621,7 +619,7 @@ export default function CheckoutPage() {
                                     </div>
                                 </motion.div>
                             ) : step === 3 ? (
-                                <motion.div 
+                                <motion.div
                                     key="step3"
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -633,12 +631,12 @@ export default function CheckoutPage() {
                                             <div className="flex items-center justify-between">
                                                 <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Authorized QR Gateway</span>
                                             </div>
-                                            
+
                                             <div className="aspect-square bg-white rounded-[2rem] p-6 border border-gray-100 shadow-xl shadow-gray-200/50 flex flex-col items-center justify-center gap-6 group">
                                                 <div className="w-full h-full bg-gray-50 rounded-2xl flex items-center justify-center relative overflow-hidden">
                                                     <div className="w-56 h-56 p-2 bg-white rounded-xl shadow-inner flex items-center justify-center">
-                                                        <img 
-                                                            src="/WhatsApp Image 2026-05-05 at 10.22.08 AM (2).jpeg" 
+                                                        <img
+                                                            src="/WhatsApp Image 2026-05-05 at 10.22.08 AM (2).jpeg"
                                                             alt="Payment QR Code"
                                                             className="w-full h-full object-contain rounded-lg"
                                                         />
@@ -655,19 +653,19 @@ export default function CheckoutPage() {
                                             <div className="space-y-6">
                                                 <div className="space-y-3">
                                                     <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest ml-4">Authorized_TXN_ID</label>
-                                                    <input 
+                                                    <input
                                                         placeholder="ENTER TRANSACTION ID"
                                                         value={paymentFormData.transactionId}
-                                                        onChange={(e) => setPaymentFormData({...paymentFormData, transactionId: e.target.value})}
+                                                        onChange={(e) => setPaymentFormData({ ...paymentFormData, transactionId: e.target.value })}
                                                         className="w-full bg-white border border-gray-200 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest outline-none focus:border-emerald-500 transition-all"
                                                     />
                                                 </div>
                                                 <div className="space-y-3">
                                                     <label className="text-[8px] font-black uppercase text-gray-400 tracking-widest ml-4">Sender_Name_Manifest</label>
-                                                    <input 
+                                                    <input
                                                         placeholder="NAME ON BANK ACCOUNT"
                                                         value={paymentFormData.senderName}
-                                                        onChange={(e) => setPaymentFormData({...paymentFormData, senderName: e.target.value})}
+                                                        onChange={(e) => setPaymentFormData({ ...paymentFormData, senderName: e.target.value })}
                                                         className="w-full bg-white border border-gray-200 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest outline-none focus:border-emerald-500 transition-all"
                                                     />
                                                 </div>
@@ -728,10 +726,10 @@ export default function CheckoutPage() {
                                         {cart.map(item => (
                                             <div key={item.id} className="flex gap-6 items-center group">
                                                 <div className="w-20 h-20 bg-white/5 rounded-3xl overflow-hidden shrink-0 border border-white/10 p-2 group-hover:border-emerald-500/50 transition-all duration-500">
-                                                    <img 
-                                                        src={item.customDesign?.textures?.front || item.customDesign?.textures?.top || Object.values(item.customDesign?.textures || {}).find(t => t) || item.img || item.image} 
-                                                        className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-700" 
-                                                        alt="" 
+                                                    <img
+                                                        src={item.customDesign?.textures?.front || item.customDesign?.textures?.top || Object.values(item.customDesign?.textures || {}).find(t => t) || item.img || item.image}
+                                                        className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-700"
+                                                        alt=""
                                                     />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
@@ -751,7 +749,7 @@ export default function CheckoutPage() {
 
                                     {/* Promo Code Input */}
                                     <div className="space-y-4 mb-10 p-6 bg-white/5 rounded-[2rem] border border-white/5">
-                                        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 ml-2">Access_Vault_Key</p>
+                                        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/30 ml-2">Coupon code</p>
                                         <div className="flex gap-3">
                                             <input
                                                 type="text"
@@ -797,26 +795,26 @@ export default function CheckoutPage() {
                                             <span className="text-emerald-500 font-black italic">WAVIED_FOC</span>
                                         </div>
                                     </div>
-                                        
-                                        <div className="pt-8 flex items-end justify-between">
-                                            <div className="space-y-1">
-                                                <p className="text-[10px] font-black uppercase text-emerald-500 tracking-[0.4em]">Final_Authorized_Total</p>
-                                                <h2 className="text-5xl md:text-6xl font-black text-white tracking-tighter leading-none italic">
-                                                    ₹{finalTotal.toLocaleString('en-IN')}
-                                                </h2>
-                                            </div>
+
+                                    <div className="pt-8 flex items-end justify-between">
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black uppercase text-emerald-500 tracking-[0.4em]">Final_Authorized_Total</p>
+                                            <h2 className="text-5xl md:text-6xl font-black text-white tracking-tighter leading-none italic">
+                                                ₹{finalTotal.toLocaleString('en-IN')}
+                                            </h2>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
-                            {/* Trust Badge Footer */}
-                            <div className="mt-8 flex items-center justify-center gap-6 opacity-30 grayscale">
-                                <ShieldCheck size={24} />
-                                <Package size={24} />
-                                <CreditCard size={24} />
-                                <CheckCircle2 size={24} />
-                            </div>
+                        </div>
+
+                        {/* Trust Badge Footer */}
+                        <div className="mt-8 flex items-center justify-center gap-6 opacity-30 grayscale">
+                            <ShieldCheck size={24} />
+                            <Package size={24} />
+                            <CreditCard size={24} />
+                            <CheckCircle2 size={24} />
+                        </div>
                     </div>
                 </div>
             </main>
