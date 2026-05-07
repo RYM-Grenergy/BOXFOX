@@ -188,8 +188,13 @@ export default function CheckoutPage() {
             window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
             return;
         }
+        if (!formData.name || !formData.email || !formData.phone) {
+            showToast("Identity profile incomplete. Email and Phone are required.", "error");
+            setStep(1);
+            return;
+        }
         if (!formData.shippingAddress.street || !formData.shippingAddress.city || !formData.shippingAddress.state || !formData.shippingAddress.zipCode) {
-            showToast("Please complete all shipping details", "error");
+            showToast("Logistics protocol incomplete. Please provide full shipping address.", "error");
             setStep(2);
             return;
         }
@@ -406,31 +411,34 @@ export default function CheckoutPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div className="space-y-3 group">
                                             <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4 group-focus-within:text-emerald-500 transition-colors">
-                                                <div className="w-1.5 h-1.5 bg-current rounded-full" /> Full Name
+                                                <div className="w-1.5 h-1.5 bg-current rounded-full" /> Full Name <span className="text-red-500">*</span>
                                             </label>
                                             <input
                                                 name="name" value={formData.name || ''} onChange={handleFormChange}
                                                 placeholder="AUTHORIZED PERSONNEL ONLY"
+                                                required
                                                 className="w-full bg-gray-50 border border-gray-100 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-emerald-500 hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest placeholder:text-gray-300"
                                             />
                                         </div>
                                         <div className="space-y-3 group">
                                             <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4 group-focus-within:text-emerald-500 transition-colors">
-                                                <div className="w-1.5 h-1.5 bg-current rounded-full" /> Digital ID (Email)
+                                                <div className="w-1.5 h-1.5 bg-current rounded-full" /> Digital ID (Email) <span className="text-red-500">*</span>
                                             </label>
                                             <input
                                                 type="email" name="email" value={formData.email || ''} onChange={handleFormChange}
                                                 placeholder="SYSTEM_ACCESS@NODE.COM"
+                                                required
                                                 className="w-full bg-gray-50 border border-gray-100 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-emerald-500 hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest placeholder:text-gray-300"
                                             />
                                         </div>
                                         <div className="space-y-3 group md:col-span-2">
                                             <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4 group-focus-within:text-emerald-500 transition-colors">
-                                                <div className="w-1.5 h-1.5 bg-current rounded-full" /> Mobile Terminal (Phone)
+                                                <div className="w-1.5 h-1.5 bg-current rounded-full" /> Mobile Terminal (Phone) <span className="text-red-500">*</span>
                                             </label>
                                             <input
                                                 name="phone" value={formData.phone || ''} onChange={handleFormChange}
                                                 placeholder="+91 [000-000-0000]"
+                                                required
                                                 className="w-full bg-gray-50 border border-gray-100 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-emerald-500 hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest placeholder:text-gray-300"
                                             />
                                         </div>
@@ -489,10 +497,11 @@ export default function CheckoutPage() {
                                     <div className="bg-gray-50/50 p-8 md:p-12 rounded-[3.5rem] border border-gray-100 space-y-10">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             <div className="space-y-4 group">
-                                                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 group-focus-within:text-emerald-500 transition-colors">Street Mapping</label>
+                                                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 group-focus-within:text-emerald-500 transition-colors">Street Mapping <span className="text-red-500">*</span></label>
                                                 <input
                                                     name="shippingAddress.street" value={formData.shippingAddress.street || ''} onChange={handleFormChange}
                                                     placeholder="Primary Street Access"
+                                                    required
                                                     className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest"
                                                 />
                                             </div>
@@ -507,11 +516,12 @@ export default function CheckoutPage() {
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             <div className="space-y-4 group">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Region Code (ZIP)</label>
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Region Code (ZIP) <span className="text-red-500">*</span></label>
                                                 <div className="relative">
                                                     <input
                                                         name="shippingAddress.zipCode" value={formData.shippingAddress.zipCode || ''} onChange={handleFormChange}
                                                         placeholder="000 000"
+                                                        required
                                                         className={`w-full bg-white border ${isPincodeLoading ? 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-gray-200'} rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all tracking-widest`}
                                                     />
                                                     {isPincodeLoading && (
@@ -522,7 +532,7 @@ export default function CheckoutPage() {
                                                 </div>
                                             </div>
                                             <div className="space-y-4 group">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Sector / City</label>
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Sector / City <span className="text-red-500">*</span></label>
                                                 <div className="relative">
                                                     {fetchedCities.length > 0 ? (
                                                         <select
@@ -548,7 +558,7 @@ export default function CheckoutPage() {
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                             <div className="space-y-4 group">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Administrative Region (State)</label>
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Administrative Region (State) <span className="text-red-500">*</span></label>
                                                 <div className="relative">
                                                     <select
                                                         name="shippingAddress.state" value={formData.shippingAddress.state || ''} onChange={handleFormChange}

@@ -62,13 +62,19 @@ const validateOrderPayload = (orderData) => {
         return 'Order total is invalid';
     }
 
+    const customer = orderData.customer || {};
+    if (!customer.email || !customer.phone) {
+        return 'Customer email and phone number are required';
+    }
+
     const shipping = orderData.shipping || orderData.shippingAddress || {};
     const street = shipping.street || shipping.address;
     const city = shipping.city;
     const zipCode = shipping.zipCode || shipping.postalCode;
+    const state = shipping.state;
 
-    if (!street || !city || !zipCode) {
-        return 'Shipping details are incomplete';
+    if (!street || !city || !zipCode || !state) {
+        return 'Complete shipping details (Street, City, State, Zip) are required';
     }
 
     return null;

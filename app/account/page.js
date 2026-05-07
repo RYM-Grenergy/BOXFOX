@@ -236,6 +236,43 @@ function AccountManagementContent() {
         router.push(`/customize?${params.toString()}`);
     };
 
+    const handleCancelOrder = async (orderId) => {
+        if (!confirm("Are you sure you want to cancel this order? This action cannot be undone.")) return;
+        
+        try {
+            const res = await fetch('/api/orders/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast("Order cancelled successfully", "success");
+                // Refresh orders
+                const ordersRes = await fetch("/api/orders/user");
+                if (ordersRes.ok) {
+                    const ordersData = await ordersRes.json();
+                    setOrders(ordersData.orders || []);
+                    if (selectedOrder && selectedOrder._id === orderId) {
+                        setSelectedOrder({ ...selectedOrder, status: 'Cancelled' });
+                    }
+                }
+            } else {
+                showToast(data.error || "Failed to cancel order", "error");
+            }
+        } catch (err) {
+            showToast("System error occurred while cancelling order", "error");
+        }
+    };
+
+    const isCancellable = (order) => {
+        if (order.status !== 'Pending') return false;
+        const now = new Date();
+        const createdAt = new Date(order.createdAt);
+        const hoursDiff = (now - createdAt) / (1000 * 60 * 60);
+        return hoursDiff <= 6;
+    };
+
     const visibleQuotes = quotes.filter((quote) => {
         const term = quoteSearch.toLowerCase();
         return [
@@ -403,6 +440,14 @@ function AccountManagementContent() {
                                             className="px-6 py-4 bg-emerald-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center gap-2"
                                         >
                                             <RefreshCw size={14} /> Reorder
+                                        </button>
+                                    )}
+                                    {isCancellable(order) && (
+                                        <button
+                                            onClick={() => handleCancelOrder(order._id)}
+                                            className="px-6 py-4 bg-red-50 text-red-600 border border-red-100 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-2"
+                                        >
+                                            <Trash2 size={14} /> Cancel Order
                                         </button>
                                     )}
                                     <button
@@ -997,7 +1042,7 @@ function AccountManagementContent() {
                                                                 <p className="text-lg font-black text-gray-950 tracking-tighter">₹{order.total.toLocaleString('en-IN')}</p>
                                                             </div>
 
-                                                            <div className="col-span-2 sm:col-span-1">
+                                                            <div className="col-span-2 sm:col-span-1 flex flex-col items-end gap-2">
                                                                 <div className={`inline-flex items-center px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] shadow-sm transition-all ${
                                                                     order.status === 'Delivered' ? 'bg-emerald-100 text-emerald-600' : 
                                                                     order.status === 'Shipped' ? 'bg-blue-100 text-blue-600' : 
@@ -1006,6 +1051,17 @@ function AccountManagementContent() {
                                                                 }`}>
                                                                     {order.status}
                                                                 </div>
+                                                                {isCancellable(order) && (
+                                                                    <button 
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleCancelOrder(order._id);
+                                                                        }}
+                                                                        className="text-[8px] font-black text-red-500 hover:text-red-700 uppercase tracking-widest underline underline-offset-2"
+                                                                    >
+                                                                        Cancel Order
+                                                                    </button>
+                                                                )}
                                                             </div>
                                                         </div>
                                                         
