@@ -34,17 +34,17 @@ export function ToastProvider({ children }) {
                             className="pointer-events-auto"
                         >
                             <div className={`flex items-center gap-4 px-6 py-4 rounded-[1.5rem] bg-white border shadow-2xl min-w-[320px] max-w-md ${toast.type === 'error' ? 'border-red-100' :
-                                    toast.type === 'info' ? 'border-blue-100' : 'border-emerald-100'
+                                toast.type === 'info' ? 'border-blue-100' : 'border-emerald-100'
                                 }`}>
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${toast.type === 'error' ? 'bg-red-50 text-red-500' :
-                                        toast.type === 'info' ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-emerald-500'
+                                    toast.type === 'info' ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-emerald-500'
                                     }`}>
                                     {toast.type === 'error' ? <AlertCircle size={20} /> :
                                         toast.type === 'info' ? <Info size={20} /> : <CheckCircle2 size={20} />}
                                 </div>
                                 <div className="flex-1">
                                     <p className={`text-[11px] font-black uppercase tracking-widest ${toast.type === 'error' ? 'text-red-500' :
-                                            toast.type === 'info' ? 'text-blue-500' : 'text-emerald-600'
+                                        toast.type === 'info' ? 'text-blue-500' : 'text-emerald-600'
                                         }`}>
                                         {toast.type === 'error' ? 'Error_Issue' :
                                             toast.type === 'info' ? 'Notification_Log' : 'Operation_Success'}

@@ -145,6 +145,12 @@ function AccountManagementContent() {
         setErrorMsg("");
         setSuccessMsg("");
 
+        if (phone && phone.length !== 10) {
+            setErrorMsg("Please provide a valid 10-digit phone number");
+            setIsLoading(false);
+            return;
+        }
+
         try {
             const res = await fetch("/api/auth/update", {
                 method: "PUT",
@@ -727,7 +733,13 @@ function AccountManagementContent() {
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Phone Number</label>
-                                                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Add Phone Number"
+                                                <input type="tel" value={phone} 
+                                                    onChange={e => {
+                                                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                                        setPhone(val);
+                                                    }} 
+                                                    placeholder="10 digit mobile number"
+                                                    required
                                                     className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-gray-950 outline-none transition-all font-medium text-gray-950" />
                                             </div>
                                             <div className="space-y-2">
@@ -796,18 +808,9 @@ function AccountManagementContent() {
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1">Country / Region</label>
                                                     <div className="relative">
-                                                        <select value={shippingAddress.country} onChange={e => setShippingAddress({ ...shippingAddress, country: e.target.value })}
-                                                            className="w-full px-6 py-4 rounded-xl bg-gray-50 border border-transparent focus:bg-white focus:border-gray-950 outline-none transition-all font-medium text-gray-950 appearance-none">
+                                                        <select value="India" readOnly
+                                                            className="w-full px-6 py-4 rounded-xl bg-gray-100 border border-transparent text-gray-500 font-medium appearance-none cursor-not-allowed">
                                                             <option value="India">India</option>
-                                                            <option value="United States">United States</option>
-                                                            <option value="United Kingdom">United Kingdom</option>
-                                                            <option value="Canada">Canada</option>
-                                                            <option value="Australia">Australia</option>
-                                                            <option value="Germany">Germany</option>
-                                                            <option value="France">France</option>
-                                                            <option value="Japan">Japan</option>
-                                                            <option value="UAE">UAE</option>
-                                                            <option value="Singapore">Singapore</option>
                                                         </select>
                                                         <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                                                             <ChevronRight size={14} className="rotate-90" />

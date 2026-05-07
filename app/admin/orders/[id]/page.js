@@ -285,7 +285,7 @@ export default function OrderDetails() {
                                 {order.paid ? 'Authorized' : 'Pending Verification'}
                             </div>
                         </div>
-                        
+
                         <div className="flex flex-col gap-6">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
@@ -298,18 +298,18 @@ export default function OrderDetails() {
                                     </div>
                                 </div>
                                 {!order.paid && (
-                                    <button 
+                                    <button
                                         onClick={async () => {
                                             if (confirm("Confirm payment receipt? This will mark the order as PAID and notify the customer.")) {
-                                                await fetch("/api/orders", { 
-                                                    method: "PATCH", 
-                                                    headers: { "Content-Type": "application/json" }, 
-                                                    body: JSON.stringify({ 
-                                                        id: order._id, 
-                                                        paid: true, 
+                                                await fetch("/api/orders", {
+                                                    method: "PATCH",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({
+                                                        id: order._id,
+                                                        paid: true,
                                                         status: 'Processing',
                                                         paymentDetails: order.paymentDetails // Ensure we persist existing details
-                                                    }) 
+                                                    })
                                                 });
                                                 setOrder({ ...order, paid: true, status: 'Processing' });
                                             }
@@ -340,16 +340,16 @@ export default function OrderDetails() {
                                                 <span>Received: {new Date(order.paymentDetails.submittedAt).toLocaleString('en-IN')}</span>
                                             </div>
                                         )}
-                                        <button 
+                                        <button
                                             onClick={() => {
                                                 const txnId = prompt("Update Transaction ID:", order.paymentDetails.transactionId);
                                                 const sName = prompt("Update Bank Name:", order.paymentDetails.senderName);
                                                 if (txnId && sName) {
                                                     const updatedDetails = { ...order.paymentDetails, transactionId: txnId, senderName: sName };
-                                                    fetch("/api/orders", { 
-                                                        method: "PATCH", 
-                                                        headers: { "Content-Type": "application/json" }, 
-                                                        body: JSON.stringify({ id: order._id, paymentDetails: updatedDetails }) 
+                                                    fetch("/api/orders", {
+                                                        method: "PATCH",
+                                                        headers: { "Content-Type": "application/json" },
+                                                        body: JSON.stringify({ id: order._id, paymentDetails: updatedDetails })
                                                     });
                                                     setOrder({ ...order, paymentDetails: updatedDetails });
                                                 }
@@ -367,20 +367,20 @@ export default function OrderDetails() {
                                             <ShieldAlert size={20} />
                                         </div>
                                         <p className="text-[10px] font-black text-amber-900 uppercase tracking-widest leading-relaxed">
-                                            Manifest Data Missing.<br/>
+                                            Manifest Data Missing.<br />
                                             <span className="text-amber-600/60 font-bold">This is a legacy order or bypass detected.</span>
                                         </p>
                                     </div>
-                                    <button 
+                                    <button
                                         onClick={() => {
                                             const txnId = prompt("Enter Transaction ID:");
                                             const sName = prompt("Enter Bank Name:");
                                             if (txnId && sName) {
                                                 const details = { transactionId: txnId, senderName: sName, method: 'Manual/Correction', submittedAt: new Date() };
-                                                fetch("/api/orders", { 
-                                                    method: "PATCH", 
-                                                    headers: { "Content-Type": "application/json" }, 
-                                                    body: JSON.stringify({ id: order._id, paymentDetails: details }) 
+                                                fetch("/api/orders", {
+                                                    method: "PATCH",
+                                                    headers: { "Content-Type": "application/json" },
+                                                    body: JSON.stringify({ id: order._id, paymentDetails: details })
                                                 });
                                                 setOrder({ ...order, paymentDetails: details });
                                             }
@@ -653,8 +653,8 @@ function CustomDesignBlueprint({ item, order, expandedFace, setExpandedFace, dow
                                 key={tool.key}
                                 onClick={() => setActiveToolTab(activeToolTab === tool.key ? null : tool.key)}
                                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${activeToolTab === tool.key
-                                        ? tool.color + ' shadow-sm'
-                                        : 'bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100'
+                                    ? tool.color + ' shadow-sm'
+                                    : 'bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100'
                                     }`}
                             >
                                 {tool.icon} {tool.label}
@@ -715,7 +715,7 @@ function CustomDesignBlueprint({ item, order, expandedFace, setExpandedFace, dow
                         <p className="text-[10px] text-gray-400 font-medium leading-relaxed italic mb-4">
                             The following pattern image is for internal use by the admin team and will be attached to customer orders for reproduction purposes. It is not publicly visible on the main catalog.
                         </p>
-                        
+
                         {productDetails?.patternImg ? (
                             <div className="mt-auto space-y-4">
                                 <div className="relative aspect-video rounded-2xl border border-gray-200 overflow-hidden group flex items-center justify-center bg-white shadow-sm">
@@ -728,13 +728,13 @@ function CustomDesignBlueprint({ item, order, expandedFace, setExpandedFace, dow
                                         <img src={productDetails.patternImg} className="w-full h-full object-cover" alt="Pattern" />
                                     )}
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                        <button 
+                                        <button
                                             onClick={() => window.open(productDetails.patternImg, "_blank")}
                                             className="p-3 bg-white rounded-full text-gray-950 hover:scale-110 transition-all shadow-xl"
                                         >
                                             <Eye size={18} />
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => handleDownload(productDetails.patternImg, "pattern", order.orderId)}
                                             className="p-3 bg-emerald-500 rounded-full text-white hover:scale-110 transition-all shadow-xl"
                                         >
@@ -780,13 +780,13 @@ function CustomDesignBlueprint({ item, order, expandedFace, setExpandedFace, dow
                                         <img src={productDetails.dielineImg} className="w-full h-full object-cover" alt="Dieline" />
                                     )}
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                        <button 
+                                        <button
                                             onClick={() => window.open(productDetails.dielineImg, "_blank")}
                                             className="p-3 bg-white rounded-full text-gray-950 hover:scale-110 transition-all shadow-xl"
                                         >
                                             <Eye size={18} />
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => handleDownload(productDetails.dielineImg, "dieline", order.orderId)}
                                             className="p-3 bg-blue-500 rounded-full text-white hover:scale-110 transition-all shadow-xl"
                                         >

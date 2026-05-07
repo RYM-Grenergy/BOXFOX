@@ -29,10 +29,10 @@ const ProductRow = React.memo(({ product, onEdit, onDelete, onDuplicate, onRegen
         <td className="px-8 py-5">
             <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-gray-100 overflow-hidden shrink-0 border border-gray-100">
-                    <img 
-                        src={product.img || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg"} 
-                        alt="" 
-                        className="w-full h-full object-cover" 
+                    <img
+                        src={product.img || "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg"}
+                        alt=""
+                        className="w-full h-full object-cover"
                         loading="lazy"
                         onError={(e) => {
                             e.target.src = "https://boxfox.in/wp-content/uploads/2022/11/Mailer_Box_Mockup_1-copy-scaled.jpg";
@@ -261,7 +261,7 @@ export default function ProductsManager() {
                 } else if (Array.isArray(formData.images)) {
                     currentImages = formData.images.filter(Boolean);
                 }
-                
+
                 setFormData({ ...formData, images: [...currentImages, ...uploadedUrls].join(', ') });
             }
         } catch (error) {
@@ -600,7 +600,7 @@ export default function ProductsManager() {
         try {
             const XLSX = await import('xlsx');
             const reader = new FileReader();
-            
+
             reader.onload = async (evt) => {
                 const bstr = evt.target.result;
                 const wb = XLSX.read(bstr, { type: 'binary' });
@@ -760,7 +760,7 @@ export default function ProductsManager() {
     const handleRegenerateSku = async (product) => {
         if (!product || !product._id) return;
         if (!confirm('This will assign a fresh, unique SKU based on the product category. Proceed?')) return;
-        
+
         try {
             const res = await fetch('/api/products', {
                 method: 'POST',
@@ -862,17 +862,17 @@ export default function ProductsManager() {
             // Smart Fallback: Extract dimensions from name if missing in data (e.g. "Cake Box 8x8x5 in")
             const match = name?.match(/(\d+(?:\.\d+)?)\s*[x×*]\s*(\d+(?:\.\d+)?)\s*[x×*]\s*(\d+(?:\.\d+)?)/i);
             if (match) {
-                d = { 
-                    length: parseFloat(match[1]), 
-                    width: parseFloat(match[2]), 
-                    height: parseFloat(match[3]), 
-                    unit: 'inch' 
+                d = {
+                    length: parseFloat(match[1]),
+                    width: parseFloat(match[2]),
+                    height: parseFloat(match[3]),
+                    unit: 'inch'
                 };
             } else {
                 return null;
             }
         }
-        
+
         const { length: l, width: w, height: h, unit = 'inch' } = d;
         const toInch = (v) => unit === 'inch' ? v : unit === 'cm' ? v / 2.54 : v / 25.4;
         const toCm = (v) => unit === 'cm' ? v : unit === 'inch' ? v * 2.54 : v / 10;
@@ -1418,62 +1418,62 @@ export default function ProductsManager() {
                                             </div>
 
                                             <div className="bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 space-y-6">
-                                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                                     <div>
-                                                         <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-1">Standardized Pricing</label>
-                                                         <p className="text-[10px] text-gray-400 font-medium italic">Auto-calculate tiers based on manufacturing specs</p>
-                                                     </div>
-                                                 </div>
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                    <div>
+                                                        <label className="text-xs font-black uppercase tracking-widest text-gray-400 block mb-1">Standardized Pricing</label>
+                                                        <p className="text-[10px] text-gray-400 font-medium italic">Auto-calculate tiers based on manufacturing specs</p>
+                                                    </div>
+                                                </div>
 
-                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                                                     <div className="space-y-3">
-                                                         <div className="flex items-center justify-between px-1">
-                                                             <label className="text-[10px] font-black uppercase tracking-tight text-gray-400">Price @ 1</label>
-                                                         </div>
-                                                         <div className="relative group">
-                                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 font-black text-sm group-focus-within:text-gray-950 transition-colors">₹</span>
-                                                             <input
-                                                                 type="number"
-                                                                 step="0.01"
-                                                                 value={formData.priceAt1 || ''}
-                                                                 onChange={e => setFormData({ ...formData, priceAt1: e.target.value })}
-                                                                 placeholder="0.00"
-                                                                 className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-6 py-4 font-black text-gray-950 focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 outline-none transition-all shadow-sm"
-                                                             />
-                                                         </div>
-                                                     </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-center justify-between px-1">
+                                                            <label className="text-[10px] font-black uppercase tracking-tight text-gray-400">Price @ 1</label>
+                                                        </div>
+                                                        <div className="relative group">
+                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 font-black text-sm group-focus-within:text-gray-950 transition-colors">₹</span>
+                                                            <input
+                                                                type="number"
+                                                                step="0.01"
+                                                                value={formData.priceAt1 || ''}
+                                                                onChange={e => setFormData({ ...formData, priceAt1: e.target.value })}
+                                                                placeholder="0.00"
+                                                                className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-6 py-4 font-black text-gray-950 focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 outline-none transition-all shadow-sm"
+                                                            />
+                                                        </div>
+                                                    </div>
 
-                                                     <div className="space-y-3">
-                                                         <label className="text-[10px] font-black uppercase tracking-tight text-gray-400 px-1">Price @ 50</label>
-                                                         <div className="relative group">
-                                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 font-black text-sm group-focus-within:text-gray-950 transition-colors">₹</span>
-                                                             <input
-                                                                 type="number"
-                                                                 step="0.01"
-                                                                 value={formData.priceAt50 || ''}
-                                                                 onChange={e => setFormData({ ...formData, priceAt50: e.target.value })}
-                                                                 placeholder="0.00"
-                                                                 className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-6 py-4 font-black text-gray-950 focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 outline-none transition-all shadow-sm"
-                                                             />
-                                                         </div>
-                                                     </div>
+                                                    <div className="space-y-3">
+                                                        <label className="text-[10px] font-black uppercase tracking-tight text-gray-400 px-1">Price @ 50</label>
+                                                        <div className="relative group">
+                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 font-black text-sm group-focus-within:text-gray-950 transition-colors">₹</span>
+                                                            <input
+                                                                type="number"
+                                                                step="0.01"
+                                                                value={formData.priceAt50 || ''}
+                                                                onChange={e => setFormData({ ...formData, priceAt50: e.target.value })}
+                                                                placeholder="0.00"
+                                                                className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-6 py-4 font-black text-gray-950 focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 outline-none transition-all shadow-sm"
+                                                            />
+                                                        </div>
+                                                    </div>
 
-                                                     <div className="space-y-3">
-                                                         <label className="text-[10px] font-black uppercase tracking-tight text-gray-400 px-1">Price @ 100</label>
-                                                         <div className="relative group">
-                                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 font-black text-sm group-focus-within:text-gray-950 transition-colors">₹</span>
-                                                             <input
-                                                                 type="number"
-                                                                 step="0.01"
-                                                                 value={formData.priceAt100 || ''}
-                                                                 onChange={e => setFormData({ ...formData, priceAt100: e.target.value })}
-                                                                 placeholder="0.00"
-                                                                 className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-6 py-4 font-black text-gray-950 focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 outline-none transition-all shadow-sm"
-                                                             />
-                                                         </div>
-                                                     </div>
-                                                 </div>
-                                             </div>
+                                                    <div className="space-y-3">
+                                                        <label className="text-[10px] font-black uppercase tracking-tight text-gray-400 px-1">Price @ 100</label>
+                                                        <div className="relative group">
+                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 font-black text-sm group-focus-within:text-gray-950 transition-colors">₹</span>
+                                                            <input
+                                                                type="number"
+                                                                step="0.01"
+                                                                value={formData.priceAt100 || ''}
+                                                                onChange={e => setFormData({ ...formData, priceAt100: e.target.value })}
+                                                                placeholder="0.00"
+                                                                className="w-full bg-white border border-gray-200 rounded-2xl pl-10 pr-6 py-4 font-black text-gray-950 focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/20 outline-none transition-all shadow-sm"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
 
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
@@ -1513,7 +1513,7 @@ export default function ProductsManager() {
                                                     {formData.images.split(',').map((url, i) => url.trim() && (
                                                         <div key={i} className="group aspect-square rounded-[2rem] border border-gray-100 overflow-hidden relative bg-gray-50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                                                             <img src={url.trim()} className="w-full h-full object-contain p-2" alt={`Product ${i + 1}`} />
-                                                            
+
                                                             {/* Primary Badge */}
                                                             {i === 0 && (
                                                                 <div className="absolute top-3 left-3 px-2 py-1 bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest rounded-lg shadow-lg">
@@ -1782,5 +1782,7 @@ export default function ProductsManager() {
         </div>
     );
 }
+
+
 
 

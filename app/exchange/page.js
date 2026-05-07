@@ -28,7 +28,7 @@ export default function ExchangePolicyPage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         try {
             const response = await fetch('/api/exchange-request', {
                 method: 'POST',
@@ -129,7 +129,7 @@ export default function ExchangePolicyPage() {
                                             If you received wrong or damaged items, we're here to help. Click the button below and we will make things right.
                                         </p>
                                         <div className="pt-4">
-                                            <button 
+                                            <button
                                                 onClick={() => document.getElementById('return-form').scrollIntoView({ behavior: 'smooth' })}
                                                 className="inline-flex items-center gap-3 px-8 py-3 bg-red-500 text-white rounded-full font-black text-xs uppercase tracking-[0.2em] hover:bg-red-600 transition-all shadow-xl"
                                             >
@@ -224,7 +224,7 @@ export default function ExchangePolicyPage() {
                             {/* Return Form Section */}
                             <div id="return-form" className="bg-emerald-50 p-10 sm:p-14 rounded-[4rem] border border-emerald-100">
                                 <h2 className="text-3xl font-black uppercase tracking-tighter text-gray-950 italic mb-10">Return / Exchange Request Form</h2>
-                                
+
                                 {submitted ? (
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}

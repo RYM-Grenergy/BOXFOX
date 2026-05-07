@@ -67,6 +67,11 @@ const validateOrderPayload = (orderData) => {
         return 'Customer email and phone number are required';
     }
 
+    const cleanPhone = String(customer.phone).replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+        return 'A valid 10-digit phone number is required';
+    }
+
     const shipping = orderData.shipping || orderData.shippingAddress || {};
     const street = shipping.street || shipping.address;
     const city = shipping.city;

@@ -188,8 +188,13 @@ export default function CheckoutPage() {
             window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
             return;
         }
-        if (!formData.name || !formData.email || !formData.phone) {
-            showToast("Identity profile incomplete. Email and Phone are required.", "error");
+        if (!formData.phone || formData.phone.length !== 10) {
+            showToast("Please provide a valid 10-digit phone number", "error");
+            setStep(1);
+            return;
+        }
+        if (!formData.name || !formData.email) {
+            showToast("Identity profile incomplete. Name and Email are required.", "error");
             setStep(1);
             return;
         }
@@ -436,8 +441,11 @@ export default function CheckoutPage() {
                                                 <div className="w-1.5 h-1.5 bg-current rounded-full" /> Mobile Terminal (Phone) <span className="text-red-500">*</span>
                                             </label>
                                             <input
-                                                name="phone" value={formData.phone || ''} onChange={handleFormChange}
-                                                placeholder="+91 [000-000-0000]"
+                                                name="phone" value={formData.phone || ''} onChange={(e) => {
+                                                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                                    handleFormChange({ target: { name: 'phone', value: val } });
+                                                }}
+                                                placeholder="10 DIGIT MOBILE NUMBER"
                                                 required
                                                 className="w-full bg-gray-50 border border-gray-100 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:bg-white focus:border-emerald-500 hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all uppercase tracking-widest placeholder:text-gray-300"
                                             />
@@ -576,13 +584,10 @@ export default function CheckoutPage() {
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-4 italic">Zone Select (Country)</label>
                                                 <div className="relative">
                                                     <select
-                                                        name="shippingAddress.country" value={formData.shippingAddress.country || 'India'} onChange={handleFormChange}
-                                                        className="w-full bg-white border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none focus:border-emerald-500 hover:shadow-xl hover:shadow-gray-100 transition-all uppercase appearance-none cursor-pointer"
+                                                        name="shippingAddress.country" value="India" readOnly
+                                                        className="w-full bg-gray-100 border border-gray-200 rounded-[2rem] px-8 py-6 font-black text-sm outline-none cursor-not-allowed uppercase appearance-none"
                                                     >
                                                         <option value="India">IND - India</option>
-                                                        <option value="United States">USA - United States</option>
-                                                        <option value="United Kingdom">GBR - United Kingdom</option>
-                                                        <option value="UAE">ARE - UAE</option>
                                                     </select>
                                                     <ChevronLeft className="absolute right-8 top-1/2 -translate-y-1/2 rotate-[270deg] text-gray-400 pointer-events-none" size={16} />
                                                 </div>
